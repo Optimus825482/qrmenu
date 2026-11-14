@@ -231,8 +231,6 @@ describe("Oda Servisi Ayarları penceresi kaydı", () => {
     });
     expect(app?.purpose?.length).toBeGreaterThan(20);
     expect([...(app?.roleCodes ?? [])].sort()).toEqual(["R-FBM", "R-OSS", "R-SYS"]);
-    // One hotel selector for every window: both room-service settings windows take the hotel from the header.
-    expect(getApp("rs.sinirlar")?.needsHotel).toBe(true);
   });
 
   it("Komuta Merkezi'nin oda servisi düğmeleri pencereyi sunar (başlangıçta kapalı)", async () => {

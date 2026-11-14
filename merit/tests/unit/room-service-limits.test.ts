@@ -172,18 +172,14 @@ describe("oda servisi sınırları: reddedilenler", () => {
 });
 
 describe("Oda Servisi Sınırları penceresi kaydı", () => {
-  it("rs.sinirlar yalnız R-OSS ve R-SYS'e sunulur, RO-TAL ekranına bağlıdır", async () => {
+  it("ayrı pencere yoktur: sınırlar Oda Servisi Ayarları penceresinin bir bölümüdür", async () => {
     const { registerRoomServiceApps } = await import("@/modules/order/roomServiceApps");
     const { getApp } = await import("@/shell/registry");
+    const { SCREEN_LAYOUT_DEFS } = await import("@/modules/core/screenLayouts");
     registerRoomServiceApps();
-    const app = getApp("rs.sinirlar");
-    expect(app).toMatchObject({
-      launchLabel: "Oda Servisi Sınırları",
-      screenCode: "RO-TAL",
-      moduleKey: "ROOM_SERVICE",
-      category: "ROOM_SERVICE",
-      kind: "component",
-    });
-    expect([...(app?.roleCodes ?? [])].sort()).toEqual(["R-OSS", "R-SYS"]);
+    expect(getApp("rs.sinirlar")).toBeUndefined();
+    expect(getApp("rs.ayarlar")?.purpose).toContain("sipariş sınırlarını");
+    const block = SCREEN_LAYOUT_DEFS.komuta.blocks.find((b) => b.id === "hizliOda");
+    expect(block?.items?.some((i) => i.app === "rs.sinirlar")).toBe(false);
   });
 });

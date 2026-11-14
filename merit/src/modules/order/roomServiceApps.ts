@@ -78,29 +78,10 @@ export function registerRoomServiceApps(): void {
     mobile: "readonly",
   });
 
-  // Oda Servisi Sorumlusu: the two per-room order limits without Denetim Masası (no CR-SYS). The server
-  // re-checks the role and the hotel (roomService/limitsAdmin).
-  registerCatalogApp({
-    id: "rs.sinirlar",
-    title: "Oda Servisi Sınırları",
-    launchLabel: "Oda Servisi Sınırları",
-    icon: "ayarlar",
-    moduleKey: "ROOM_SERVICE",
-    screenCode: "RO-TAL",
-    purpose: "Bir odanın aynı anda kaç açık siparişi olabileceğini ve iki sipariş arasındaki bekleme süresini belirlersin.",
-    roleCodes: ["R-OSS", "R-SYS"],
-    category: "ROOM_SERVICE",
-    needsHotel: true,
-    window: { w: 640, h: 560, minW: 420, minH: 380 },
-    kind: "component",
-    component: () =>
-      import("./ui/RoomServiceLimitsWindow").then((m) => ({ default: m.RoomServiceLimitsWindow })),
-    mobile: "full",
-  });
-
-  // The operational switches of the hotel's room-service outlet (order intake, prices, currency, receipt), which
-  // the outlet screens no longer list. The server finds the outlet and re-checks the role and the hotel
-  // (roomService/settingsAdmin).
+  // One settings window for room service: the operational switches of the hotel's room-service outlet (order
+  // intake, prices, currency, receipt), which the outlet screens no longer list, and the two per-room order
+  // limits (the former "Oda Servisi Sınırları" window). The server re-checks the role and the hotel for each
+  // part (roomService/settingsAdmin, roomService/limitsAdmin); the limits part is shown to R-OSS and R-SYS only.
   registerCatalogApp({
     id: "rs.ayarlar",
     title: "Oda Servisi Ayarları",
@@ -108,11 +89,11 @@ export function registerRoomServiceApps(): void {
     icon: "ayarlar",
     moduleKey: "ROOM_SERVICE",
     screenCode: "RO-TAL",
-    purpose: "Oda servisinin sipariş alımını açıp kapatır, misafire gösterilen fiyatları, para birimini ve fiş yazdırmayı ayarlarsın.",
+    purpose: "Oda servisinin sipariş alımını, misafire gösterilen fiyatları, para birimini, fiş yazdırmayı ve oda başına sipariş sınırlarını ayarlarsın.",
     roleCodes: ["R-OSS", "R-FBM", "R-SYS"],
     category: "ROOM_SERVICE",
     needsHotel: true,
-    window: { w: 640, h: 640, minW: 420, minH: 380 },
+    window: { w: 640, h: 720, minW: 420, minH: 380 },
     kind: "component",
     component: () =>
       import("./ui/RoomServiceSettingsWindow").then((m) => ({ default: m.RoomServiceSettingsWindow })),

@@ -237,7 +237,6 @@ export const SCREEN_LAYOUT_DEFS: { [K in LayoutScreenKey]: ScreenLayoutDef } = {
           { id: "tema", label: "Menü Tasarım Stüdyosu", app: "rs.tema", icon: "palette" },
           { id: "kayitlar", label: "Oda Servisi Kayıtları", app: "rs.kayitlar", icon: "clipboard" },
           { id: "rapor", label: "SLA & Operasyon Raporları", app: "rs.rapor", icon: "trending" },
-          { id: "sinirlar", label: "Oda Servisi Sınırları", app: "rs.sinirlar", icon: "settings", off: true },
           { id: "otellerArasi", label: "Oteller Arası Oda Servisi", app: "rs.oteller-arasi", icon: "building", off: true },
           { id: "ayarlar", label: "Oda Servisi Ayarları", app: "rs.ayarlar", icon: "settings", off: true },
         ],
