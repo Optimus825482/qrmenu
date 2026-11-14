@@ -3,24 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Çevrimdışı - Merit</title>
+  <meta name="theme-color" content="#faf7f0">
+  <title>Merit Hotels</title>
   <style>
     :root {
-      --bg: #0f0d0a;
-      --card-bg: #1c1813;
-      --text: #f5f1e8;
-      --text-muted: #9e9587;
-      --accent: #c9a24a;
-      --border: rgba(201, 162, 74, 0.25);
+      --bg: #faf7f0;
+      --text: #1f2a44;
+      --text-muted: #5f6678;
+      --gold: #b8913a;
+      --line: rgba(184, 145, 58, 0.35);
     }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+      background: radial-gradient(ellipse at top, #ffffff 0%, var(--bg) 65%);
       background-color: var(--bg);
       color: var(--text);
       display: flex;
@@ -29,85 +25,114 @@
       justify-content: center;
       min-height: 100vh;
       min-height: 100dvh;
-      padding: calc(20px + env(safe-area-inset-top, 0px)) calc(20px + env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) calc(20px + env(safe-area-inset-left, 0px));
+      padding: calc(28px + env(safe-area-inset-top, 0px)) 20px calc(28px + env(safe-area-inset-bottom, 0px));
       text-align: center;
     }
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 36px 24px;
-      max-width: 400px;
-      width: 100%;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-    .icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 20px;
-      background: rgba(201, 162, 74, 0.12);
-      border-radius: 50%;
+    .logos {
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: clamp(12px, 4vw, 32px);
+      animation: breathe 3.2s ease-in-out infinite;
     }
-    .icon svg {
-      width: 32px;
-      height: 32px;
-      stroke: var(--accent);
+    .logos img {
+      width: clamp(80px, 24vw, 140px);
+      height: auto;
+      filter: drop-shadow(0 8px 18px rgba(31, 42, 68, 0.18));
     }
-    h1 {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      color: var(--accent);
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.025); }
     }
-    p {
-      font-size: 14px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
+    .divider { width: 72px; height: 1px; background: var(--line); margin: 30px auto 24px; }
+    h1 { font-size: 20px; font-weight: 600; color: var(--text); }
+    p { margin: 12px auto 0; max-width: 460px; font-size: 15px; line-height: 1.65; color: var(--text-muted); }
+    p.en { margin-top: 18px; font-size: 13px; font-style: italic; opacity: 0.85; }
+    .thanks { margin-top: 16px; font-size: 15px; font-weight: 600; color: var(--gold); }
+    .dots { margin-top: 26px; display: flex; gap: 8px; justify-content: center; }
+    .dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: dot 1.4s ease-in-out infinite; }
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dot { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--accent);
-      color: #0f0d0a;
-      font-weight: 700;
-      font-size: 15px;
-      padding: 12px 24px;
+      margin-top: 28px;
+      background: #ffffff;
+      color: var(--text);
+      border: 1px solid var(--line);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 28px;
       border-radius: 12px;
-      border: none;
+      min-height: 46px;
       cursor: pointer;
-      width: 100%;
-      min-height: 48px;
       touch-action: manipulation;
-      transition: opacity 0.2s ease;
+      box-shadow: 0 2px 8px rgba(31, 42, 68, 0.06);
     }
-    .btn:active {
-      opacity: 0.85;
-      transform: scale(0.98);
+    .btn:active { transform: scale(0.98); }
+    @media (prefers-reduced-motion: reduce) {
+      .logos, .dots span { animation: none; }
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="icon">
-      <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-      </svg>
-    </div>
-    <h1>Bağlantı Kesildi</h1>
-    <p>Şu anda çevrimdışısınız. İnternet bağlantınız yeniden kurulduğunda menüye ve siparişlerinize devam etmek için sayfayı yenileyebilirsiniz.</p>
-    <button class="btn" onclick="window.location.reload()">Tekrar Dene</button>
+  <div class="logos">
+    <img src="/brand/hotels/royal-transparent.webp" alt="Merit Royal Hotel & Casino & Spa">
+    <img src="/brand/hotels/premium-transparent.webp" alt="Merit Royal Premium Hotel & Casino & Spa">
+    <img src="/brand/hotels/diamond-transparent.webp" alt="Merit Royal Diamond Hotel & Spa">
   </div>
+
+  <div class="divider"></div>
+
+  <h1 id="title">Kısa süreli güncelleme</h1>
+  <p id="msg">Sizlere daha iyi hizmet verebilmek adına, son teknolojik gelişmeler doğrultusunda sistemimizde kısa süreli bir güncelleme yapılmaktadır. Birkaç saniye sonra istediğiniz alana ulaşabileceksiniz.</p>
+  <p class="en" id="msg-en">To serve you better, we are applying a brief system update in line with the latest technology. You will reach the page you requested in a few seconds.</p>
+  <div class="thanks">Anlayışınız için teşekkür ederiz.</div>
+
+  <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+  <button class="btn" type="button" onclick="window.location.reload()">Şimdi yenile</button>
+
   <script>
-    window.addEventListener('online', function() {
-      var btn = document.querySelector('.btn');
-      if (btn) btn.textContent = 'Bağlantı sağlandı, yenileniyor...';
-      setTimeout(function() { window.location.reload(); }, 300);
-    });
+    (function () {
+      var title = document.getElementById('title');
+      var msg = document.getElementById('msg');
+      var msgEn = document.getElementById('msg-en');
+      var updateTitle = title.textContent;
+      var updateMsg = msg.textContent;
+      var updateMsgEn = msgEn.textContent;
+
+      // Cihazın interneti yoksa sorun sunucuda değildir: metni ona göre göster.
+      function render() {
+        if (navigator.onLine === false) {
+          title.textContent = 'İnternet bağlantısı yok';
+          msg.textContent = 'Bağlantınız geri geldiğinde sayfa kendiliğinden açılacaktır.';
+          msgEn.textContent = 'You appear to be offline. The page will open as soon as your connection is back.';
+        } else {
+          title.textContent = updateTitle;
+          msg.textContent = updateMsg;
+          msgEn.textContent = updateMsgEn;
+        }
+      }
+
+      // Uygulama geri gelince sayfayı yenile; 3 sn arayla /api/health sorulur. Yanıtı uygulama verdiyse
+      // (JSON; proxy'nin "no available server" yanıtı düz metindir) yenilenir; 503 olsa da sayfa açılabilir.
+      var reloading = false;
+      function check() {
+        if (reloading || navigator.onLine === false) return;
+        fetch('/api/health', { cache: 'no-store' })
+          .then(function (r) {
+            var fromApp = (r.headers.get('content-type') || '').indexOf('application/json') !== -1;
+            if (fromApp && !reloading) { reloading = true; window.location.reload(); }
+          })
+          .catch(function () {});
+      }
+
+      render();
+      window.addEventListener('online', function () { render(); check(); });
+      window.addEventListener('offline', render);
+      setInterval(check, 3000);
+      setTimeout(check, 1500);
+    })();
   </script>
 </body>
 </html>

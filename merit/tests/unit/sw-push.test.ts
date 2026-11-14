@@ -7,7 +7,9 @@ const source = readFileSync(path.resolve(__dirname, "../../public/sw.js"), "utf8
 
 type Handler = (event: Record<string, unknown>) => void;
 
-function load(opts: { clients?: Record<string, unknown>[]; keys?: string[] } = {}) {
+function load(
+  opts: { clients?: Record<string, unknown>[]; keys?: string[]; fetch?: () => Promise<Response>; offline?: Response } = {},
+) {
   const handlers: Record<string, Handler> = {};
   const showNotification = vi.fn(async () => {});
   const openWindow = vi.fn(async () => null);
@@ -31,9 +33,9 @@ function load(opts: { clients?: Record<string, unknown>[]; keys?: string[] } = {
       deleted.push(k);
       return true;
     },
-    open: async () => ({ addAll: async () => {}, match: async () => undefined, put: async () => {}, keys: async () => [] }),
+    open: async () => ({ addAll: async () => {}, match: async (req: unknown) => (req === "/offline.html" ? opts.offline : undefined), put: async () => {}, keys: async () => [] }),
   };
-  vm.runInNewContext(source, { self, caches, URL, Response, fetch: async () => new Response("ok"), console }, { filename: "sw.js" });
+  vm.runInNewContext(source, { self, caches, URL, Response, fetch: opts.fetch ?? (async () => new Response("ok")), console }, { filename: "sw.js" });
   return { handlers, showNotification, openWindow, deleted, self };
 }
 
@@ -132,10 +134,41 @@ describe("sw önbellek kuralları", () => {
   });
 
   it("activate eski merit önbelleklerini siler", async () => {
-    const sw = load({ keys: ["merit-static-v1", "merit-static-v3", "merit-media-v3", "baska"] });
+    const sw = load({ keys: ["merit-static-v1", "merit-static-v3", "merit-static-v4", "merit-media-v4", "baska"] });
     const waits: Promise<unknown>[] = [];
     sw.handlers.activate!({ waitUntil: (p: Promise<unknown>) => waits.push(p) });
     await Promise.all(waits);
-    expect(sw.deleted).toEqual(["merit-static-v1"]);
+    expect(sw.deleted).toEqual(["merit-static-v1", "merit-static-v3"]);
+  });
+
+  async function navigate(fetchImpl: () => Promise<Response>) {
+    const offline = new Response("offline-page");
+    const sw = load({ fetch: fetchImpl, offline });
+    let result: Promise<Response> | undefined;
+    sw.handlers.fetch!({
+      request: { method: "GET", mode: "navigate", url: "https://merit.example.test/kat" },
+      respondWith: (p: Promise<Response>) => {
+        result = p;
+      },
+    });
+    return { response: await result!, offline };
+  }
+
+  it("dağıtım sırasında proxy 502/503/504 dönerse logolu bekleme sayfası gösterilir", async () => {
+    for (const status of [502, 503, 504]) {
+      const { response, offline } = await navigate(async () => new Response("no available server", { status }));
+      expect(response).toBe(offline);
+    }
+  });
+
+  it("ağ hatasında bekleme sayfası, normal ve 500 yanıtta uygulamanın yanıtı döner", async () => {
+    const down = await navigate(async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    expect(down.response).toBe(down.offline);
+    for (const status of [200, 404, 500]) {
+      const { response } = await navigate(async () => new Response("app", { status }));
+      expect(response.status).toBe(status);
+    }
   });
 });

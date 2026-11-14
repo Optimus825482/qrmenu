@@ -7,7 +7,7 @@
  * - Dynamic API, SSE, and server actions go directly to network untouched (no authenticated data is cached).
  * - Web Push: `push` shows a notification (unless a focused window is open), `notificationclick` focuses/opens the url.
  */
-const VERSION = "3";
+const VERSION = "4";
 const STATIC_CACHE = `merit-static-v${VERSION}`;
 const MEDIA_CACHE = `merit-media-v${VERSION}`;
 const OFFLINE_URL = "/offline.html";
@@ -35,7 +35,11 @@ const PRECACHE_URLS = [
   "/icons/merit-512.png",
   "/icons/legacy/icon-192.png",
   "/icons/legacy/icon-512.png",
-  "/icons/legacy/apple-touch-icon-180.png"
+  "/icons/legacy/apple-touch-icon-180.png",
+  // Güncelleme (bekleme) sayfasındaki otel logoları: sunucu kapalıyken de görünmeleri için.
+  "/brand/hotels/royal-transparent.webp",
+  "/brand/hotels/premium-transparent.webp",
+  "/brand/hotels/diamond-transparent.webp"
 ];
 
 self.addEventListener("install", (event) => {
@@ -102,16 +106,25 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  // 1. Navigation requests (HTML document) -> Network First with Offline HTML fallback
+  // 1. Navigation requests (HTML document) -> Network First with Offline HTML fallback.
+  //    502/503/504 from the proxy (Coolify redeploy: container restarting) also get the branded page,
+  //    which polls /api/health and reloads by itself when the app is back.
   if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
-        try {
-          return await fetch(request);
-        } catch (error) {
+        const offlinePage = async () => {
           const cache = await caches.open(STATIC_CACHE);
           const cachedOffline = await cache.match(OFFLINE_URL);
-          return cachedOffline || new Response("Çevrimdışısınız", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+          return cachedOffline || new Response("Sistem güncelleniyor, lütfen birkaç saniye sonra yenileyin.", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+        };
+        try {
+          const response = await fetch(request);
+          if (response.status === 502 || response.status === 503 || response.status === 504) {
+            return offlinePage();
+          }
+          return response;
+        } catch {
+          return offlinePage();
         }
       })()
     );
