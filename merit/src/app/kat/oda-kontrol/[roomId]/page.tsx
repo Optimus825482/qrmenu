@@ -34,6 +34,8 @@ interface RoomCheckItem {
   setupQty: number;
   capacity: number;
   addedToday: number;
+  /** Part of `addedToday` left above the setup at the guest's request ("ilave talep"). */
+  extraToday: number;
   allowedLeft: number;
   poolRemaining: number;
   targetQty: number;
@@ -175,7 +177,7 @@ export default function OdaKontrolPage() {
         }),
         signal: AbortSignal.timeout(WRITE_TIMEOUT_MS),
       });
-      const json = (await res.json()) as { transactionId?: string; error?: string; message?: string };
+      const json = (await res.json()) as { transactionId?: string; extra?: number; error?: string; message?: string };
       if (!res.ok) {
         notify.error(json.error ?? json.message ?? "İkame kaydedilemedi.");
         // The refusal may mean the QR proof ran out or the room changed meanwhile: show the room as it is now.
@@ -187,8 +189,11 @@ export default function OdaKontrolPage() {
       if (typedNote) setNote("");
       await loadRoom(false);
       const txId = json.transactionId;
+      const extra = json.extra ?? 0;
       notify.success(
-        `+${n} eklendi (${item.productName})`,
+        extra > 0
+          ? `+${n} eklendi (${item.productName}) — ${extra} adet ilave talep olarak kaydedildi`
+          : `+${n} eklendi (${item.productName})`,
         txId
           ? {
               undo: async () => {
@@ -386,7 +391,9 @@ export default function OdaKontrolPage() {
 
             <p className="text-xs text-muted">
               Eksik ürünü yerine koyun ve adedine basın (+1, +2 …): kayıt hemen yapılır; yanlış basarsanız bildirimdeki
-              &quot;Geri al&quot; ile düzeltin. Hiçbir ürün eksik değilse alttaki &quot;Sarfiyat Yok&quot; düğmesini kullanın.
+              &quot;Geri al&quot; ile düzeltin. Misafir setup adedinden fazlasını isterse ürün adının yanındaki + ile daha
+              büyük bir adet düğmesi açın; setup üstü kısım ilave talep olarak kaydedilir. Hiçbir ürün eksik değilse
+              alttaki &quot;Sarfiyat Yok&quot; düğmesini kullanın.
             </p>
 
             {data.setups.map((setup, setupIdx) => (
@@ -412,6 +419,8 @@ export default function OdaKontrolPage() {
                     const buttonCap = Math.min(Math.max(item.setupQty, 1), 4);
                     const extraCount = Math.min(extraCounts[item.productId] ?? 0, EXTRA_BUTTON_MAX - buttonCap);
                     const quickNumbers = Array.from({ length: buttonCap + extraCount }, (_, i) => i + 1);
+                    // The + icon was pressed for this product: quantities above the setup may be recorded.
+                    const unlocked = (extraCounts[item.productId] ?? 0) > 0;
                     const limitReason =
                       item.allowedLeft === 0
                         ? "Günlük setup sınırı doldu — fazlası için ürün adının yanındaki + düğmesini kullanın"
@@ -460,6 +469,14 @@ export default function OdaKontrolPage() {
                             >
                               Bugün eklenen: {item.addedToday}
                             </span>
+                            {item.extraToday > 0 ? (
+                              <>
+                                <span>·</span>
+                                <span data-testid={`extra-today-${item.productName}`} className="font-semibold text-warn">
+                                  İlave talep: {item.extraToday}
+                                </span>
+                              </>
+                            ) : null}
                           </div>
                           {limitReason ? <p className="mt-1 text-xs font-medium text-warn">{limitReason}</p> : null}
                         </div>
@@ -467,8 +484,12 @@ export default function OdaKontrolPage() {
                         <div className="flex flex-wrap items-center gap-2" role="group" aria-label={`${item.productName} hızlı ikame`}>
                           {quickNumbers.map((n) => {
                             const outOfPool = item.poolRemaining < n;
-                            const isExtra = n > buttonCap;
-                            const overCap = !isExtra && item.allowedLeft < n;
+                            // Above what the setup still allows today: an "ilave talep". It needs the + icon pressed
+                            // for this product first (then +1 works too, once the setup is full); the server splits
+                            // the setup part from the extra part.
+                            const overSetup = n > item.allowedLeft;
+                            const overCap = overSetup && !unlocked;
+                            const isExtra = overSetup && unlocked;
                             const disabled = outOfPool || overCap || busy;
                             const reason = overCap
                               ? "Günlük setup sınırı doldu"
@@ -481,22 +502,26 @@ export default function OdaKontrolPage() {
                                 key={n}
                                 type="button"
                                 data-mutates=""
-                                aria-label={`${item.productName} +${n}`}
+                                aria-label={`${item.productName} +${n}${isExtra ? " (ilave talep)" : ""}`}
+                                data-extra={isExtra ? "" : undefined}
                                 aria-disabled={disabled ? "true" : undefined}
                                 aria-busy={saving ? "true" : undefined}
-                                title={reason}
+                                title={reason ?? (isExtra ? `${n - item.allowedLeft} adedi ilave talep olarak kaydedilir` : undefined)}
                                 onClick={() => {
                                   if (disabled) return;
                                   void handleQuickAdd(setup.setupId, item, n, isExtra);
                                 }}
                                 style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
-                                className={`inline-flex items-center justify-center rounded-xl border px-3 text-sm font-bold tabular-nums transition ${
+                                className={`inline-flex flex-col items-center justify-center rounded-xl border px-3 text-sm font-bold leading-tight tabular-nums transition ${
                                   disabled
                                     ? "cursor-not-allowed border-border bg-bg text-muted opacity-55"
-                                    : "border-accent/40 bg-accent/10 text-accent hover:bg-accent hover:text-white"
+                                    : isExtra
+                                      ? "border-warn/60 bg-warn/15 text-warn hover:bg-warn hover:text-white"
+                                      : "border-accent/40 bg-accent/10 text-accent hover:bg-accent hover:text-white"
                                 }`}
                               >
                                 +{n}
+                                {isExtra ? <span className="text-[10px] font-semibold uppercase tracking-wide">ilave</span> : null}
                               </button>
                             );
                           })}

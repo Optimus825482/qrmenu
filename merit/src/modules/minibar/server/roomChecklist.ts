@@ -145,3 +145,13 @@ export async function addedToday(
   return out;
 }
 
+/** Part of `addedToday` recorded as "ilave talep" (above the setup) per product, by everybody. */
+export async function extraToday(db: Db, roomId: string, day: string): Promise<Map<string, number>> {
+  const rows = await db.minibarTransactionItem.findMany({
+    where: { extraQty: { gt: 0 }, transaction: { roomId, type: "SETUP_KONTROL", occurredAt: dayRange(day) } },
+    select: { productId: true, extraQty: true },
+  });
+  const out = new Map<string, number>();
+  for (const r of rows) out.set(r.productId, (out.get(r.productId) ?? 0) + r.extraQty);
+  return out;
+}

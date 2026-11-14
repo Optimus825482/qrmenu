@@ -125,6 +125,8 @@ export interface RoomCheckHistoryItem {
     productName: string;
     consumed: number;
     added: number;
+    /** Part of `added` above the setup ("ilave talep"). */
+    extra?: number;
     groupName: string;
     maxTargetQty?: number;
     stockQty?: number;

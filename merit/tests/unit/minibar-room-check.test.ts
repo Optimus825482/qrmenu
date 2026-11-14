@@ -214,6 +214,52 @@ describe("addReplacement", () => {
     expect(logs.some((l) => JSON.stringify(l.after).includes('"overSetup":true'))).toBe(true);
   });
 
+  it("ilave talep: setup üstündeki kısım satırda extraQty olarak ayrılır; setup içi overSetup ilave sayılmaz", async () => {
+    const { w, kat } = await world({ stock: 100 });
+    const extraOf = async (id: string) =>
+      (await testDb.minibarTransactionItem.findFirstOrThrow({ where: { transactionId: id } })).extraQty;
+    // setup 4, nothing added yet: +3 with the flag stays inside the setup
+    const a = await rep(kat.ctx, w, 3, { overSetup: true });
+    expect(a.extra).toBe(0);
+    expect(await extraOf(a.transactionId)).toBe(0);
+    // 3 added, +4: one unit fills the setup, three are "ilave"
+    const rid = randomUUID();
+    const b = await rep(kat.ctx, w, 4, { overSetup: true, rid });
+    expect(b).toMatchObject({ added: 4, extra: 3 });
+    expect(await extraOf(b.transactionId)).toBe(3);
+    // the replay reports the same split and writes nothing
+    expect(await rep(kat.ctx, w, 4, { overSetup: true, rid })).toMatchObject({ replayed: true, added: 4, extra: 3 });
+    // already above the setup: every further unit is "ilave"
+    const c = await rep(kat.ctx, w, 2, { overSetup: true });
+    expect(await extraOf(c.transactionId)).toBe(2);
+
+    const view = await rc.getRoomCheckView(kat.ctx, w.room.id, T0);
+    const cola = view.setups.flatMap((s) => s.items).find((i) => i.productId === w.cola.id)!;
+    expect(cola).toMatchObject({ addedToday: 9, extraToday: 5, allowedLeft: 0 });
+    const mine = await rc.listMyTransactions(kat.ctx, {}, T0);
+    expect(mine.find((m) => m.id === b.transactionId)?.items[0]).toMatchObject({ added: 4, extra: 3 });
+    const logs = await testDb.auditLog.findMany({ where: { action: "MINIBAR_REPLACE", entityId: b.transactionId } });
+    expect(JSON.stringify(logs[0]?.after)).toContain('"extraQty":3');
+  });
+
+  it("ilave talep: kayıt düzeltilince ilave yeniden hesaplanır; ilavesiz kayıt setup üstüne çıkarılamaz", async () => {
+    const { w, kat } = await world({ stock: 100 });
+    const b = await rep(kat.ctx, w, 7, { overSetup: true }); // setup 4 -> 3 ilave
+    const item = () => testDb.minibarTransactionItem.findFirstOrThrow({ where: { transactionId: b.transactionId } });
+    expect((await item()).extraQty).toBe(3);
+    await rc.updateMyTransaction(kat.ctx, { transactionId: b.transactionId, updatedItems: [{ productId: w.cola.id, qty: 5 }] }, T0);
+    expect(await item()).toMatchObject({ added: 5, extraQty: 1 });
+    await rc.updateMyTransaction(kat.ctx, { transactionId: b.transactionId, updatedItems: [{ productId: w.cola.id, qty: 2 }] }, T0);
+    expect(await item()).toMatchObject({ added: 2, extraQty: 0 });
+    // no "ilave" on the line any more: the plain setup limit is back
+    expect(
+      await codeOf(
+        rc.updateMyTransaction(kat.ctx, { transactionId: b.transactionId, updatedItems: [{ productId: w.cola.id, qty: 5 }] }, T0),
+      ),
+    ).toBe("DAILY_LIMIT");
+    await expectConsistent(w.hotelId, w.cola.id, 100);
+  });
+
   it("iki personel eşzamanlı 5+5: kapasiteyi aşamaz (biri DAILY_LIMIT)", async () => {
     const { w, kat, kat2 } = await world({ cabinets: 2 });
     const results = await Promise.all([rep(kat.ctx, w, 5), rep(kat2.ctx, w, 5)].map(codeOf));

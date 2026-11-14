@@ -3,6 +3,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { defineReport, fetchCap, type ReportColumn, type ReportRow } from "@/modules/reporting/server/types";
 import { NICOSIA_DAY, capRows, inList, likePattern, money, optId } from "./common";
+import { EXTRA_QTY } from "./ilaveTalep";
 
 const GROUP_BY = ["urun", "oda", "kat", "personel", "gun", "otel"] as const;
 type GroupBy = (typeof GROUP_BY)[number];
@@ -64,6 +65,7 @@ type Row = {
   d2: string | null;
   consumed: number;
   added: number;
+  extra: number;
   mybar: number;
   amount: number;
   tx: number;
@@ -87,7 +89,7 @@ export const tuketim = defineReport({
   key: "tuketim",
   group: "MINIBAR",
   title: "Minibar Tüketim Raporu",
-  description: "Ürün, oda, kat, personel, gün veya otel bazında tüketim, eklenen, MyBar ve tutar",
+  description: "Ürün, oda, kat, personel, gün veya otel bazında tüketim, eklenen, ilave talep, MyBar ve tutar",
   moduleKey: "MINIBAR",
   screenCode: "MB-RAP",
   dateMode: "range",
@@ -136,6 +138,7 @@ export const tuketim = defineReport({
       SELECT h.name AS hotel, ${dim.select},
              COALESCE(SUM(i.consumed) FILTER (WHERE ${OWN}), 0)::int AS consumed,
              COALESCE(SUM(i.added) FILTER (WHERE ${OWN}), 0)::int AS added,
+             COALESCE(SUM(${EXTRA_QTY}) FILTER (WHERE ${OWN}), 0)::int AS extra,
              COALESCE(SUM(i.added) FILTER (WHERE t.type::text = 'MYBAR_KARSILAMA'), 0)::int AS mybar,
              COALESCE(SUM(i.consumed * COALESCE(i.sale_price, 0)) FILTER (WHERE ${OWN}), 0)::float8 AS amount,
              COUNT(DISTINCT t.id)::int AS tx,
@@ -158,6 +161,8 @@ export const tuketim = defineReport({
       ...dim.columns,
       { key: "consumed", title: "Tüketim", type: "int", total: "sum" },
       { key: "added", title: "Eklenen", type: "int", total: "sum" },
+      // Part of "Eklenen" left above the setup at the guest's request (detail: the İlave Talep report).
+      { key: "extra", title: "İlave", type: "int", total: "sum" },
       { key: "mybar", title: "MyBar", type: "int", total: "sum" },
       { key: "amount", title: "Tutar", type: "money", total: "sum" },
       { key: "tx", title: "İşlem", type: "int" },
@@ -169,6 +174,7 @@ export const tuketim = defineReport({
       ...(dim.columns[1] ? { d2: r.d2 } : {}),
       consumed: r.consumed,
       added: r.added,
+      extra: r.extra,
       mybar: r.mybar,
       amount: money(r.amount),
       tx: r.tx,

@@ -39,7 +39,7 @@ type RoomGroup = {
   /** Every record of the group, newest first (as the server sends them). */
   records: MyRecord[];
   /** Products added to the room that day, summed over the records. */
-  products: { productId: string; productName: string; added: number }[];
+  products: { productId: string; productName: string; added: number; extra: number }[];
   /** Records the group cancel removes (today) or asks to remove (past days). */
   cancellable: MyRecord[];
 };
@@ -71,8 +71,12 @@ function groupByRoomDay(items: MyRecord[]): RoomGroup[] {
     if (canDeleteRecord(tx)) g.cancellable.push(tx);
     for (const it of tx.items) {
       const row = g.products.find((p) => p.productId === it.productId);
-      if (row) row.added += it.added;
-      else g.products.push({ productId: it.productId, productName: it.productName, added: it.added });
+      if (row) {
+        row.added += it.added;
+        row.extra += it.extra ?? 0;
+      } else {
+        g.products.push({ productId: it.productId, productName: it.productName, added: it.added, extra: it.extra ?? 0 });
+      }
     }
   }
   return [...map.values()]
@@ -420,6 +424,7 @@ export default function KatIslemlerimPage() {
                       {g.products.map((p) => (
                         <span key={p.productId} className="rounded-lg border border-border bg-bg px-2.5 py-1 text-xs text-text">
                           {p.productName}: <strong className="text-ok">+{p.added}</strong>
+                          {p.extra > 0 ? <span className="ml-1 font-semibold text-warn">({p.extra} ilave talep)</span> : null}
                         </span>
                       ))}
                     </div>
@@ -465,6 +470,7 @@ export default function KatIslemlerimPage() {
                               {tx.items.map((it) => (
                                 <span key={it.productId}>
                                   {it.productName} <strong className="text-ok">+{it.added}</strong>
+                                  {(it.extra ?? 0) > 0 ? <span className="ml-1 font-semibold text-warn">({it.extra} ilave)</span> : null}
                                 </span>
                               ))}
                               {tx.note ? <span className="text-muted">Not: {tx.note}</span> : null}

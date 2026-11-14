@@ -16,7 +16,7 @@ import { autoCompleteDnd, reopenAutoCompletedDnd } from "./dnd";
 import { lockRow } from "./minibarCommon";
 import type { CorrectionRequestItem, RoomCheckHistoryItem } from "./minibarTypes";
 import { isStockManager, lockStocks, restoreStock, takeManyFromPool } from "./pool";
-import { addedToday, type Checklist, capacityByProduct, loadRoomChecklist } from "./roomChecklist";
+import { addedToday, type Checklist, capacityByProduct, extraToday, loadRoomChecklist } from "./roomChecklist";
 import { assertRoomVerified, hasRoomProof } from "./roomVerification";
 import { completeOpenItemsForRoom, reopenIfUncovered } from "./tasks";
 
@@ -184,6 +184,8 @@ export type CheckItemView = {
   /** Daily replacement capacity of the product in this room (setup x cabinet copies, all setups). */
   capacity: number;
   addedToday: number;
+  /** Part of `addedToday` left above the setup at the guest's request ("ilave talep"). */
+  extraToday: number;
   allowedLeft: number;
   poolRemaining: number;
   buttons: CheckButton[];
@@ -270,6 +272,7 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
   }
   const caps = checklist ? capacityByProduct(checklist) : new Map<string, number>();
   const done = await addedToday(prisma, roomId, day);
+  const extras = await extraToday(prisma, roomId, day);
   const pool = await poolRemainingOf(prisma, hotelId, [...caps.keys()]);
 
   const itemView = (i: {
@@ -291,6 +294,7 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
       setupQty: i.setupQty,
       capacity,
       addedToday: added,
+      extraToday: extras.get(i.productId) ?? 0,
       allowedLeft,
       poolRemaining,
       buttons: Array.from({ length: Math.min(i.setupQty, QTY_BUTTON_MAX) }, (_, k) => ({
@@ -432,6 +436,14 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
 /** Most units a product may get above its daily setup capacity in one room per business day (over-setup buttons). */
 export const OVER_SETUP_DAILY_MAX = 20;
 
+/**
+ * "İlave talep" part of a line: how many of its `qty` units land above the daily setup capacity, given what the
+ * room already got today (`added`, by everybody). Setup 2, added 0, qty 5 -> 3; setup 2, added 3, qty 1 -> 1.
+ */
+export function extraPart(capacity: number, added: number, qty: number): number {
+  return Math.max(0, added + qty - capacity) - Math.max(0, added - capacity);
+}
+
 const replacementSchema = z
   .strictObject({
     roomId: id,
@@ -441,7 +453,7 @@ const replacementSchema = z
           productId: id,
           setupId: id,
           qty: z.number().int().min(1, "Adet en az 1 olmalı").max(999),
-          /** Staff deliberately leaves more than the setup amount: skips the daily setup limit (pool stock still applies). */
+          /** Staff deliberately leaves more than the setup amount: the part above the setup is recorded as "ilave talep". */
           overSetup: z.boolean().optional(),
         }),
       )
@@ -463,6 +475,8 @@ const replacementSchema = z
 export type ReplacementResult = {
   transactionId: string;
   added: number;
+  /** Part of `added` recorded as "ilave talep" (above the setup). */
+  extra: number;
   poolRemaining: Record<string, number>;
   taskCompleted: boolean;
   dndCompleted: boolean;
@@ -477,7 +491,7 @@ async function replayOf(
     hotelId: string;
     roomId: string;
     occurredAt: Date;
-    items: { productId: string; added: number }[];
+    items: { productId: string; added: number; extraQty: number }[];
   },
 ): Promise<ReplacementResult> {
   const date = businessDay(businessDate(existing.occurredAt));
@@ -490,6 +504,7 @@ async function replayOf(
   return {
     transactionId: existing.id,
     added: existing.items.reduce((a, i) => a + i.added, 0),
+    extra: existing.items.reduce((a, i) => a + i.extraQty, 0),
     poolRemaining: await poolRemainingOf(
       tx,
       existing.hotelId,
@@ -510,7 +525,7 @@ async function findReplay(tx: Tx, ctx: Ctx, roomId: string, clientRequestId: str
       roomId: true,
       userId: true,
       occurredAt: true,
-      items: { select: { productId: true, added: true } },
+      items: { select: { productId: true, added: true, extraQty: true } },
     },
   });
   if (!existing) return null;
@@ -560,28 +575,27 @@ export async function bookReplacementTx(
         fieldErrors: { productId: [it.productId] },
       });
     }
-    return { ...it, setupQty: setup.items.find((i) => i.productId === it.productId)!.setupQty };
-  });
-  for (const l of lines) {
-    const capacity = caps.get(l.productId) ?? 0;
-    const added = done.get(l.productId) ?? 0;
-    if (l.overSetup) {
-      // Over-setup has a hard daily ceiling on the server too (pool stock is still checked in takeManyFromPool).
-      if (added + l.qty > capacity + OVER_SETUP_DAILY_MAX) {
+    const capacity = caps.get(it.productId) ?? 0;
+    const added = done.get(it.productId) ?? 0;
+    const extraQty = extraPart(capacity, added, it.qty);
+    if (extraQty > 0) {
+      // Above the setup: only as a deliberate "ilave talep" (the + button), and under a hard daily ceiling.
+      // Pool stock is still checked in takeManyFromPool.
+      if (!it.overSetup) {
+        throw new DomainError(
+          "DAILY_LIMIT",
+          `Setup miktarı aşılamaz: setup ${capacity}, bugün eklenen ${added}, kalan ${Math.max(0, capacity - added)}`,
+        );
+      }
+      if (added + it.qty > capacity + OVER_SETUP_DAILY_MAX) {
         throw new DomainError(
           "DAILY_LIMIT",
           `Setup üstü günlük sınır aşılamaz: setup ${capacity} + en fazla ${OVER_SETUP_DAILY_MAX}, bugün eklenen ${added}`,
         );
       }
-      continue;
     }
-    if (added + l.qty > capacity) {
-      throw new DomainError(
-        "DAILY_LIMIT",
-        `Setup miktarı aşılamaz: setup ${capacity}, bugün eklenen ${added}, kalan ${Math.max(0, capacity - added)}`,
-      );
-    }
-  }
+    return { ...it, setupQty: setup.items.find((i) => i.productId === it.productId)!.setupQty, extraQty };
+  });
 
   const prices = await tx.product.findMany({
     where: { id: { in: lines.map((l) => l.productId) } },
@@ -608,6 +622,7 @@ export async function bookReplacementTx(
           endStock: l.setupQty,
           consumed: l.qty,
           added: l.qty,
+          extraQty: l.extraQty,
           purchasePrice: priceOf.get(l.productId)?.purchasePrice ?? null,
           salePrice: priceOf.get(l.productId)?.salePrice ?? null,
         })),
@@ -661,7 +676,12 @@ export async function bookReplacementTx(
     after: {
       roomId: room.id,
       roomNumber: room.number,
-      items: lines.map((l) => ({ productId: l.productId, setupId: l.setupId, qty: l.qty, ...(l.overSetup ? { overSetup: true } : {}) })),
+      items: lines.map((l) => ({
+        productId: l.productId,
+        setupId: l.setupId,
+        qty: l.qty,
+        ...(l.extraQty > 0 ? { overSetup: true, extraQty: l.extraQty } : {}),
+      })),
       clientRequestId,
       ...(p.manualRequestId ? { manualRequestId: p.manualRequestId } : {}),
     },
@@ -677,6 +697,7 @@ export async function bookReplacementTx(
   return {
     transactionId: created.id,
     added: total,
+    extra: lines.reduce((a, l) => a + l.extraQty, 0),
     poolRemaining: await poolRemainingOf(
       tx,
       room.hotelId,
@@ -1091,13 +1112,17 @@ export async function updateTransactionTx(tx: Tx, actor: Actor, input: UpdateInp
       throw new DomainError("VALIDATION", "Ürün bu setup'ta bulunamadı", { fieldErrors: { productId: [u.productId] } });
     }
     const added = others.get(u.productId) ?? 0;
-    if (added + u.qty > capacity) {
+    // A line that already holds an "ilave talep" keeps its right to stay above the setup (same daily ceiling).
+    const ceiling = (old.get(u.productId)?.extraQty ?? 0) > 0 ? capacity + OVER_SETUP_DAILY_MAX : capacity;
+    if (added + u.qty > ceiling) {
       throw new DomainError(
         "DAILY_LIMIT",
         `Setup miktarı aşılamaz: setup ${capacity}, bugün eklenen ${added}, kalan ${Math.max(0, capacity - added)}`,
       );
     }
   }
+  const extraOf = (productId: string, qty: number) =>
+    extraPart(caps.get(productId) ?? 0, others.get(productId) ?? 0, qty);
 
   const back: { productId: string; qty: number }[] = [];
   const take: { productId: string; qty: number }[] = [];
@@ -1152,6 +1177,7 @@ export async function updateTransactionTx(tx: Tx, actor: Actor, input: UpdateInp
           data: {
             added: u.qty,
             consumed: u.qty,
+            extraQty: extraOf(u.productId, u.qty),
             startStock: Math.max(0, before.setupQty - u.qty),
             endStock: before.setupQty,
           },
@@ -1335,6 +1361,7 @@ export async function listMyTransactions(
       productName: i.product.name,
       consumed: i.consumed,
       added: i.added,
+      extra: i.extraQty,
       groupName: i.product.group?.name ?? "Genel",
       stockQty: stockMap.get(`${t.hotelId}:${i.productId}`) ?? 0,
       maxTargetQty: i.setupQty || 10,

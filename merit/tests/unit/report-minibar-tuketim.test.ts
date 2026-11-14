@@ -45,14 +45,14 @@ describe("tuketim", () => {
   it("ürün bazında tüketim/eklenen/MyBar/tutar ve özet; fiyatsız satır sayılır", async () => {
     await basicFixture();
     const r = await run("tuketim");
-    expect(titles(r)).toEqual(["Ürün grubu", "Ürün", "Tüketim", "Eklenen", "MyBar", "Tutar", "İşlem", "Oda"]);
+    expect(titles(r)).toEqual(["Ürün grubu", "Ürün", "Tüketim", "Eklenen", "İlave", "MyBar", "Tutar", "İşlem", "Oda"]);
     expect(r.rows).toHaveLength(1);
     expect(r.rows[0]).toMatchObject({ d1: "Rapor", d2: "Kola", consumed: 3, added: 3, mybar: 5, amount: 7, tx: 3, rooms: 3 });
     expect(sum(r, "Toplam tüketim")).toBe(3);
     expect(sum(r, "Toplam tutar")).toBe(7);
     expect(sum(r, "İşlem yapılan oda")).toBe(3);
     expect(sum(r, "Fiyatsız satır")).toBe(1);
-    expect(r.columns.filter((c) => c.total === "sum").map((c) => c.title)).toEqual(["Tüketim", "Eklenen", "MyBar", "Tutar"]);
+    expect(r.columns.filter((c) => c.total === "sum").map((c) => c.title)).toEqual(["Tüketim", "Eklenen", "İlave", "MyBar", "Tutar"]);
     expect(r.truncated).toBe(false);
   });
 
@@ -65,7 +65,7 @@ describe("tuketim", () => {
   it("kat/oda/personel/gün/otel sütun kümeleri", async () => {
     await basicFixture();
     const cols = async (groupBy: string, hotels = ["ROYAL"]) =>
-      titles(await run("tuketim", { groupBy }, range, hotels)).slice(0, -6);
+      titles(await run("tuketim", { groupBy }, range, hotels)).slice(0, -7);
     expect(await cols("kat")).toEqual(["Kat"]);
     expect(await cols("oda")).toEqual(["Kat", "Oda"]);
     expect(await cols("personel")).toEqual(["Personel"]);

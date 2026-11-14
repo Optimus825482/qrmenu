@@ -79,6 +79,38 @@ test("1. kat sorumlusu oda kontrolünde +2 tek dokunuşla ekler ve Geri al ile g
   await page.context().close();
 });
 
+test("1b. setup üstü adet: + ile açılan düğme ilave talep olarak kaydeder, Geri al ile geri alınır", async ({ browser }) => {
+  const page = await newContextPage(browser);
+  await login(page, "kat.mr");
+  await expect(page).toHaveURL(/\/(kat|erisimim)/);
+  if (/erisimim/.test(page.url())) {
+    await page.getByRole("button", { name: "Anladım" }).click();
+  }
+  await expect(page).toHaveURL(/\/kat$/);
+
+  await page.goto(`/kat/oda-kontrol/${seedIds.room101Id}`);
+  await expect(page.getByTestId("product-row-Su")).toBeVisible();
+  await expect(page.getByTestId("extra-today-Su")).toHaveCount(0);
+
+  // Each press of the + icon opens one more numbered button; the first one above the setup is an "ilave" button.
+  const extraButtons = page.getByRole("button", { name: /^Su \+\d+ \(ilave talep\)$/ });
+  for (let i = 0; i < 20 && (await extraButtons.count()) === 0; i++) {
+    await page.getByTestId("extra-plus-Su").click();
+  }
+  await expect(extraButtons.first()).toContainText("ilave");
+  await extraButtons.first().click();
+
+  const toast = page.getByRole("status").filter({ hasText: "1 adet ilave talep olarak kaydedildi" });
+  await expect(toast).toBeVisible();
+  await expect(page.getByTestId("extra-today-Su")).toContainText("İlave talep: 1");
+
+  await toast.getByRole("button", { name: "Geri al" }).click();
+  await expect(page.getByTestId("extra-today-Su")).toHaveCount(0);
+  await expect(page.getByTestId("added-today-Su")).toContainText("Bugün eklenen: 0");
+
+  await page.context().close();
+});
+
 test("2. misafir MyBar talebi gönderdiğinde kat sorumlusunda 1 s içinde PersistentMybarModal açılır, Gördüm ile kapanır", async ({
   browser,
 }) => {

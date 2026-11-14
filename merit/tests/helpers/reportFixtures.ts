@@ -51,6 +51,12 @@ type ConsumptionOpts = {
   salePrice?: number | null;
   type?: MinibarTxType;
   at?: Date;
+  /** Part of `added` above the setup ("ilave talep"). */
+  extraQty?: number;
+  /** `ekstra_miktar` of a record imported from the old system. */
+  legacyExtra?: number;
+  setupQty?: number;
+  note?: string;
 };
 
 /** One minibar transaction with one item (`consumed` / `added`). */
@@ -68,12 +74,16 @@ export async function addConsumption(opts: ConsumptionOpts) {
       userId: u.id,
       type: opts.type ?? "SETUP_KONTROL",
       occurredAt: opts.at ?? new Date(),
+      note: opts.note,
       items: {
         create: [
           {
             productId: p.id,
             consumed: opts.consumed,
             added: opts.added,
+            extraQty: opts.extraQty ?? 0,
+            legacyExtra: opts.legacyExtra,
+            setupQty: opts.setupQty ?? 0,
             salePrice: opts.salePrice === undefined ? 3.5 : opts.salePrice,
           },
         ],
