@@ -45,7 +45,10 @@ for (const viewport of RADAR_VIEWPORTS) {
     const soundBtn = banner.getByRole("button", { name: "Ses" });
     await expect(soundBtn).toBeVisible();
 
-    // Click "Tam ekran başlat" -> wakeLock.request is called once
+    // The page asks for the lock on mount; "Tam ekran başlat" asks once more
+    await page.evaluate(() => {
+      (window as unknown as { __wakeLockCalls: number }).__wakeLockCalls = 0;
+    });
     await banner.getByRole("button", { name: "Tam ekran başlat" }).click();
     const calls = await page.evaluate(() => (window as unknown as { __wakeLockCalls: number }).__wakeLockCalls);
     expect(calls).toBe(1);

@@ -58,6 +58,8 @@ export type ToolbarProps = {
    */
   demo?: { enabled?: boolean; running: boolean; disabled: boolean; hint?: string; focusLabel?: string; onStart(): void; onStop(): void };
   sound?: { enabled: boolean; onToggle(): void };
+  /** The wall header already shows the connection: leave it out here (a mode text is still shown). */
+  hideConnection?: boolean;
 };
 
 export function Toolbar(p: ToolbarProps) {
@@ -168,10 +170,12 @@ export function Toolbar(p: ToolbarProps) {
           ) : null}
         </>
       ) : null}
-      <span className="rd-conn" data-state={p.connection} role="status">
-        <Icon name={p.connection === "offline" ? "wifi-off" : "wifi"} size={14} />
-        {p.modeText ?? CONNECTION_TEXT[p.connection]}
-      </span>
+      {p.hideConnection && !p.modeText ? null : (
+        <span className="rd-conn" data-state={p.connection} role="status">
+          <Icon name={p.connection === "offline" ? "wifi-off" : "wifi"} size={14} />
+          {p.modeText ?? CONNECTION_TEXT[p.connection]}
+        </span>
+      )}
     </div>
   );
 }

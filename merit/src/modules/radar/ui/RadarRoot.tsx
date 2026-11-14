@@ -879,10 +879,9 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
               onToggle: toggleMotion,
               hint: all && view === "genel" ? "Animasyon pano görünümlerinde çalışır (Oda Servisi, MyBar)" : undefined,
             }}
-            sound={{
-              enabled: soundEnabled,
-              onToggle: toggleSound,
-            }}
+            // The wall header carries the sound switch and the connection: not twice on one screen.
+            sound={wall ? undefined : { enabled: soundEnabled, onToggle: toggleSound }}
+            hideConnection={wall}
             demo={{
               enabled: demoModeActive,
               running: demo.running,
@@ -900,7 +899,9 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
                 ? `${demo.running ? "Demo" : "Tekrar"} ${clock(state.replay.virtualMs)}`
                 : state.mode === "scrub" && state.cursor
                   ? `Geçmiş ${clock(state.cursor)}`
-                  : CONNECTION_TEXT[connection]
+                  : wall
+                    ? undefined
+                    : CONNECTION_TEXT[connection]
             }
           />
           {!wall && loaded ? <PathBar idPrefix={idPrefix} levels={pathLevels} place={pathPlace} /> : null}

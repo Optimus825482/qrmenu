@@ -1474,10 +1474,23 @@ button.rd-alert-chip {
   cursor: not-allowed;
 }
 
+/* Tablets and small laptops: the event feed beside the view would take a third of the width (and leave the
+   whole-complex overview one hotel per row), so it becomes a short strip under the view. The wall's own
+   width rule is more specific, hence the second selector. */
+@media (max-width: 1100px) {
+  .rd-workspace { flex-direction: column; }
+  .rd-ticker,
+  .rd-ticker[data-mode="wall"] {
+    width: auto;
+    max-width: none;
+    max-height: 170px;
+    border-left: 0;
+    border-top: 1px solid var(--app-line);
+  }
+}
+
 /* Phone-sized windows: the side panels go under the main view instead of squeezing it to nothing. */
 @media (max-width: 759px) {
-  .rd-workspace { flex-direction: column; }
-  .rd-ticker { width: auto; max-width: none; max-height: 40%; border-left: 0; border-top: 1px solid var(--app-line); }
   .rd-floor, .rd-staff-layout, .rd-tables[data-has-detail="true"] { grid-template-columns: minmax(0, 1fr); }
   .rd-overview { grid-template-columns: repeat(auto-fit, minmax(min(270px, 100%), 1fr)); }
   .rd-menu-list { max-width: calc(100vw - 16px); }
@@ -1488,7 +1501,7 @@ button.rd-alert-chip {
   .rd-root { overflow-y: auto; overflow-x: clip; }
   .rd-workspace { flex: none; }
   .rd-main { flex: none; overflow: visible; }
-  .rd-ticker { max-height: 240px; }
+  .rd-ticker, .rd-ticker[data-mode="wall"] { max-height: 240px; }
   .rd-tabs { flex-wrap: wrap; }
   .rd-timeline { flex-wrap: wrap; }
   .rd-timeline-controls { flex-wrap: wrap; flex: 1 1 100%; min-width: 0; }

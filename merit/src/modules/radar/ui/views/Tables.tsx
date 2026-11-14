@@ -174,7 +174,11 @@ export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp, selecte
   const outlets: Outlet[] = view.layers.order?.outlets ?? [];
   if (outlets.length === 0) return <EmptyState title="Bu otelde aktif QR Menü veya Masa bulunamadı." />;
 
-  const outlet = outlets.find((o) => o.outletId === outletId) ?? outlets[0];
+  // Nothing picked: the first outlet that has tables, so a wall never opens on an empty plan.
+  const outlet =
+    outlets.find((o) => o.outletId === outletId) ??
+    outlets.find((o) => o.areas.some((a) => a.tables.length > 0)) ??
+    outlets[0];
   const tables = outlet.areas.flatMap((a) => a.tables);
   const sel = selected ? tables.find((t) => t.tableId === selected) : undefined;
 
