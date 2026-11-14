@@ -19,7 +19,10 @@ function stamp(iso: string): string {
   });
 }
 
-/** Taskbar bell: unread badge, last 20, same actions as the mobile Bildirimler tab. */
+/**
+ * Taskbar bell: unread badge and the unread ones of the last 20. A notification leaves the list once it is read
+ * (opened, or "Tümünü okundu işaretle"); the mobile Bildirimler tab keeps the read ones as history.
+ */
 export function NotificationBell() {
   const listeners = useRef(new Set<(event: MeritEvent) => void>());
   useSse((event) => {
@@ -34,6 +37,7 @@ export function NotificationBell() {
   }, []);
 
   const { items, error, unread, markRead, markAll } = useNotifications(subscribe);
+  const pending = items?.filter((item) => !item.isRead) ?? null;
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
@@ -89,9 +93,9 @@ export function NotificationBell() {
               {error}
             </p>
           ) : null}
-          {items !== null && items.length === 0 ? <p className="xp-defs-note">Bildirim yok</p> : null}
+          {pending !== null && pending.length === 0 ? <p className="xp-defs-note">Okunmamış bildirim yok</p> : null}
           <ul className="xp-bell-list">
-            {items?.map((item) => (
+            {pending?.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
@@ -99,7 +103,7 @@ export function NotificationBell() {
                   data-read={item.isRead}
                   title={notificationTarget(item) ? "İlgili ekranı aç" : undefined}
                   onClick={() => {
-                    if (!item.isRead) void markRead(item.id);
+                    void markRead(item.id);
                     const target = notificationTarget(item);
                     if (!target) return;
                     // null = the user may not open that screen (or the window limit is reached): stay on the list.
