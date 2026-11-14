@@ -79,7 +79,19 @@ function briefingParts(briefing: CredentialsBriefing): { intro: string[]; blocks
   };
 }
 
-export const CREDENTIALS_SUBJECT = "F&B Personnel System giriş bilgileriniz";
+/** Public page that shows a value and copies it with one tap (`src/app/kopyala`). */
+export const COPY_PAGE_PATH = "/kopyala";
+
+/**
+ * Link behind the "Kopyala" button of the mail. Mail clients run no script, so a button cannot reach the
+ * clipboard itself: it opens the copy page. The value travels in the fragment (`#`), which the browser never
+ * sends to the server, so it lands in no access log.
+ */
+export function copyLink(siteUrl: string, value: string): string {
+  return `${siteUrl}${COPY_PAGE_PATH}#${encodeURIComponent(value)}`;
+}
+
+export const CREDENTIALS_SUBJECT ="F&B Personnel System giriş bilgileriniz";
 
 // Shared by the text and HTML bodies so the two never drift apart.
 const ABOUT_TEXT =
@@ -137,7 +149,9 @@ export function composeCredentialsMail(input: CredentialsMailInput): {
     "",
     `Adres: ${siteUrl}`,
     `Kullanıcı adı: ${username}`,
-    ...(temporaryPassword ? [`Geçici şifre: ${temporaryPassword}`] : []),
+    ...(temporaryPassword
+      ? [`Geçici şifre: ${temporaryPassword}`, `Şifreyi kopyalamak için: ${copyLink(siteUrl, temporaryPassword)}`]
+      : []),
     "",
     passwordNote,
     "Bu bilgileri kimseyle paylaşmayın.",
@@ -159,7 +173,10 @@ export function composeCredentialsMail(input: CredentialsMailInput): {
         <p style="font-size: 13px;">${esc(NOTIFICATION_TEXT)}</p>
         <p>Adres: <a href="${esc(siteUrl)}">${esc(siteUrl)}</a><br>
         Kullanıcı adı: <strong>${esc(username)}</strong>${
-          temporaryPassword ? `<br>Geçici şifre: <strong style="font-family: monospace; font-size: 16px;">${esc(temporaryPassword)}</strong>` : ""
+          temporaryPassword
+            ? `<br>Geçici şifre: <strong style="font-family: monospace; font-size: 16px; user-select: all; -webkit-user-select: all;">${esc(temporaryPassword)}</strong>&nbsp;
+          <a href="${esc(copyLink(siteUrl, temporaryPassword))}" style="display: inline-block; margin-left: 6px; padding: 4px 12px; background: #0f172a; color: #ffffff; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; vertical-align: middle;">Kopyala</a>`
+            : ""
         }</p>
         <p style="font-size: 13px;">${esc(passwordNote)}</p>
         <p style="font-size: 13px;">Bu bilgileri kimseyle paylaşmayın.</p>${briefingHtml}

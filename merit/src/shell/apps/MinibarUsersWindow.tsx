@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import {
   createMinibarWaiterAction,
   listMinibarUsersAction,
+  mailMinibarUserCredentialsAction,
   minibarUserOptionsAction,
   resetMinibarUserPasswordAction,
   setMinibarUserActiveAction,
@@ -179,6 +180,35 @@ export function MinibarUsersWindow({ setStatus }: AppProps) {
     list.reload();
   };
 
+  const [mailingId, setMailingId] = useState<string | null>(null);
+  const mailCredentials = async (row: UserRow) => {
+    if (!row.email || mailingId) return;
+    const yes = await confirm({
+      title: "Giriş bilgilerini gönder",
+      message: row.mustChangePassword
+        ? `“${row.username}” için yeni bir geçici şifre üretilip ${row.email} adresine gönderilsin mi? Açık oturumları kapatılır.`
+        : `“${row.username}” kullanıcı adı ve giriş adresi ${row.email} adresine gönderilsin mi? Kendi belirlediği şifresi değişmez.`,
+      confirmLabel: "Gönder",
+    });
+    if (!yes) return;
+    setMailingId(row.id);
+    try {
+      const result = await mailMinibarUserCredentialsAction({ id: row.id });
+      if (!result.ok) {
+        notify.error(result.error.message, { title: "E-posta gönderilemedi" });
+        return;
+      }
+      notify.success(
+        result.data.newTemporaryPassword
+          ? `Geçici şifre ${result.data.to} adresine gönderildi.`
+          : `Giriş bilgileri ${result.data.to} adresine gönderildi.`,
+      );
+      list.reload();
+    } finally {
+      setMailingId(null);
+    }
+  };
+
   const copyCredentials = async () => {
     if (!credentials) return;
     try {
@@ -276,6 +306,9 @@ export function MinibarUsersWindow({ setStatus }: AppProps) {
           { label: "Düzenle", onSelect: () => edit(row) },
           { label: "Şifre sıfırla", onSelect: () => void resetPassword(row) },
           { label: row.isActive ? "Pasife al" : "Aktif et", onSelect: () => void toggleActive(row) },
+          ...(row.email && row.isActive
+            ? [{ label: "Giriş bilgilerini e-posta ile gönder", onSelect: () => void mailCredentials(row) }]
+            : []),
         ]}
         emptyText="Kayıtlı minibar kullanıcısı yok"
         toolbar={
@@ -301,6 +334,21 @@ export function MinibarUsersWindow({ setStatus }: AppProps) {
               onClick={() => selected && void toggleActive(selected)}
             >
               {selected && !selected.isActive ? "Aktif et" : "Pasife al"}
+            </button>
+            <button
+              type="button"
+              className="xp-button"
+              disabled={!selected || !selected.email || !selected.isActive || mailingId !== null}
+              title={
+                selected && !selected.email
+                  ? "Kayıtlı e-posta adresi yok"
+                  : selected && !selected.isActive
+                    ? "Kullanıcı pasif"
+                    : undefined
+              }
+              onClick={() => selected && void mailCredentials(selected)}
+            >
+              {mailingId ? "Gönderiliyor..." : "E-posta ile gönder"}
             </button>
             <button type="button" className="xp-button" onClick={list.reload}>
               Yenile

@@ -9,6 +9,7 @@ import {
   createMinibarWaiter,
   type CreateMinibarWaiterInput,
   listMinibarUsers,
+  mailMinibarUserCredentials,
   type MinibarUserCredentials,
   minibarUserOptions,
   resetMinibarUserPassword,
@@ -45,6 +46,12 @@ export async function updateMinibarUserAction(raw: unknown): Promise<Result<User
 
 export async function resetMinibarUserPasswordAction(raw: unknown): Promise<Result<{ temporaryPassword: string }>> {
   return safeAction(z.object({ id }), async (input) => resetMinibarUserPassword(await requireUser(), input.id))(raw);
+}
+
+export async function mailMinibarUserCredentialsAction(
+  raw: unknown,
+): Promise<Result<{ to: string; newTemporaryPassword: boolean }>> {
+  return safeAction(z.object({ id }), async (input) => mailMinibarUserCredentials(await requireUser(), input.id))(raw);
 }
 
 export async function setMinibarUserActiveAction(raw: unknown): Promise<Result<UserRow>> {

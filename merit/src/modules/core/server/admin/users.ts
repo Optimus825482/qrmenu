@@ -824,18 +824,18 @@ export const sendCredentialsSchema = z.object({ ids: userIdsSchema });
 export type SendCredentialsInput = z.input<typeof sendCredentialsSchema>;
 export type SendCredentialsResult = { sent: number; failed: { id: string; fullName: string; reason: string }[] };
 
-const MAIL_NOT_CONFIGURED =
+export const MAIL_NOT_CONFIGURED =
   "E-posta gönderimi yapılandırılmamış; önce SMTP ayarlarını tamamlayın. Hiçbir şifre değiştirilmedi.";
-const MAIL_SEND_FAILED = "E-posta gönderilemedi; şifre değiştirilmedi";
+export const MAIL_SEND_FAILED = "E-posta gönderilemedi; şifre değiştirilmedi";
 /** The SMTP call runs inside the transaction (see `mailCredentials`), so it gets more than the 5 s default. */
-const CREDENTIALS_TX_TIMEOUT_MS = 60_000;
+export const CREDENTIALS_TX_TIMEOUT_MS = 60_000;
 
 /**
  * The "how to use the system" part of the credentials mail: the screens this user may view in their hotel
  * (role matrix, hotel modules and personal exceptions, through `accessSummary`). The sign-in details matter
  * more than the briefing, so a summary that cannot be built leaves the briefing out instead of failing the mail.
  */
-async function credentialsBriefing(roleId: string, userId: string, hotelId: string): Promise<CredentialsBriefing | undefined> {
+export async function credentialsBriefing(roleId: string, userId: string, hotelId: string): Promise<CredentialsBriefing | undefined> {
   try {
     const summary = await accessSummary({ roleId, hotelId, userId });
     const screens = summary.modules.flatMap((m) => m.screens);

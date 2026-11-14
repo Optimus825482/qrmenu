@@ -23,7 +23,17 @@ import {
   userJobTitleIdFor,
   type UserRow,
 } from "@/modules/core/server/admin/users";
+import { composeCredentialsMail, generateTemporaryPassword } from "@/modules/core/server/admin/credentialsMail";
+import {
+  CREDENTIALS_TX_TIMEOUT_MS,
+  credentialsBriefing,
+  MAIL_NOT_CONFIGURED,
+  MAIL_SEND_FAILED,
+} from "@/modules/core/server/admin/users";
 import { audit } from "@/modules/core/server/audit";
+import { env } from "@/lib/env";
+import { isMailConfigured, sendMail } from "@/lib/mailer";
+import { maskEmail } from "@/modules/reporting/server/mail/transport";
 import { closeUserSessionsInTx } from "@/modules/core/server/sessions";
 import { DEFAULT_TEMPORARY_PASSWORD } from "@/modules/core/usernames";
 
@@ -356,6 +366,65 @@ export async function resetMinibarUserPassword(ctx: Ctx, id: string): Promise<{ 
     await publishUser(tx, id, userHotelsOf(target), "update");
   });
   return { temporaryPassword: temporary };
+}
+
+/**
+ * Mails a minibar user's sign-in details to the address on their account (same mail as CR-KUL "E-posta ile
+ * gönder"). A user who has not chosen an own password yet gets a fresh random temporary password; others get
+ * username and address only, their own password is never touched. The mail is sent as the LAST step of the
+ * transaction: a failed send rolls the password change back, so no password exists that nobody received.
+ */
+export async function mailMinibarUserCredentials(ctx: Ctx, id: string): Promise<{ to: string; newTemporaryPassword: boolean }> {
+  await assertManager(ctx, "mailCredentials");
+  const peek = await loadTarget(prisma, ctx, id);
+  const anchor = peek.hotelId ?? userHotelsOf(peek)[0];
+  if (!(await isMailConfigured(anchor))) throw new DomainError("VALIDATION", MAIL_NOT_CONFIGURED);
+  return prisma.$transaction(
+    async (tx) => {
+      const target = await loadTarget(tx, ctx, id);
+      const issue = target.mustChangePassword;
+      // A new temporary password changes the whole account: the caller must cover all of its hotels.
+      if (issue) await assertWholeAccountInScope(ctx, target, "mailCredentials");
+      const to = target.email?.trim();
+      if (!to) throw new DomainError("VALIDATION", "Bu kullanıcının kayıtlı e-posta adresi yok; önce Düzenle'den ekleyin");
+      if (!target.isActive) throw new DomainError("VALIDATION", "Kullanıcı pasif; önce aktif edin");
+      const temporary = issue ? generateTemporaryPassword() : undefined;
+      let sessionsClosed = 0;
+      if (temporary) {
+        const passwordHash = await hashPassword(temporary);
+        await tx.user.update({ where: { id }, data: { passwordHash, mustChangePassword: true } });
+        sessionsClosed = await closeUserSessionsInTx(tx, id, "SISTEM", ctx.user.id);
+      }
+      await audit(tx, {
+        userId: ctx.user.id,
+        hotelId: anchor,
+        action: "USER_CREDENTIALS_MAILED",
+        entity: "User",
+        entityId: id,
+        // Never the password itself, only whether a new temporary one was issued.
+        after: { to: maskEmail(to), newTemporaryPassword: issue, sessionsClosed, via: ENTITY },
+      });
+      const mail = composeCredentialsMail({
+        fullName: target.fullName,
+        username: target.username,
+        siteUrl: env.APP_BASE_URL.replace(/\/+$/, ""),
+        temporaryPassword: temporary,
+        briefing: anchor ? await credentialsBriefing(target.roleId, id, anchor) : undefined,
+      });
+      const sent = await sendMail({
+        to,
+        subject: mail.subject,
+        html: mail.html,
+        text: mail.text,
+        attachments: mail.attachments,
+        hotelId: anchor,
+      });
+      if (!sent) throw new DomainError("INTERNAL", MAIL_SEND_FAILED);
+      if (temporary) await publishUser(tx, id, userHotelsOf(target), "update");
+      return { to: maskEmail(to), newTemporaryPassword: issue };
+    },
+    { timeout: CREDENTIALS_TX_TIMEOUT_MS },
+  );
 }
 
 export async function setMinibarUserActive(ctx: Ctx, id: string, isActive: boolean): Promise<UserRow> {
