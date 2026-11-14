@@ -6,6 +6,8 @@ export interface MailOptions {
   subject: string;
   html: string;
   text?: string;
+  /** Inline images: referenced from the HTML as `cid:<cid>`. */
+  attachments?: { filename: string; content: Buffer; contentType: string; cid: string }[];
   /** Hotel whose SMTP settings apply (hotel row, else system row, else env). Default: system. */
   hotelId?: string | null;
 }
@@ -39,6 +41,7 @@ export async function sendMail(opts: MailOptions): Promise<boolean> {
         subject: opts.subject,
         html: opts.html,
         text: opts.text || opts.subject,
+        attachments: opts.attachments,
       });
       // A server may accept the message while refusing a recipient without raising an error: that is not "sent".
       const rejected = Array.isArray(info?.rejected) ? info.rejected.length : 0;

@@ -897,7 +897,7 @@ async function mailCredentials(ctx: Ctx, id: string): Promise<void> {
       temporaryPassword: temporary,
       briefing: await credentialsBriefing(target.roleId, id, anchor ?? ctx.session.hotelId),
     });
-    if (!(await sendMail({ to, subject: mail.subject, html: mail.html, text: mail.text, hotelId: anchor }))) {
+    if (!(await sendMail({ to, subject: mail.subject, html: mail.html, text: mail.text, attachments: mail.attachments, hotelId: anchor }))) {
       throw new DomainError("INTERNAL", MAIL_SEND_FAILED);
     }
     if (temporary) await publishUser(tx, id, hotelsOf(target), "update");

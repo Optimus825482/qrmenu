@@ -74,7 +74,15 @@ describe("users.sendCredentials", () => {
     expect(temp).toHaveLength(12);
     expect(temp).not.toMatch(/[0OIl1]/);
     expect(mail.text).toContain(u.username);
-    expect(mail.subject).toBe("F&B Command Center giriş bilgileriniz");
+    expect(mail.subject).toBe("F&B Personnel System giriş bilgileriniz");
+    expect(mail.text).toContain("F&B Command Center'a bağlı F&B Personnel System giriş bilgileriniz aşağıdaki gibidir.");
+    expect(mail.text).toContain("Merit Royal, Merit Royal Premium ve Merit Royal Diamond");
+    expect(mail.text).toContain("bildirim gönderilmesine izin veriniz");
+    expect(mail.html).not.toContain("nedir?");
+    // The header crest travels inline: the HTML points at the attachment's content id.
+    expect(mail.html).toContain("F&amp;B COMMAND CENTER");
+    expect(mail.html).toContain(`cid:${mail.attachments[0].cid}`);
+    expect(mail.attachments[0].contentType).toBe("image/png");
     expect(mail.html).toContain(temp);
     const after = await reload(u.id);
     expect(after.mustChangePassword).toBe(true);
