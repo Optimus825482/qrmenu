@@ -288,6 +288,11 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
                   <div className="xp-progress-bar" style={{ width: `${r.percent}%` }} />
                 </div>
                 <span className="xp-list-count">%{r.percent}</span>
+                {r.missing.length > 0 ? (
+                  <span className="xp-cc-setup-missing" data-testid={`setup-missing-${r.code}`}>
+                    Eksik: {r.missing.join(", ")}
+                  </span>
+                ) : null}
               </li>
             ))}
           </ul>

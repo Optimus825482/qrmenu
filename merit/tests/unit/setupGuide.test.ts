@@ -348,6 +348,12 @@ describe("setupGuide.summary", () => {
     expect(rows.map((r) => r.code)).toEqual(["ROYAL", "DIAMOND", "PREMIUM"]); // Royal, Royal Diamond, Royal Premium
     expect(rows.find((r) => r.code === "ROYAL")).toMatchObject({ hotelId: mr, name: "Merit Royal", percent: 30 }); // 3 / 10
     expect(rows.find((r) => r.code === "PREMIUM")?.percent).toBe(10);
+    // The steps still to do are named, so the card can say what the missing 70% is.
+    const missing = rows.find((r) => r.code === "ROYAL")?.missing ?? [];
+    expect(missing).toHaveLength(7);
+    expect(missing).not.toContain("Katlar");
+    expect(missing).not.toContain("Odalar");
+    expect(rows.find((r) => r.code === "PREMIUM")?.missing).toHaveLength(9);
   });
 
   it("pasif oteli ve yetkisiz otelleri dışarıda bırakır; hiç yetki yoksa reddeder", async () => {

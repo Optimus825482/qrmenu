@@ -40,7 +40,8 @@ export type SetupStatus = {
   steps: SetupStep[];
 };
 
-export type SetupSummaryRow = { hotelId: string; code: string; name: string; percent: number };
+/** `missing`: titles of the required steps that are not done yet, in guide order (empty at 100%). */
+export type SetupSummaryRow = { hotelId: string; code: string; name: string; percent: number; missing: string[] };
 
 const toPercent = (steps: SetupStep[]): number => {
   const required = steps.filter((s) => s.required);
@@ -199,6 +200,10 @@ export async function summary(ctx: Ctx): Promise<SetupSummaryRow[]> {
     orderBy: { name: "asc" },
   });
   return Promise.all(
-    hotels.map(async (h) => ({ hotelId: h.id, code: h.code, name: h.name, percent: (await compute(h.id)).percent })),
+    hotels.map(async (h) => {
+      const { percent, steps } = await compute(h.id);
+      const missing = steps.filter((s) => s.required && !s.done).map((s) => s.title);
+      return { hotelId: h.id, code: h.code, name: h.name, percent, missing };
+    }),
   );
 }
