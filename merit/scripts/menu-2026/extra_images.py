@@ -29,23 +29,67 @@ MENUS = {
 }
 # Pictures of the photo shoot (img_match.SRC) that belong to an item the name matcher could not pair, chosen by
 # hand: outlet key -> {item name, or "name|category" where the outlet has the name more than once: file}.
-# Written to extra_images.json with the "docs:" prefix.
+# Written to extra_images.json with the "docs:" prefix. An "arsiv:" value is a file of the archive (SRC) instead, for a
+# product the archive names differently. A "*|category" key gives every item of that category the hotel's one
+# picture of the drink (milkshake, smoothie, ice cream: the flavours were never photographed one by one).
+DRINKS = "1-İÇECEKLER/OTEL ÇEKİM SUNUM İÇECEKLER/"
+WATER = "1-İÇECEKLER/İÇECEKLER/MEŞRUBATLAR/SU 330 ML.PNG"
+FRESH = "1075_MERİT DIAMOND POOL BAR SNACK/30002653_MEŞRUBATLAR/30009358_FRESH MEYVE SUYU (Mevsimine göre değişiklik gösterebilir)_01.jpg"
+FILTER = "1075_MERİT DIAMOND POOL BAR SNACK/30002722_SICAK İÇECEKLER/30009379_FİLTRE KAHVE_01.jpg"
 MANUAL = {
     "DIAMOND|Diamond Pool Bar": {
-        "PORTAKAL|FRESH MEYVE SUYU": "1-İÇECEKLER/OTEL ÇEKİM SUNUM İÇECEKLER/Diamond çekim/75 fresh portakal suyu.jpg",
+        "PORTAKAL|FRESH MEYVE SUYU": DRINKS + "Diamond çekim/75 fresh portakal suyu.jpg",
         "ENGLISH BREAKFAST TEA": "12-RONNEFELDT ÇAYLAR/RONNEFELDT SALLAMA/ENGLISH BREAKFAST.jpg",
+        "*|MEYVE SUYU": DRINKS + "Diamond çekim/76 meyve suyu.jpg",
+        "*|FRESH MEYVE SUYU": "arsiv:" + FRESH,
+        "*|SERİNLETİCİ SMOOTHIE": DRINKS + "Diamond çekim/35 smoothie.jpg",
+        "*|DONDURMALAR": DRINKS + "Diamond çekim/39 dondurma.jpg",
+        "*|MILKSHAKES": DRINKS + "Diamond çekim/34 milkshake.jpg",
+        "FILTER COFFEE": "arsiv:" + FILTER, "NESCAFE": "arsiv:" + FILTER,
+        "SU 330 ml.": WATER,
     },
     "ROYAL|Blue Sea Beach Bar": {
-        "PORTAKAL|FRESH MEYVE SUYU": "1-İÇECEKLER/OTEL ÇEKİM SUNUM İÇECEKLER/royal&prm/75 fresh portakal suyu.jpg",
+        "PORTAKAL|FRESH MEYVE SUYU": DRINKS + "royal&prm/75 fresh portakal suyu.jpg",
         "ENGLISH BREAKFAST TEA": "12-RONNEFELDT ÇAYLAR/RONNEFELDT SALLAMA/ENGLISH BREAKFAST.jpg",
+        "*|FRESH MEYVE SUYU": "arsiv:" + FRESH,
+        "*|SERİNLETİCİ SMOOTHIE": DRINKS + "royal&prm/35 smoothie.jpg",
+        "*|DONDURMALAR": DRINKS + "royal&prm/39 dondurma.jpg",
+        "*|MILKSHAKES": DRINKS + "royal&prm/34 milkshake.jpg",
+        "FILTER COFFEE": "arsiv:" + FILTER, "NESCAFE": "arsiv:" + FILTER,
+        "SU 330 ml.": WATER,
     },
-    "DIAMOND|Tea Lounge": {"NANE & PEPPERMINT": "12-RONNEFELDT ÇAYLAR/RONNEFELDT SALLAMA/PEPPERMINT.jpg"},
-    "PREMIUM|Cafe Verde": {"NANE & PEPPERMINT": "12-RONNEFELDT ÇAYLAR/RONNEFELDT SALLAMA/PEPPERMINT.jpg"},
+    "DIAMOND|Tea Lounge": {
+        "NANE & PEPPERMINT": "12-RONNEFELDT ÇAYLAR/RONNEFELDT SALLAMA/PEPPERMINT.jpg",
+        "ESPRESSO LUNGO": DRINKS + "tea lounge/188 tea loungeespresso.jpg",
+        "3. NESİL KAHVELER": DRINKS + "tea lounge/154 tea- verde v60.jpg",
+        "HİNDİSTAN CEVİZİ SÜTLÜ MATCHA LATTE": "arsiv:922_MERİT DIAMOND TEA LOUNGE/11289_SICAK İÇECEKLER/45927_MATCHA LATTE_01.jpg",
+        "KAFEİNSİZ KAHVE": "arsiv:" + FILTER,
+        "SU 330 ml.": WATER,
+    },
+    "PREMIUM|Cafe Verde": {
+        "NANE & PEPPERMINT": "12-RONNEFELDT ÇAYLAR/RONNEFELDT SALLAMA/PEPPERMINT.jpg",
+        "ESPRESSO LUNGO": DRINKS + "royal&prm/189 verde espresso.jpg",
+        "3. NESİL KAHVELER": DRINKS + "tea lounge/154 tea- verde v60.jpg",
+        "HİNDİSTAN CEVİZİ SÜTLÜ MATCHA LATTE": "arsiv:923_MERİT PREMIUM CAFE VERDE/11256_SICAK İÇECEKLER/45641_MATCHA LATTE_01.jpg",
+        "KAFEİNSİZ KAHVE": "arsiv:" + FILTER,
+        "SU 330 ml.": WATER,
+    },
     "PREMIUM|Premium Pool Bar": {
         "Lahmacun": "8-BLUE SEA SNACK GÖRSELLER/lahmacun.jpeg",
         "Mevsim Meyveleri": "6-ROOM SERVİS MENÜ GÖRSELLER/MEVSİM MEYEVLERİ.jpeg",
-        "Dondurma": "1-İÇECEKLER/OTEL ÇEKİM SUNUM İÇECEKLER/royal&prm/39 dondurma.jpg",
+        "Dondurma": DRINKS + "royal&prm/39 dondurma.jpg",
+        "Kıymalı Kır Pidesi": "arsiv:1076_MERİT PREMIUM POOL BAR/30002166_SNACK MENÜ - PİDELER/30008636_Kıymalı Pİde_01.png",
+        "Kuşbaşılı Kaşarlı Pide": "arsiv:1076_MERİT PREMIUM POOL BAR/30002166_SNACK MENÜ - PİDELER/30008638_Kuşbaşılı Pide_01.jpg",
     },
+    "DIAMOND|The Steakhouse": {
+        "TEREYAĞLI KUZU SIRTI 220 G": "arsiv:944_THE STEAKHOUSE/11487_YİYECEKLER - KUZU ETLERİ/33301_TEREYAĞLI KUZU SIRTI_01.jpg",
+        "DALLAS BİFTEK 450-500 G": "arsiv:944_THE STEAKHOUSE/11488_YİYECEKLER - DANA ETLERİ/33304_DALLAS STEAK_01.jpg",
+        "KOBE ETİ 180-200 G": "arsiv:944_THE STEAKHOUSE/11488_YİYECEKLER - DANA ETLERİ/33312_KOBE BEEF_01.jpg",
+    },
+    "DIAMOND|Diamond Lobby Bar": {"SU 330 ml.": WATER},
+    "ROYAL|Royal Lobby Bar": {"SU 330 ml.": WATER},
+    "PREMIUM|Premium Lobby Bar": {"SU 330 ml.": WATER},
+    "ROYAL|The Roof Garden": {"SU 330 ml.": WATER},
 }
 PLACEHOLDER_NAMES = 4
 # Placeholders too rare to be caught by the count (file names).
@@ -117,9 +161,11 @@ def main():
             if item["imageUrl"] and os.path.basename(item["imageUrl"]) in shoot:
                 continue
             manual = MANUAL.get(key, {})
-            by_hand = manual.get("%s|%s" % (item["name"], item["catPath"][-1])) or manual.get(item["name"])
+            by_hand = (manual.get("%s|%s" % (item["name"], item["catPath"][-1])) or manual.get(item["name"])
+                       or manual.get("*|" + item["catPath"][-1]))
             if by_hand:
-                hit["%s|%s" % (item["name"], item["catPath"][-1])] = "docs:" + by_hand
+                hit["%s|%s" % (item["name"], item["catPath"][-1])] = (
+                    by_hand[6:] if by_hand.startswith("arsiv:") else "docs:" + by_hand)
                 continue
             rel = pick(item, own) or pick(item, everything)
             if rel:
