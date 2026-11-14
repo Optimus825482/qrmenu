@@ -4,7 +4,6 @@ import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import { hotelFromAddress, useInShellFrame } from "@/shell/useInShellFrame";
 import React, { useState, useEffect, useCallback } from "react";
 import { BackLink } from "@/components/staff/BackLink";
-import { ScreenLink } from "@/components/staff/StaffScreens";
 import { screenTitle } from "@/components/staff/screenTitle";
 import { confirm } from "@/shell/confirm";
 import { Icon } from "@/components/icons/Icon";
@@ -884,27 +883,6 @@ export default function MinibarTanimlarPage() {
                 ))}
               </select>
             )}
-
-            <ScreenLink
-              href={hotelHref("/depo/stok", selectedHotelId)}
-              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-surface hover:bg-success/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
-            >
-              <Icon name="box" size={20} /> {screenTitle("MB-ZIM")}
-            </ScreenLink>
-
-            <ScreenLink
-              href="/kat/tavsiye-is-plani"
-              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-warn/10 hover:bg-warn/20 text-warn border border-warn/40 rounded-lg text-xs font-semibold transition"
-            >
-              <Icon name="lightbulb" size={20} /> Tavsiye İş Planı
-            </ScreenLink>
-
-            <ScreenLink
-              href={hotelHref("/depo/raporlar", selectedHotelId)}
-              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
-            >
-              <Icon name="trending" size={20} /> {screenTitle("MB-RAP")}
-            </ScreenLink>
           </div>
         </div>
       </header>

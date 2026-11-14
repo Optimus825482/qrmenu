@@ -1,9 +1,8 @@
 "use client";
 
-import { hotelFromAddress } from "@/shell/useInShellFrame";
+import { hotelFromAddress, useInShellFrame } from "@/shell/useInShellFrame";
 import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import { BackLink } from "@/components/staff/BackLink";
-import { ScreenLink } from "@/components/staff/StaffScreens";
 import { screenTitle } from "@/components/staff/screenTitle";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { confirm } from "@/shell/confirm";
@@ -83,6 +82,7 @@ async function readJson(res: Response): Promise<Record<string, unknown>> {
 export default function DolulukYuklePage() {
   const hotelHref = useHotelHref();
   const [hotels, setHotels] = useState<HotelItem[]>([]);
+  const inShellFrame = useInShellFrame();
   const [hotelId, setHotelId] = useState("");
   const [schedule, setSchedule] = useState<ScheduleInfo | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -284,7 +284,8 @@ export default function DolulukYuklePage() {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            {hotels.length > 1 && (
+            {/* Inside a shell window the banner already offers the hotel selector. */}
+            {hotels.length > 1 && !inShellFrame && (
               <select
                 data-testid="occupancy-hotel"
                 value={hotelId}
@@ -303,20 +304,6 @@ export default function DolulukYuklePage() {
                 ))}
               </select>
             )}
-            <ScreenLink
-              href="/kat/tavsiye-is-plani"
-              style={{ minHeight: "var(--tap-action)" }}
-              className="inline-flex items-center px-3 py-1.5 border border-border bg-surface rounded-xl text-xs font-semibold text-text hover:bg-bg"
-            >
-              Tavsiye İş Planı
-            </ScreenLink>
-            <ScreenLink
-              href={hotelHref("/depo/stok", hotelId)}
-              style={{ minHeight: "var(--tap-action)" }}
-              className="inline-flex items-center px-3 py-1.5 border border-border bg-surface rounded-xl text-xs font-semibold text-text hover:bg-bg"
-            >
-              {screenTitle("MB-ZIM")}
-            </ScreenLink>
           </div>
         </div>
       </header>

@@ -4,7 +4,6 @@ import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import { useInShellFrame } from "@/shell/useInShellFrame";
 import Link from "next/link";
 import { BackLink } from "@/components/staff/BackLink";
-import { ScreenLink } from "@/components/staff/StaffScreens";
 import { screenTitle } from "@/components/staff/screenTitle";
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Icon } from "@/components/icons/Icon";
@@ -435,18 +434,6 @@ export default function DepoStokPage() {
             Merkez depo tedarik
           </Link>
         ) : null}
-        <ScreenLink href={hotelHref("/depo/doluluk-yukle", selectedHotelId)} className={LINK_BUTTON}>
-          <Icon name="chart" size={20} />
-          {screenTitle("MB-DOL")}
-        </ScreenLink>
-        <ScreenLink href={hotelHref("/depo/raporlar", selectedHotelId)} className={LINK_BUTTON}>
-          <Icon name="trending" size={20} />
-          {screenTitle("MB-RAP")}
-        </ScreenLink>
-        <ScreenLink href={hotelHref("/depo/tanimlar", selectedHotelId)} className={LINK_BUTTON}>
-          <Icon name="settings" size={20} />
-          {screenTitle("MB-TAN")}
-        </ScreenLink>
       </div>
 
       {ruleHidden ? null : (

@@ -4,7 +4,6 @@ import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import { hotelFromAddress, useInShellFrame } from "@/shell/useInShellFrame";
 import React, { useState, useEffect, useCallback, type ReactNode } from "react";
 import { BackLink } from "@/components/staff/BackLink";
-import { ScreenLink } from "@/components/staff/StaffScreens";
 import { screenTitle } from "@/components/staff/screenTitle";
 import { Icon } from "@/components/icons/Icon";
 import { HotelBadges } from "@/components/ui/HotelBadge";
@@ -433,27 +432,6 @@ export default function RaporlarPage() {
               </svg>
               <span>Yazdır</span>
             </button>
-
-            <ScreenLink
-              href={hotelHref("/depo/doluluk-yukle", selectedHotelId)}
-              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-warn/10 hover:bg-warn/20 text-warn border border-warn/40 rounded-lg text-xs font-semibold transition"
-            >
-              <Icon name="chart" size={20} /> {screenTitle("MB-DOL")}
-            </ScreenLink>
-
-            <ScreenLink
-              href={hotelHref("/depo/stok", selectedHotelId)}
-              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-surface hover:bg-success/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
-            >
-              <Icon name="box" size={20} /> {screenTitle("MB-ZIM")}
-            </ScreenLink>
-
-            <ScreenLink
-              href={hotelHref("/depo/tanimlar", selectedHotelId)}
-              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
-            >
-              <Icon name="settings" size={20} /> {screenTitle("MB-TAN")}
-            </ScreenLink>
           </div>
         </div>
       </header>
