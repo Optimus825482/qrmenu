@@ -1,10 +1,116 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { AUTO_UPDATED_KEY } from "../staleBuildReload";
 import { useAppUpdate } from "../useAppUpdate";
 import { Icon } from "@/components/icons/Icon";
 
 const subscribeNever = () => () => {};
+/** How long the "updated" notice stays when nobody closes it. */
+const UPDATED_NOTICE_MS = 20_000;
+
+/** The page reloaded itself into the new version (staleBuildReload): read once, then forgotten. */
+function takeAutoUpdated(): boolean {
+  try {
+    const set = sessionStorage.getItem(AUTO_UPDATED_KEY) === "1";
+    if (set) sessionStorage.removeItem(AUTO_UPDATED_KEY);
+    return set;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * After an idle page updated itself, a short notice says so (the version and what is new), so the user knows the
+ * app changed even though they never pressed "Güncelle".
+ */
+function AutoUpdatedNotice({ version, highlights }: { version: string; highlights: string[] }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const show = setTimeout(() => setOpen(takeAutoUpdated()), 0);
+    const hide = setTimeout(() => setOpen(false), UPDATED_NOTICE_MS);
+    return () => {
+      clearTimeout(show);
+      clearTimeout(hide);
+    };
+  }, []);
+  if (!open) return null;
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      data-testid="app-auto-updated"
+      style={{
+        position: "fixed",
+        zIndex: 999999,
+        left: "50%",
+        transform: "translateX(-50%)",
+        bottom: "max(18px, env(safe-area-inset-bottom, 18px))",
+        width: "calc(100% - 32px)",
+        maxWidth: "460px",
+      }}
+    >
+      <div
+        style={{
+          background: "linear-gradient(135deg, #0b1a2d 0%, #112845 100%)",
+          color: "#ffffff",
+          borderRadius: "16px",
+          padding: "16px 18px",
+          border: "1px solid rgba(212, 175, 55, 0.4)",
+          boxShadow: "0 20px 40px -10px rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          gap: "12px",
+          alignItems: "flex-start",
+        }}
+      >
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flex: "0 0 36px",
+            height: "36px",
+            borderRadius: "10px",
+            background: "linear-gradient(135deg, #d4af37 0%, #aa841c 100%)",
+            color: "#0b1a2d",
+          }}
+        >
+          <Icon name="check-circle" size={18} />
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: "14px", fontWeight: 700 }}>Sistem güncellendi · v{version}</div>
+          <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: "#cbd5e1" }}>
+            Uygulama yeni sürüme otomatik geçti; ekran yenilendi.
+          </p>
+          {highlights.length > 0 ? (
+            <ul style={{ margin: "6px 0 0", paddingLeft: "16px", fontSize: "11.5px", color: "#93c5fd" }}>
+              {highlights.slice(0, 2).map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          style={{
+            minHeight: "36px",
+            padding: "0 14px",
+            background: "rgba(255, 255, 255, 0.08)",
+            color: "#e2e8f0",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
+            borderRadius: "10px",
+            fontWeight: 600,
+            fontSize: "12px",
+            cursor: "pointer",
+          }}
+        >
+          Tamam
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export function AppUpdateNotifier() {
   const {
@@ -24,7 +130,8 @@ export function AppUpdateNotifier() {
     () => "server",
   );
 
-  if (view !== "app" || !hasUpdate) return null;
+  if (view !== "app") return null;
+  if (!hasUpdate) return <AutoUpdatedNotice version={serverInfo?.version ?? currentVersion} highlights={serverInfo?.highlights ?? []} />;
 
   const targetVersion = serverInfo?.version ?? currentVersion;
   const highlights = serverInfo?.highlights ?? [

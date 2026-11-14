@@ -10,6 +10,11 @@ const CHECK_MS = 2 * 60_000;
 export const IDLE_BEFORE_RELOAD_MS = 2 * 60_000;
 /** The server build this tab last reloaded for: one reload per build, so a stale cached page cannot loop. */
 const RELOADED_KEY = "merit_stale_build_reloaded_for";
+/**
+ * Set right before an automatic reload: the reloaded page tells the user it moved to the new version
+ * (AppUpdateNotifier), since the "Güncelle" notice never got the chance to show.
+ */
+export const AUTO_UPDATED_KEY = "merit_auto_updated";
 
 /**
  * After a release, a page opened before it still calls the server actions of the old build; the new server
@@ -63,6 +68,7 @@ export function StaleBuildReload(): null {
       stopped = true;
       try {
         sessionStorage.setItem(RELOADED_KEY, server);
+        sessionStorage.setItem(AUTO_UPDATED_KEY, "1");
       } catch {
         // storage blocked: `stopped` still limits this page life to one reload
       }
