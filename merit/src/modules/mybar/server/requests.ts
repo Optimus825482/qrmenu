@@ -7,7 +7,6 @@ import { DomainError, fromZod } from "@/lib/result";
 import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { type Page, pageArgs } from "@/modules/core/server/admin/listQuery";
 import { audit } from "@/modules/core/server/audit";
-import { restoreStock } from "@/modules/minibar/server/pool";
 import { isValidExplanation } from "../constants";
 import { publishMybar } from "../events";
 
@@ -549,11 +548,11 @@ type LockedRequest = Awaited<ReturnType<typeof loadRequestForUpdate>>;
 
 /**
  * The one cancellation rule (staff `cancel` and the system checkout cancel): the request turns IPTAL, its open
- * notifications are marked read, what was already delivered from the hotel pool goes back (IADE), an audit row
- * and the `mybar.cancelled` event follow. `req` must be BEKLEMEDE and row-locked by the caller.
+ * notifications are marked read, deliveries and collections already made stay as they are (the products are
+ * physically in / out of the room), an audit row and the `mybar.cancelled` event follow. `req` must be BEKLEMEDE
+ * and row-locked by the caller.
  *
- * `actorId: null` is the system: no seen/cancelled-by user, the IADE movement is booked on the user who delivered
- * the line (a stock movement needs a user), and the audit row has no user.
+ * `actorId: null` is the system: no seen/cancelled-by user, and the audit row has no user.
  */
 export async function applyCancel(
   tx: Prisma.TransactionClient,
@@ -590,23 +589,9 @@ export async function applyCancel(
     data: { isRead: true, readAt: now },
   });
 
-  // Removals are NOT reversed: what the attendant already collected from the room was physically taken out and has
-  // been booked back into the hotel stock (IADE) by `fulfill`; cancelling the request does not put it back in the
-  // room, so those movements stay as they are (the audit row lists them as `removedKept`).
-  // What was already taken from the hotel pool for this request goes back (IADE), in product-id order like fulfill.
-  for (const line of [...deliveredBefore].sort((a, b) => a.productId.localeCompare(b.productId))) {
-    const userId = actorId ?? (await delivererOf(tx, id, line.productId));
-    await restoreStock(tx, {
-      hotelId: req.hotelId,
-      productId: line.productId,
-      qty: line.deliveredQty,
-      userId,
-      refType: "MybarRequest",
-      refId: id,
-      note: "MyBar talebi iptal edildi",
-    });
-  }
-
+  // Nothing already done is reversed: what the attendant put into the room stays there (its MYBAR_KARSILAMA record
+  // and the pool take stand, so stock, room record and reports agree), and what was collected from the room stays
+  // returned (IADE by `fulfill`). The cancel only closes what is still open; the audit row lists both as kept.
   await audit(tx, {
     ...(actorId ? { userId: actorId } : {}),
     hotelId: req.hotelId,
@@ -615,7 +600,7 @@ export async function applyCancel(
     entityId: id,
     after: {
       cancelNote: reason,
-      deliveredBefore,
+      deliveredKept: deliveredBefore,
       removedKept: req.removals
         .filter((it) => it.removedQty > 0)
         .map((it) => ({ productId: it.productId, removedQty: it.removedQty })),
@@ -633,13 +618,3 @@ export async function applyCancel(
   });
 }
 
-/** The user whose pool take delivered `productId` for the request (latest first). */
-async function delivererOf(tx: Prisma.TransactionClient, requestId: string, productId: string): Promise<string> {
-  const move = await tx.hotelStockMovement.findFirst({
-    where: { refType: "MybarRequest", refId: requestId, qty: { lt: 0 }, productId },
-    orderBy: { createdAt: "desc" },
-    select: { userId: true },
-  });
-  if (!move) throw new DomainError("INTERNAL", "Teslim edilen ürünün stok hareketi bulunamadı");
-  return move.userId;
-}

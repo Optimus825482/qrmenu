@@ -338,8 +338,9 @@ export async function reopenAutoCompletedDnd(
   const dnd = await tx.roomDnd.findUnique({ where: { roomId_date: { roomId: p.roomId, date } } });
   if (!dnd || dnd.hotelId !== p.hotelId || dnd.status !== "TAMAMLANDI") return false;
   const auto = await tx.roomDndCheck.findFirst({
-    where: { dndId: dnd.id, note: { startsWith: "OTOMATİK TAMAMLANDI" } },
-    orderBy: { no: "desc" },
+    // autoCompleteDnd writes its row as no = count + 1 without counting it; a real check is counted, so a
+    // user's note that happens to start with the same words cannot be taken for the automatic row.
+    where: { dndId: dnd.id, no: dnd.count + 1, note: { startsWith: "OTOMATİK TAMAMLANDI" } },
     select: { id: true },
   });
   if (!auto) return false;

@@ -103,11 +103,9 @@ describe("MyBar: misafir çıkışında bekleyen talepler iptal", () => {
     }
     expect(await statusOf(done.id)).toBe("TAMAMLANDI");
     expect(await statusOf(other.id)).toBe("BEKLEMEDE");
-    // existing cancel rule: the delivered water goes back to the pool (IADE) on the deliverer
-    expect((await stockOf(a.hotelId, a.products.su)).remainingQty).toBe(85);
-    expect(
-      await testDb.hotelStockMovement.count({ where: { refId: partial.id, type: "IADE", userId: uploader.userId } }),
-    ).toBe(1);
+    // cancel rule: the delivered water stays in the room, nothing goes back to the pool
+    expect((await stockOf(a.hotelId, a.products.su)).remainingQty).toBe(84);
+    expect(await testDb.hotelStockMovement.count({ where: { refId: partial.id, type: "IADE" } })).toBe(0);
     expect(await testDb.auditLog.count({ where: { action: CHECKOUT_CANCEL_AUDIT, userId: null } })).toBe(2);
     // no new notification, the open one is read; staff screens get the plain cancelled event
     expect(await testDb.notification.count()).toBe(notesBefore);

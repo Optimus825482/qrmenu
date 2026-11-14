@@ -189,18 +189,25 @@ describe("fulfill", () => {
 });
 
 describe("cancel after a partial fulfilment", () => {
-  it("returns the delivered quantities to the pool (IADE) and keeps deliveredQty", async () => {
+  it("keeps what was delivered in the room: no IADE, the pool take and the room record stand", async () => {
     await fulfill(kat1, reqId, { lines: [{ productId: fx.products.su, qty: 2 }, { productId: fx.products.kola, qty: 1 }] });
     expect(await remaining(fx.products.su)).toBe(98);
     expect(await remaining(fx.products.kola)).toBe(99);
 
     await cancel(dep1, reqId, { reason: "misafir odadan ayrıldı" });
 
-    expect(await remaining(fx.products.su)).toBe(100);
-    expect(await remaining(fx.products.kola)).toBe(100);
-    const iade = await testDb.hotelStockMovement.findMany({ where: { refId: reqId, type: "IADE" } });
-    expect(iade.map((m) => m.qty).sort()).toEqual([1, 2]);
+    expect(await remaining(fx.products.su)).toBe(98);
+    expect(await remaining(fx.products.kola)).toBe(99);
+    expect(await testDb.hotelStockMovement.count({ where: { refId: reqId, type: "IADE" } })).toBe(0);
     expect(await delivered()).toEqual({ [fx.products.su]: 2, [fx.products.kola]: 1 });
+    expect(await testDb.minibarTransaction.count({ where: { mybarRequestId: reqId, type: "MYBAR_KARSILAMA" } })).toBe(1);
+    const log = await testDb.auditLog.findFirstOrThrow({ where: { action: "MYBAR_CANCEL", entityId: reqId } });
+    expect((log.after as { deliveredKept: unknown[] }).deliveredKept).toEqual(
+      expect.arrayContaining([
+        { productId: fx.products.su, deliveredQty: 2 },
+        { productId: fx.products.kola, deliveredQty: 1 },
+      ]),
+    );
   });
 
   it("a request nothing was delivered for touches no stock", async () => {
@@ -318,8 +325,8 @@ describe("çıkarılacak ürünler (takas)", () => {
 
     await cancel(dep1, swapId, { reason: "misafir vazgeçti kapatın" });
 
-    // The addition goes back to the stock, the beer the attendant already took out of the room stays returned.
-    expect(await remaining(fx.products.su)).toBe(100);
+    // The water put into the room stays there, the beer the attendant already took out of the room stays returned.
+    expect(await remaining(fx.products.su)).toBe(99);
     expect(await remaining(fx.products.bira)).toBe(101);
     expect(await removedOf()).toEqual({ [fx.products.bira]: 1 });
     const beer = await testDb.hotelStockMovement.findMany({ where: { refId: swapId, productId: fx.products.bira } });
