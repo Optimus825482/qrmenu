@@ -176,6 +176,8 @@ export function createWallController(opts: WallControllerOptions): WallControlle
  */
 export function complexViews(active: ReadonlySet<string>): WallView[] {
   const out: WallView[] = ["genel"];
+  // Table orders as status lanes per hotel (not the table plan, which belongs to one outlet).
+  if (active.has("SIPARIS")) out.push("masa");
   if (active.has("ODA_SERVISI")) out.push("odaServisi");
   if (active.has("MINIBAR")) out.push("mybar");
   return out;

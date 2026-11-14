@@ -157,8 +157,8 @@ describe("wakeLock: acquireWakeLock", () => {
 describe("wall: whole complex", () => {
   it("offers the overview and only the boards that stack per hotel", async () => {
     const { complexViews } = await import("@/modules/radar/ui/wall");
-    expect(complexViews(new Set(["MINIBAR", "SIPARIS", "ODA_SERVISI", "PERSONEL", "SISTEM"]))).toEqual(["genel", "odaServisi", "mybar"]);
-    expect(complexViews(new Set(["SIPARIS", "ODA_SERVISI"]))).toEqual(["genel", "odaServisi"]);
+    expect(complexViews(new Set(["MINIBAR", "SIPARIS", "ODA_SERVISI", "PERSONEL", "SISTEM"]))).toEqual(["genel", "masa", "odaServisi", "mybar"]);
+    expect(complexViews(new Set(["SIPARIS", "ODA_SERVISI"]))).toEqual(["genel", "masa", "odaServisi"]);
     expect(complexViews(new Set())).toEqual(["genel"]);
   });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { getApps } from "@/shell/registry";
 import { windowStore } from "@/shell/windowStore";
 
@@ -71,8 +71,14 @@ export function DetailBubble({
   children,
 }: DetailBubbleProps) {
   const openableAppId = onOpenApp && appTarget ? resolveOpenableAppId(appTarget, hotelId) : undefined;
+  // On a phone or a portrait tablet the panel is laid out above or below the card that opened it: bring it into
+  // view, or a tap on a card far down the list seems to do nothing. `nearest` leaves a visible panel where it is.
+  const ref = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    ref.current?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+  }, [title]);
   return (
-    <section className="rd-panel rd-detail-bubble" aria-label={ariaLabel ?? `${title} ayrıntısı`}>
+    <section ref={ref} className="rd-panel rd-detail-bubble" aria-label={ariaLabel ?? `${title} ayrıntısı`}>
       <div className="rd-row">
         <h3>{title}</h3>
         <button type="button" className="rd-link" onClick={onClose}>

@@ -308,7 +308,10 @@
 /* Genel Bakış */
 .rd-overview {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  /* auto-fit: the hotel cards share the whole width (auto-fill kept empty tracks beside three cards on a wide
+     screen), so their counters get more columns and the whole complex fits one screen without scrolling. */
+  /* 270px: three hotels stay side by side on a 1280px screen that also shows the event feed. */
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
   gap: var(--rd-gap);
 }
 
@@ -399,6 +402,79 @@ button.rd-counter {
   align-items: center;
   gap: 3px;
   font-size: var(--rd-small);
+}
+
+/* Genel Bakış: one dense row per counter (value, label, severity mark) so every hotel of the complex is read on
+   one screen. The "Normal" mark stays for screen readers only; a warning or critical counter keeps icon and word. */
+.rd-overview .rd-counters {
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 3px;
+}
+
+.rd-overview .rd-hotel-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 3px;
+  padding: 6px 8px;
+}
+
+.rd-overview .rd-hotel-card > * {
+  grid-column: 1 / -1;
+}
+
+/* A layer with a single counter (Personel, Sistem) takes half the card, so two of them share one row. */
+.rd-overview .rd-hotel-card > section:has(.rd-counters > :only-child) {
+  grid-column: auto;
+}
+
+.rd-overview .rd-hotel-card > section:has(.rd-counters > :only-child) .rd-counters {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rd-overview .rd-counter {
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 1px 6px;
+  text-align: left;
+  font-size: var(--rd-small);
+  line-height: 1.1;
+}
+
+.rd-overview .rd-counter-value {
+  flex: none;
+  font-size: calc(var(--rd-counter) * 0.62);
+  white-space: nowrap;
+}
+
+.rd-overview .rd-counter > span:nth-child(2) {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Read by screen readers, not drawn: the word "adet", the severity word, and the whole mark of a normal counter
+   (tone, border weight and the icon already tell a warning or a critical one apart). */
+.rd-overview .rd-counter [data-unit="adet"],
+.rd-overview .rd-counter-sev-text,
+.rd-overview .rd-counter[data-tone="success"] .rd-counter-sev {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.rd-overview .rd-counter:not([data-tone="success"]) .rd-counter-sev {
+  flex: none;
+}
+
+.rd-overview .rd-layer-title {
+  margin-top: 0;
 }
 
 .rd-spark {
@@ -863,6 +939,17 @@ button.rd-ticker-btn:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
+}
+
+/* "Tüm kompleks": the hotel an event belongs to. */
+.rd-ticker-hotel {
+  padding: 1px 5px;
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-s);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .rd-ticker-badge {
@@ -1392,10 +1479,19 @@ button.rd-alert-chip {
   .rd-workspace { flex-direction: column; }
   .rd-ticker { width: auto; max-width: none; max-height: 40%; border-left: 0; border-top: 1px solid var(--app-line); }
   .rd-floor, .rd-staff-layout, .rd-tables[data-has-detail="true"] { grid-template-columns: minmax(0, 1fr); }
-  .rd-overview { grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); }
+  .rd-overview { grid-template-columns: repeat(auto-fit, minmax(min(270px, 100%), 1fr)); }
   .rd-menu-list { max-width: calc(100vw - 16px); }
   .rd-menu:nth-last-child(-n+2) .rd-menu-list { left: auto; right: 0; }
   .rd-help { width: min(340px, calc(100% - 24px)); }
+  /* The header, toolbar, alerts and timeline of a phone leave the board a strip a few cards high: the whole radar
+     scrolls as one page instead, and the wide rows of the toolbar wrap instead of running off the screen. */
+  .rd-root { overflow-y: auto; overflow-x: clip; }
+  .rd-workspace { flex: none; }
+  .rd-main { flex: none; overflow: visible; }
+  .rd-ticker { max-height: 240px; }
+  .rd-tabs { flex-wrap: wrap; }
+  .rd-timeline { flex-wrap: wrap; }
+  .rd-timeline-controls { flex-wrap: wrap; flex: 1 1 100%; min-width: 0; }
 }
 
 /* One stacked board of the whole complex: the box its own animated scene is laid over. */

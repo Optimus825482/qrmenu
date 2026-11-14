@@ -32,6 +32,8 @@ import { Mybar, MybarAll } from "./views/Mybar";
 import { Overview } from "./views/Overview";
 import { Queues } from "./views/Queues";
 import { RoomService, RoomServiceAll } from "./views/RoomService";
+import { OrdersAll } from "./views/OrdersAll";
+import { ComplexAlertStrip, ComplexFeedProvider, ComplexTicker } from "./complex/ComplexFeed";
 import { Staff } from "./views/Staff";
 import { Tables } from "./views/Tables";
 import { complexLaneCap, complexViews, createSoundGate, createWallController } from "./wall";
@@ -102,6 +104,9 @@ const SHORTCUTS: [string, string][] = [
   ["F1", "Bu yardımı aç veya kapat"],
   ["Ok tuşları · Enter · Esc", "Kat ızgarasında gezin, ayrıntı aç, kapat"],
 ];
+
+/** Outside the "Tüm kompleks" scope no hotel feeds the complex (a stable empty list). */
+const NO_HOTELS: readonly { id: string; code: string; name: string }[] = [];
 
 export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const wall = mode === "wall";
@@ -741,6 +746,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
           overview={overview}
           layers={active}
           views={all ? undefined : views}
+          hideAlerts={all}
           onOpenHotel={(id) => pickHotel(id, null)}
           onOpenView={(id, v) => (id === hotelId ? goView(v) : pickHotel(id, v))}
         />
@@ -760,6 +766,9 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   } else if (all && view === "odaServisi") {
     const boards = complexHotels("ODA_SERVISI");
     body = <RoomServiceAll hotels={boards} now={now} onOpenApp={openApp} maxCards={complexCap(boards.length)} motion={animationOn} />;
+  } else if (all && view === "masa") {
+    const boards = complexHotels("SIPARIS");
+    body = <OrdersAll hotelIds={boards.map((b) => b.id)} now={now} onOpenApp={openApp} maxCards={complexCap(boards.length)} />;
   } else if (all && view === "mybar") {
     const boards = complexHotels("MINIBAR");
     body = <MybarAll hotels={boards} now={now} maxCards={complexCap(boards.length)} motion={animationOn} />;
@@ -825,6 +834,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
 
   return (
     <RadarStoreContext.Provider value={store}>
+      <ComplexFeedProvider hotels={all ? initial.hotels : NO_HOTELS}>
       <DensityRoot density={wall ? "pos" : "xp"}>
         <div
           ref={rootRef}
@@ -928,7 +938,12 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
               </button>
             </div>
           ) : null}
-          {!all ? <AlertStrip alerts={visibleAlerts} onFocus={focusAlert} /> : null}
+          {all ? (
+            // The whole complex: every hotel's alerts in one strip; a chip opens the hotel it belongs to.
+            <ComplexAlertStrip active={active} onFocus={(alert) => pickHotel(alert.hotelId, null)} />
+          ) : (
+            <AlertStrip alerts={visibleAlerts} onFocus={focusAlert} />
+          )}
           <div className="rd-workspace">
             <div
               id={`${idPrefix}-view`}
@@ -948,7 +963,15 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
                 nameStyle={wall ? "short" : "full"}
                 onSelect={focusEvent}
               />
-            ) : null}
+            ) : (
+              // The whole complex: the events of every hotel for the operation on screen, each tagged with its hotel.
+              <ComplexTicker
+                operation={view === "masa" || view === "odaServisi" || view === "mybar" ? view : "genel"}
+                active={active}
+                wall={wall}
+                onSelect={(ev) => pickHotel(ev.hotelId, null)}
+              />
+            )}
           </div>
           {!all && loaded ? (
             <Timeline
@@ -1006,6 +1029,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
           ) : null}
         </div>
       </DensityRoot>
+      </ComplexFeedProvider>
     </RadarStoreContext.Provider>
   );
 }

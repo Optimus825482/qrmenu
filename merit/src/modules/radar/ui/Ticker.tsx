@@ -113,12 +113,14 @@ export type TickerProps = {
   mode?: "window" | "wall";
   nameStyle?: NameStyle;
   onSelect?(event: RadarEvent): void;
+  /** "Tüm kompleks": the short name of the hotel an event belongs to, shown on its row. */
+  hotelTag?(hotelId: string): string | undefined;
 };
 
 /**
  * Live event ticker: newest on top, vertical feed on the right, badges with distinct colours and icons.
  */
-export function Ticker({ events, state, mode = "window", nameStyle, onSelect }: TickerProps) {
+export function Ticker({ events, state, mode = "window", nameStyle, onSelect, hotelTag }: TickerProps) {
   const style: NameStyle = nameStyle ?? (mode === "wall" ? "short" : "full");
   const people = state?.people ?? {};
   const lookup = useMemo(() => lookupFromState(state), [state]);
@@ -157,6 +159,7 @@ export function Ticker({ events, state, mode = "window", nameStyle, onSelect }: 
                     <Icon name={badge.icon} size={11} />
                     <span>{badge.label}</span>
                   </span>
+                  {hotelTag?.(ev.hotelId) ? <span className="rd-ticker-hotel">{hotelTag(ev.hotelId)}</span> : null}
                   <span className="rd-ticker-time">{clock(ev.at)}</span>
                 </div>
                 <div className="rd-ticker-text">{sentence}</div>

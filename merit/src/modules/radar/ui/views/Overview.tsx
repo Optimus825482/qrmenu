@@ -40,6 +40,8 @@ export type OverviewProps = {
   onOpenView(hotelId: string, view: ViewKey): void;
   /** Views that exist; counters only turn into buttons for those. */
   views?: readonly ViewKey[];
+  /** The screen already lists every hotel's alerts above the cards (the strip of the whole complex): leave them out of the cards. */
+  hideAlerts?: boolean;
 };
 
 function Counter({
@@ -55,12 +57,12 @@ function Counter({
     <>
       <span className="rd-counter-value">
         {metric.value}
-        {metric.unit ? <span className="rd-small"> {metric.unit}</span> : null}
+        {metric.unit ? <span className="rd-small" data-unit={metric.unit}> {metric.unit}</span> : null}
       </span>
       <span>{metric.label}</span>
       <span className="rd-counter-sev">
         <Icon name={SEVERITY_ICON[metric.severity]} size={12} />
-        {SEVERITY_LABELS[metric.severity]}
+        <span className="rd-counter-sev-text">{SEVERITY_LABELS[metric.severity]}</span>
       </span>
     </>
   );
@@ -94,7 +96,7 @@ function AlertLine({ alert }: { alert: RadarAlert }) {
 }
 
 /** Genel Bakış: one card per hotel in scope with counters, a 60-minute event sparkline and the top alerts. */
-export function Overview({ overview, layers, onOpenHotel, onOpenView, views }: OverviewProps) {
+export function Overview({ overview, layers, onOpenHotel, onOpenView, views, hideAlerts }: OverviewProps) {
   if (overview.hotels.length === 0) {
     return <EmptyState title="Bu kapsamda izlenecek otel yok." hint="Canlı Radar yetkisi olan bir otel görünmüyor." />;
   }
@@ -163,7 +165,7 @@ export function Overview({ overview, layers, onOpenHotel, onOpenView, views }: O
                 vectorEffect="non-scaling-stroke"
               />
             </svg>
-            {hotel.topAlerts.length > 0 ? (
+            {hideAlerts ? null : hotel.topAlerts.length > 0 ? (
               <ul className="rd-alerts" aria-label="En önemli uyarılar">
                 {hotel.topAlerts.slice(0, 2).map((a) => (
                   <AlertLine key={a.key} alert={a} />
