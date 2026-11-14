@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { guestLangHref } from "@/lib/i18n/guestLangUrl";
 import { LOCALES, LOCALE_META, type Locale } from "@/lib/i18n/locales";
 import { FlagIcon } from "./FlagIcon";
 import { Icon } from "@/components/icons/Icon";
@@ -108,10 +109,14 @@ export function LanguageSwitch({
                 key={code}
                 role="menuitem"
                 className={`g-lang-item ${isSelected ? "is-selected" : ""}`}
-                href={`/api/q/${encodeURIComponent(token)}/lang?lang=${code}`}
+                href={guestLangHref(token, code)}
                 hrefLang={code}
                 aria-current={isSelected || undefined}
-                onClick={() => setOpen(false)}
+                onClick={(event) => {
+                  // The lang route sends the guest back to the page they are on, not to the home page.
+                  event.currentTarget.href = guestLangHref(token, code, window.location.pathname);
+                  setOpen(false);
+                }}
               >
                 <span className="g-lang-item-flag">
                   <FlagIcon locale={code} width={20} height={14} />

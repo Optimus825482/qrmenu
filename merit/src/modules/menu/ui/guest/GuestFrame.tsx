@@ -7,6 +7,7 @@ import type { GuestTheme } from "../../server/guestState";
 import type { OutletDesign } from "../../design";
 import { DESIGN_TEMPLATES } from "../../design";
 import { readableText } from "../../contrast";
+import { guestLangHref } from "@/lib/i18n/guestLangUrl";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { previewLocaleUrl } from "./previewLocale";
 
@@ -124,7 +125,7 @@ export function HtmlLangSync({
           onLocaleChange(deviceLocale);
         } else if (token && typeof win !== "undefined" && win.location.pathname.startsWith("/q/")) {
           doc.cookie = `${LANG_COOKIE}=${deviceLocale}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-          win.location.replace(`/api/q/${encodeURIComponent(token)}/lang?lang=${deviceLocale}`);
+          win.location.replace(guestLangHref(token, deviceLocale, win.location.pathname));
         }
       }
     }

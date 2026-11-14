@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { guestLangHref } from "@/lib/i18n/guestLangUrl";
 import { LANG_COOKIE, isLocale, type Locale } from "@/lib/i18n/locales";
 import { LanguageSwitch } from "@/modules/menu/ui/guest/LanguageSwitch";
 
@@ -17,8 +18,7 @@ function stored(): string | null {
 
 /** The lang route sets the cookie and redirects back: a full navigation, not a client-side route. */
 function goToLang(token: string, code: string): void {
-  // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- an API route, not a Next page
-  window.location.href = `/api/q/${encodeURIComponent(token)}/lang?lang=${code}`;
+  window.location.href = guestLangHref(token, code, window.location.pathname);
 }
 
 /**
