@@ -105,7 +105,7 @@ function getDndRecheckStatus(lastDndAtStr: string | null | undefined, recheckMin
   const recheckAt = lastDndTime + recheckMinutes * 60_000;
   const diffMinutes = Math.ceil((recheckAt - nowMs) / 60_000);
   const targetTime = new Date(recheckAt);
-  const targetTimeStr = `${String(targetTime.getHours()).padStart(2, "0")}:${String(targetTime.getMinutes()).padStart(2, "0")}`;
+  const targetTimeStr = targetTime.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Nicosia" });
 
   return {
     diffMinutes,
@@ -164,8 +164,8 @@ export default function KatDolulukDetailPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const loadFloor = useCallback(async () => {
-    if (!floorId) return;
+  const loadFloor = useCallback(async (): Promise<FloorResponse | null> => {
+    if (!floorId) return null;
     setLoading(true);
     setError(null);
     try {
@@ -176,8 +176,10 @@ export default function KatDolulukDetailPage() {
       }
       const json = (await res.json()) as FloorResponse;
       setData(json);
+      return json;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Bilinmeyen hata");
+      return null;
     } finally {
       setLoading(false);
     }
@@ -233,6 +235,12 @@ export default function KatDolulukDetailPage() {
     .filter((r) => (r.type === "SETUP_KONTROL" || r.type === "SARFIYAT_YOK") && dayOf(r.occurredAt) === today)
     .reverse();
   const selectedChecked = selectedRoom?.checkStatus === "completed";
+  // The next DND mark of the open room waits for the recheck time, the same wait its card counts down.
+  const selectedRecheck =
+    selectedRoom && !selectedChecked && selectedRoom.dndCount > 0
+      ? getDndRecheckStatus(selectedRoom.lastDndAt, data?.settings?.dndRecheckMinutes ?? 120, now)
+      : null;
+  const dndWaiting = selectedRecheck !== null && !selectedRecheck.isDue;
 
   // Opening a room card resets the dialog and loads its DND details (event handler, not an effect).
   // Empty rooms have no DND action, so their history is not loaded.
@@ -297,7 +305,13 @@ export default function KatDolulukDetailPage() {
       setDndNote("");
       setDndKey(newRequestKey());
       await loadRoomDnd(selectedRoom.id);
-      await loadFloor();
+      const fresh = await loadFloor();
+      // The open dialog shows the room as it is now (DND count, last mark, a completed DND), not as it was opened.
+      const updated = fresh?.rooms.find((rm) => rm.id === selectedRoom.id);
+      if (updated) {
+        setSelectedRoom(updated);
+        if (updated.checkStatus === "completed") void loadRoomRecords(updated.id);
+      }
     } catch (e) {
       notify.error(e instanceof Error ? e.message : "DND hatası");
     } finally {
@@ -813,12 +827,16 @@ export default function KatDolulukDetailPage() {
                     type="button"
                     data-mutates=""
                     onClick={() => void handleMarkDndFromDialog()}
-                    disabled={submittingDnd}
+                    disabled={submittingDnd || dndWaiting}
                     style={{ minHeight: "var(--tap-action)" }}
                     className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-warn px-4 py-2.5 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50 transition"
                   >
                     <Icon name="moon" size={16} />
-                    {submittingDnd ? "Kaydediliyor..." : "Odayı DND Olarak İşaretle"}
+                    {submittingDnd
+                      ? "Kaydediliyor..."
+                      : dndWaiting
+                        ? `Sonraki DND kontrolü ${selectedRecheck?.targetTimeStr}`
+                        : "Odayı DND Olarak İşaretle"}
                   </button>
                   <button
                     type="button"

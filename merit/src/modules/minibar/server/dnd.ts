@@ -324,6 +324,44 @@ export async function autoCompleteDnd(
   return true;
 }
 
+/**
+ * Undo of `autoCompleteDnd`: the replacement or "Sarfiyat Yok" that closed the room's active DND was deleted.
+ * The automatic check row goes and the DND is AKTIF again, so the room waits for a real check (the caller
+ * reopens the task items). A DND completed by real checks is left alone. Returns whether it reopened.
+ */
+export async function reopenAutoCompletedDnd(
+  tx: Tx,
+  p: { hotelId: string; roomId: string; day: string; userId: string },
+): Promise<boolean> {
+  const date = businessDay(p.day);
+  await tx.$queryRaw`SELECT id FROM room_dnds WHERE room_id = ${p.roomId} AND date = ${date}::date FOR UPDATE`;
+  const dnd = await tx.roomDnd.findUnique({ where: { roomId_date: { roomId: p.roomId, date } } });
+  if (!dnd || dnd.hotelId !== p.hotelId || dnd.status !== "TAMAMLANDI") return false;
+  const auto = await tx.roomDndCheck.findFirst({
+    where: { dndId: dnd.id, note: { startsWith: "OTOMATİK TAMAMLANDI" } },
+    orderBy: { no: "desc" },
+    select: { id: true },
+  });
+  if (!auto) return false;
+  // Another covering record of the day still stands: the room was checked, the DND stays completed.
+  const covered = await tx.roomCheck.count({
+    where: { roomId: p.roomId, checkDate: date, type: { in: ["URUN_EKLENDI", "SARFIYAT_YOK"] } },
+  });
+  if (covered > 0) return false;
+  await tx.roomDndCheck.delete({ where: { id: auto.id } });
+  await tx.roomDnd.update({ where: { id: dnd.id }, data: { status: "AKTIF" } });
+  await audit(tx, {
+    userId: p.userId,
+    hotelId: p.hotelId,
+    action: "DND_AUTO_REOPEN",
+    entity: "RoomDnd",
+    entityId: dnd.id,
+    before: { status: "TAMAMLANDI" },
+    after: { status: "AKTIF" },
+  });
+  return true;
+}
+
 const listSchema = z
   .object({
     day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarih yyyy-MM-dd olmalı").optional(),

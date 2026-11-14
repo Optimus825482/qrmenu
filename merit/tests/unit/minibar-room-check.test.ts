@@ -367,6 +367,32 @@ describe("recordNoConsumption", () => {
   });
 });
 
+describe("DND otomatik tamamlanmasının geri alınması", () => {
+  it("DND'yi kapatan ikame silinince DND yeniden AKTIF olur, otomatik kontrol satırı gider, görev DND_BEKLIYOR'a döner", async () => {
+    const { w, kat, kat2, inh } = await world();
+    await dnd.markDnd(kat2.ctx, { roomId: w.room.id }, T0);
+    const r = await rep(kat.ctx, w, 1, { now: minutes(T0, 60) });
+    const before = await testDb.roomDnd.findUniqueOrThrow({ where: { roomId_date: { roomId: w.room.id, date } } });
+    expect(before.status).toBe("TAMAMLANDI");
+
+    await rc.deleteMyTransaction(kat.ctx, r.transactionId, minutes(T0, 61));
+    const after = await testDb.roomDnd.findUniqueOrThrow({ where: { id: before.id } });
+    expect(after.status).toBe("AKTIF");
+    expect(await testDb.roomDndCheck.count({ where: { dndId: before.id } })).toBe(1);
+    expect(await itemStatus(inh.item.id)).toBe("DND_BEKLIYOR");
+    expect(await testDb.auditLog.count({ where: { action: "DND_AUTO_REOPEN", entityId: before.id } })).toBe(1);
+  });
+
+  it("aynı gün başka bir ikame duruyorsa DND tamamlanmış kalır", async () => {
+    const { w, kat, kat2 } = await world();
+    await dnd.markDnd(kat2.ctx, { roomId: w.room.id }, T0);
+    const first = await rep(kat.ctx, w, 1, { now: minutes(T0, 60) });
+    await rep(kat.ctx, w, 1, { now: minutes(T0, 62) });
+    await rc.deleteMyTransaction(kat.ctx, first.transactionId, minutes(T0, 63));
+    expect((await testDb.roomDnd.findUniqueOrThrow({ where: { roomId_date: { roomId: w.room.id, date } } })).status).toBe("TAMAMLANDI");
+  });
+});
+
 describe("loadRoomChecklist / getRoomCheckView / startRoomCheck", () => {
   it("oda tipi veya setup ataması yoksa VALIDATION", async () => {
     const w = await minibarWorld();
@@ -551,10 +577,21 @@ describe("updateMyTransaction", () => {
     await expectConsistent(w.hotelId, w.cola.id, 100);
     await expectConsistent(w.hotelId, w.water.id, 100);
 
-    // all lines to zero -> the record becomes "Sarfiyat Yok", pool fully restored
-    await rc.updateMyTransaction(kat.ctx, { transactionId: r.transactionId, updatedItems: [{ productId: w.cola.id, qty: 0 }, { productId: w.water.id, qty: 0 }] }, minutes(T0, 3));
-    expect((await testDb.minibarTransaction.findUniqueOrThrow({ where: { id: r.transactionId } })).type).toBe("SARFIYAT_YOK");
-    expect((await stockOf(w.hotelId, w.water.id)).remainingQty).toBe(100);
+    // all lines to zero is a delete, not a silent "Sarfiyat Yok": refused, nothing changes
+    const zero = rc.updateMyTransaction(kat.ctx, { transactionId: r.transactionId, updatedItems: [{ productId: w.cola.id, qty: 0 }, { productId: w.water.id, qty: 0 }] }, minutes(T0, 3));
+    expect(await messageOf(zero)).toBe("Tüm adetler sıfır olamaz; kaydı kaldırmak için Sil'i kullanın");
+    expect((await testDb.minibarTransaction.findUniqueOrThrow({ where: { id: r.transactionId } })).type).toBe("SETUP_KONTROL");
+  });
+
+  it("bugünkü Sarfiyat Yok düzenlenemez (not saklanır), listede düzenle kapalı, sil açık", async () => {
+    const w2 = await world();
+    const nc = await rc.recordNoConsumption(w2.kat.ctx, { roomId: w2.w.room.id, clientRequestId: randomUUID(), note: "Dolap tam" }, T0);
+    expect((await testDb.minibarTransaction.findUniqueOrThrow({ where: { id: nc.transactionId } })).note).toBe("Dolap tam");
+    expect(await messageOf(rc.updateMyTransaction(w2.kat.ctx, { transactionId: nc.transactionId, updatedItems: [{ productId: w2.w.cola.id, qty: 1 }] }, minutes(T0, 1)))).toBe(
+      "Sarfiyat Yok kaydı değiştirilemez; gerekirse silip ürün ekleyin",
+    );
+    const listed = (await rc.listMyTransactions(w2.kat.ctx, {}, minutes(T0, 2))).find((x) => x.id === nc.transactionId);
+    expect(listed).toMatchObject({ canEditDirectly: false, canDelete: true });
   });
 
   it("başkasının işlemi NOT_FOUND, dünkü FORBIDDEN, fazla alan / yinelenen ürün VALIDATION", async () => {

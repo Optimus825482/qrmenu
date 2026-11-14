@@ -46,7 +46,8 @@ export async function POST(request: Request, props: { params: Promise<{ roomId: 
 
     const legacy = (body.consumedItems ?? []).filter((i) => i.qty > 0);
     if (legacy.length === 0) {
-      const r = await recordNoConsumption(ctx, { roomId, clientRequestId });
+      const note = body.note?.trim();
+      const r = await recordNoConsumption(ctx, { roomId, clientRequestId, ...(note ? { note } : {}) });
       return { success: true, ...r, replenishedCount: 0 };
     }
     const fallback = await firstSetupOf(

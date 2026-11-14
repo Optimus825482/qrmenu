@@ -5,6 +5,7 @@ import { assertCan } from "@/lib/rbac";
 import { DomainError, fromZod } from "@/lib/result";
 import { businessDate, businessDay } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
+import { lockRow } from "./minibarCommon";
 
 /*
  * MMD (misafir müsait değil): the attendant went to the room and could not go in. It is NOT a DND: it does not
@@ -56,6 +57,8 @@ export async function recordMmd(ctx: Ctx, input: unknown, now: Date = new Date()
         return view(seen);
       }
     }
+    // Serialised with the room check and DND writers, so a check landing now is seen here.
+    await lockRow(tx, "rooms", roomId);
     // Same rule as markDnd: a room checked today (replacement, "Sarfiyat Yok" or a completed DND) was entered,
     // so "could not go in" no longer applies to it.
     const covered = await tx.roomCheck.count({

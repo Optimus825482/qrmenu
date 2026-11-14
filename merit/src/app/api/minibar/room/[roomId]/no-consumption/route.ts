@@ -5,7 +5,7 @@ import { recordNoConsumption } from "@/modules/minibar/server/roomCheckService";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const bodySchema = z.object({ clientRequestId: z.uuid() });
+const bodySchema = z.object({ clientRequestId: z.uuid(), note: z.string().trim().max(300).optional() });
 
 /** "Sarfiyat Yok": the room's minibar is complete. */
 export async function POST(request: Request, props: { params: Promise<{ roomId: string }> }) {

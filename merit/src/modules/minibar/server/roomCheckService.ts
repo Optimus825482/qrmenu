@@ -12,7 +12,7 @@ import { notify } from "@/modules/core/server/notifications";
 import { publishRadar } from "@/modules/radar/publish";
 import { QTY_BUTTON_MAX } from "../constants";
 import { dayRange } from "./dates";
-import { autoCompleteDnd } from "./dnd";
+import { autoCompleteDnd, reopenAutoCompletedDnd } from "./dnd";
 import { lockRow } from "./minibarCommon";
 import type { CorrectionRequestItem, RoomCheckHistoryItem } from "./minibarTypes";
 import { isStockManager, lockStocks, restoreStock, takeManyFromPool } from "./pool";
@@ -337,8 +337,11 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
   const [taskItem, hotelItems, mybar, lastTx, dnd, settings, proof] = await Promise.all([
     prisma.dailyTaskItem.findFirst({ where: { roomId, task: taskWhere }, include: { guestRecord: true } }),
     prisma.dailyTaskItem.count({ where: { task: taskWhere } }),
+    // Same pick as the floor view (floorPlan.ts): the oldest open request up to today, so a request left open
+    // from an earlier day is handled here too instead of only showing on the floor map.
     prisma.mybarRequest.findFirst({
-      where: { roomId, businessDate: date, status: "BEKLEMEDE" },
+      where: { roomId, businessDate: { lte: date }, status: "BEKLEMEDE" },
+      orderBy: [{ businessDate: "asc" }, { createdAt: "asc" }],
       include: { items: { include: { product: { select: { name: true } } } } },
     }),
     prisma.minibarTransaction.findFirst({
@@ -713,7 +716,12 @@ export async function firstSetupOf(ctx: Ctx, roomId: string, productIds: string[
   );
 }
 
-const noConsumptionSchema = z.strictObject({ roomId: id, clientRequestId: z.uuid() });
+const noConsumptionSchema = z.strictObject({
+  roomId: id,
+  clientRequestId: z.uuid(),
+  /** The attendant's own note; the standard sentence when none. */
+  note: z.string().trim().max(300).optional(),
+});
 
 /** "Sarfiyat Yok": the minibar is complete. One atomic record; a second one the same day is a CONFLICT. */
 export async function recordNoConsumption(
@@ -724,6 +732,7 @@ export async function recordNoConsumption(
   const parsed = noConsumptionSchema.safeParse(input);
   if (!parsed.success) throw fromZod(parsed.error);
   const { roomId, clientRequestId } = parsed.data;
+  const note = parsed.data.note || "Sarfiyat yok, minibar tam.";
   const room = await resolveRoom(ctx, roomId);
   await assertCan(ctx, SCREEN, "O", room.hotelId);
   const day = businessDate(now);
@@ -759,7 +768,7 @@ export async function recordNoConsumption(
           roomId: room.id,
           userId: ctx.user.id,
           type: "SARFIYAT_YOK",
-          note: "Sarfiyat yok, minibar tam.",
+          note,
           clientRequestId,
           occurredAt: now,
         },
@@ -902,6 +911,9 @@ export async function deleteTransactionTx(
   await tx.minibarTransaction.delete({ where: { id: row.id } });
 
   if (isToday) {
+    // The record had closed an active DND automatically: with nothing covering the room any more, that DND
+    // is open again (status AKTIF, the automatic check removed), so the room is not "checked" by it.
+    await reopenAutoCompletedDnd(tx, { hotelId: actor.hotelId, roomId: row.room.id, day: businessDate(now), userId: actor.userId });
     await reopenIfUncovered(tx, {
       hotelId: actor.hotelId,
       roomId: row.room.id,
@@ -989,7 +1001,7 @@ type UpdateInput = { transactionId: string; updatedItems: { productId: string; q
 
 /** Update inside an open transaction: same capacity rule, restore + take under ONE product-ordered pool lock. */
 export async function updateTransactionTx(tx: Tx, actor: Actor, input: UpdateInput, now: Date = new Date()) {
-  const { row } = await loadOwnTx(
+  const { row, isToday } = await loadOwnTx(
     tx,
     input.transactionId,
     actor,
@@ -998,6 +1010,10 @@ export async function updateTransactionTx(tx: Tx, actor: Actor, input: UpdateInp
   );
   if (row.type !== "SETUP_KONTROL" && row.type !== "SARFIYAT_YOK") {
     throw new DomainError("VALIDATION", "Bu işlem türü değiştirilemez");
+  }
+  // Today's "Sarfiyat Yok" is deleted, not edited into a replacement (an approved correction may still do it).
+  if (row.type === "SARFIYAT_YOK" && isToday && !actor.isManagerBypass) {
+    throw new DomainError("VALIDATION", "Sarfiyat Yok kaydı değiştirilemez; gerekirse silip ürün ekleyin");
   }
   const checklist = await loadRoomChecklist(tx, row.room.id);
   const caps = capacityByProduct(checklist);
@@ -1102,6 +1118,10 @@ export async function updateTransactionTx(tx: Tx, actor: Actor, input: UpdateInp
   const finalQty = new Map(row.items.map((i) => [i.productId, i.added]));
   for (const u of input.updatedItems) finalQty.set(u.productId, u.qty);
   const total = [...finalQty.values()].reduce((a, b) => a + b, 0);
+  if (total === 0 && isToday && !actor.isManagerBypass) {
+    // Turning a replacement into "Sarfiyat Yok" here would bypass its rules (another replacement that day).
+    throw new DomainError("VALIDATION", "Tüm adetler sıfır olamaz; kaydı kaldırmak için Sil'i kullanın");
+  }
   const type = total > 0 ? "SETUP_KONTROL" : "SARFIYAT_YOK";
   await tx.minibarTransaction.update({
     where: { id: row.id },
@@ -1261,8 +1281,8 @@ export async function listMyTransactions(
       occurredAt: t.occurredAt.toISOString(),
       dateStr,
       isToday,
-      canEditDirectly: isToday,
-      canDelete: isToday,
+      canEditDirectly: isToday && t.type === "SETUP_KONTROL",
+      canDelete: isToday && t.type !== "MYBAR_KARSILAMA",
       items,
       totalItemsCount: items.reduce((a, x) => a + x.added, 0),
       pendingCorrection:
@@ -1363,6 +1383,10 @@ export async function createCorrectionRequest(ctx: Ctx, input: unknown) {
     const pending = await tx.minibarCorrectionRequest.findFirst({ where: { transactionId, status: "BEKLIYOR" } });
     if (pending) {
       throw new DomainError("CONFLICT", "Bu işlem için zaten onay bekleyen bir düzeltme talebi bulunmaktadır");
+    }
+    // MyBar deliveries are managed from the MyBar screen: neither deletion nor correction can be approved here.
+    if (row.type !== "SETUP_KONTROL" && row.type !== "SARFIYAT_YOK") {
+      throw new DomainError("VALIDATION", "Bu işlem türü için düzeltme talebi oluşturulamaz");
     }
     if (actionType === "DUZELTME") {
       // Same rules the approval will apply (updateTransactionTx): only room-check records, only setup products.

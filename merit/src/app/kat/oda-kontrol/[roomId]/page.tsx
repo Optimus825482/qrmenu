@@ -93,7 +93,7 @@ const TASK_STATUS_LABEL: Record<string, string> = {
 };
 
 const timeOf = (iso: string | undefined): string =>
-  iso ? new Date(iso).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "";
+  iso ? new Date(iso).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Nicosia" }) : "";
 
 export default function OdaKontrolPage() {
   const canView = useCanViewPath();
@@ -173,6 +173,8 @@ export default function OdaKontrolPage() {
       const json = (await res.json()) as { transactionId?: string; error?: string; message?: string };
       if (!res.ok) {
         notify.error(json.error ?? json.message ?? "İkame kaydedilemedi.");
+        // The refusal may mean the QR proof ran out or the room changed meanwhile: show the room as it is now.
+        await loadRoom(false);
         return;
       }
       delete quickKeys.current[quickId];
