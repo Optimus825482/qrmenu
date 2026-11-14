@@ -107,24 +107,32 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   // 1. Navigation requests (HTML document) -> Network First with Offline HTML fallback.
-  //    502/503/504 from the proxy (Coolify redeploy: container restarting) also get the branded page,
-  //    which polls /api/health and reloads by itself when the app is back.
+  //    Two different causes, two different texts on the same page (body data-reason):
+  //    - "update": our proxy answered 502/503/504 (Coolify redeploy, container restarting) -> our side.
+  //    - "offline": the request never got an answer (fetch threw) -> the guest's device has no internet.
+  //    The page polls /api/health, keeps the reason up to date and reloads by itself when the app is back.
   if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
-        const offlinePage = async () => {
+        const offlinePage = async (reason) => {
           const cache = await caches.open(STATIC_CACHE);
           const cachedOffline = await cache.match(OFFLINE_URL);
-          return cachedOffline || new Response("Sistem güncelleniyor, lütfen birkaç saniye sonra yenileyin.", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+          if (!cachedOffline) {
+            const text = reason === "offline" ? "İnternet bağlantınızı kontrol edin." : "Sistem güncelleniyor, lütfen birkaç saniye sonra yenileyin.";
+            return new Response(text, { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+          }
+          if (reason === "update") return cachedOffline;
+          const html = (await cachedOffline.text()).replace('data-reason="update"', 'data-reason="offline"');
+          return new Response(html, { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } });
         };
         try {
           const response = await fetch(request);
           if (response.status === 502 || response.status === 503 || response.status === 504) {
-            return offlinePage();
+            return offlinePage("update");
           }
           return response;
         } catch {
-          return offlinePage();
+          return offlinePage("offline");
         }
       })()
     );

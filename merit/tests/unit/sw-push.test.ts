@@ -142,7 +142,7 @@ describe("sw önbellek kuralları", () => {
   });
 
   async function navigate(fetchImpl: () => Promise<Response>) {
-    const offline = new Response("offline-page");
+    const offline = new Response('<body data-reason="update">bekleme</body>');
     const sw = load({ fetch: fetchImpl, offline });
     let result: Promise<Response> | undefined;
     sw.handlers.fetch!({
@@ -161,11 +161,13 @@ describe("sw önbellek kuralları", () => {
     }
   });
 
-  it("ağ hatasında bekleme sayfası, normal ve 500 yanıtta uygulamanın yanıtı döner", async () => {
+  it("ağ hatasında (misafirin interneti yok) sayfa 'offline' nedeniyle, normal ve 500 yanıtta uygulamanın yanıtı döner", async () => {
     const down = await navigate(async () => {
       throw new TypeError("Failed to fetch");
     });
-    expect(down.response).toBe(down.offline);
+    const html = await down.response.text();
+    expect(html).toContain('data-reason="offline"');
+    expect(html).not.toContain('data-reason="update"');
     for (const status of [200, 404, 500]) {
       const { response } = await navigate(async () => new Response("app", { status }));
       expect(response.status).toBe(status);
