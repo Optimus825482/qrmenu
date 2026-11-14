@@ -65,7 +65,11 @@ const ODS_PRIMARY: Def[] = [
   // The hotel's room-service menu as a tree; sold-out items are marked and put back here.
   { id: "rs-menu", label: "Oda Servisi Menüsü", icon: "utensils", href: "/oda-servisi/menu", screen: "RO-TAL" },
 ];
-const ODS_MORE: Def[] = [];
+const ODS_MORE: Def[] = [
+  // Read-only floor grid of today's minibar room checks, every hotel selectable. The bar is full (five entries with
+  // "Daha"), so it sits under "Daha" on a phone and in the left menu on a tablet or PC.
+  { id: "minibar-watch", label: "Minibar Takip", icon: "minibar", href: "/oda-servisi/minibar-takip", screen: "RO-MBT" },
+];
 
 const DEPO_PRIMARY: Def[] = [
   { id: "pool", label: "Otel deposu", icon: "box", href: "/depo/stok", screen: "MB-ZIM" },

@@ -23,7 +23,7 @@ function allTexts(): string[] {
 
 describe("screenGuide kataloğu", () => {
   it("katalogdaki her ekranın rehberi var, fazladan kayıt yok", () => {
-    expect(SCREENS).toHaveLength(35);
+    expect(SCREENS).toHaveLength(36);
     for (const s of SCREENS) {
       const g = SCREEN_GUIDES[s.code];
       expect(g, s.code).toBeDefined();

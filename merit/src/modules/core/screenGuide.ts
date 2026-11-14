@@ -505,6 +505,20 @@ const LIST: ScreenGuide[] = [
     ],
   ),
   guide(
+    "RO-MBT",
+    "personel",
+    "Minibar oda kontrollerini kat planı üzerinde anlık izlersin; hangi odayı kimin, ne zaman kontrol ettiğini görürsün.",
+    [
+      ["mbt-otel", "Otel seçimi", "Üstteki listeden oteli değiştir; bütün otellerin kat planını görebilirsin."],
+      ["mbt-kat", "Kat planı", "Her kutu bir odadır; renkler Komuta Merkezi'ndeki Kat görünümüyle aynıdır."],
+      ["mbt-ayrinti", "Oda ayrıntısı", "Bir odaya dokun: kontrol saati, kontrol eden personel ve sonuç görünür."],
+    ],
+    [
+      "Bu ekran yalnız izleme içindir; buradan kayıt girilmez veya düzeltilmez.",
+      "Ekran kendiliğinden yenilenir; sayfayı elle yenilemen gerekmez.",
+    ],
+  ),
+  guide(
     "RO-SLA",
     "xp",
     "Oda servisi süre hedeflerini raporlarsın.",

@@ -63,6 +63,9 @@ const CATALOG: ReadonlyArray<readonly [ModuleKey, string, string, string]> = [
   // Oda Kontrol İşlemleri (14 Kas 2026): the room check records of all staff, edit / delete of any day. Last, so earlier
   // sort orders stay; the permission matrix lists it with the other MINIBAR screens.
   ["MINIBAR", "MB-OKI", "Oda Kontrol İşlemleri", "/kat/oda-kontrol-islemleri"],
+  // Minibar Takip (14 Kas 2026): the read-only floor grid of the minibar room checks for the room-service team, every
+  // hotel selectable. A ROOM_SERVICE screen on purpose: that team's roles do not hold the MINIBAR module.
+  ["ROOM_SERVICE", "RO-MBT", "Minibar Takip", "/oda-servisi/minibar-takip"],
 ];
 
 export const SCREENS: ScreenDef[] = CATALOG.map(([moduleKey, code, name, path], index) => ({

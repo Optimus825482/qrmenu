@@ -99,7 +99,7 @@ const DEPARTMENT_CORE_VIEW = new Set(["CR-KOM", "CR-RAP", "CR-RAD", "CR-DUR"]);
  * their whole global matrix (its `@limits` block). `match.exceptCodes` selects every role except those listed.
  */
 export type ScreenLimit = {
-  plan: "P5" | "P2" | "P3" | "P7" | "YR" | "KD" | "OKI";
+  plan: "P5" | "P2" | "P3" | "P7" | "YR" | "KD" | "OKI" | "MBT";
   match?: {
     kind?: RoleKind;
     profile?: Profile;
@@ -246,6 +246,12 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
   // the system administrator grants it to other users / roles from the Yetki Matrisi. Migration 20261114110000.
   { plan: "OKI", match: { exceptCodes: ["R-OSS"] }, keep: { "MB-OKI": [] } },
   { plan: "OKI", match: { codes: ["R-OSS"] }, grant: { "MB-OKI": ["R"] } },
+  // MBT (14 Kas 2026) — Minibar Takip (RO-MBT): the read-only floor grid of the minibar room checks inside the
+  // room-service screens. View only, for the room-service team and its managers (R-ODS, R-OSS, R-FBM, R-FBY; R-SYS
+  // has it through modules "ALL"); the other ROOM_SERVICE roles (R-BUT, R-MUS) get it from the Yetki Matrisi when
+  // needed. Migration 20261114160000.
+  { plan: "MBT", keep: { "RO-MBT": ["V"] } },
+  { plan: "MBT", match: { exceptCodes: ["R-ODS", "R-OSS", "R-FBM", "R-FBY"] }, keep: { "RO-MBT": [] } },
 ];
 
 const ACTION_ORDER: readonly Action[] = ["V", "O", "D", "A", "R"];

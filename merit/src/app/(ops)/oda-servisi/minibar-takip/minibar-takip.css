@@ -1,0 +1,178 @@
+/* Minibar Takip: the floor grid of the Komuta Merkezi "Kat" view (radar.css .rd-cell), sized for touch. Same tone
+   tokens, so a room has the same colour on both screens. */
+
+.mbt [data-tone="muted"] {
+  --tone-fg: var(--muted);
+  --tone-bg: var(--muted-bg);
+  --tone-line: var(--muted);
+}
+.mbt [data-tone="warn"] {
+  --tone-fg: var(--warn);
+  --tone-bg: var(--warn-bg);
+  --tone-line: var(--warn);
+}
+.mbt [data-tone="info"] {
+  --tone-fg: var(--info);
+  --tone-bg: var(--info-bg);
+  --tone-line: var(--info);
+}
+.mbt [data-tone="success"] {
+  --tone-fg: var(--success);
+  --tone-bg: var(--success-bg);
+  --tone-line: var(--success);
+}
+.mbt [data-tone="danger"] {
+  --tone-fg: var(--danger);
+  --tone-bg: var(--danger-bg);
+  --tone-line: var(--danger);
+}
+
+.mbt-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+@media (min-width: 1100px) {
+  .mbt-layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
+
+.mbt-grid {
+  display: grid;
+  gap: 10px;
+}
+.mbt-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.mbt-floor-name {
+  flex: none;
+  width: 72px;
+  padding-top: 12px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.mbt-cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mbt-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 56px;
+  height: 44px;
+  padding: 0;
+  border: 1.5px solid var(--tone-line);
+  border-radius: 8px;
+  background: var(--tone-bg);
+  color: var(--tone-fg);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mbt-cell[data-edge="dashed"] {
+  border-style: dashed;
+}
+.mbt-cell[aria-pressed="true"] {
+  outline: 3px solid var(--text);
+  outline-offset: 1px;
+}
+.mbt-cell:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 1px;
+}
+/* Corner marks (DND count, MyBar minutes) are painted from data-marks so the cell's text stays the room number. */
+.mbt-corner {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.mbt-corner::before {
+  content: attr(data-marks);
+  word-spacing: 2px;
+}
+.mbt-tick {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  line-height: 0;
+}
+
+.mbt-side {
+  display: grid;
+  gap: 12px;
+}
+/* Narrow screens: the opened room stays in view over the grid, above the bottom navigation. */
+@media (max-width: 1099px) {
+  .mbt-detail {
+    position: sticky;
+    top: 8px;
+    z-index: 5;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  }
+  /* Only the opened room (or its hint) goes above the grid; the staff list stays below it. */
+  .mbt-side {
+    display: contents;
+  }
+  .mbt-detail,
+  .mbt-hint {
+    order: -1;
+  }
+}
+
+.mbt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.mbt-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mbt-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 20px;
+  padding: 0 3px;
+  border: 1.5px solid var(--tone-line);
+  border-radius: 5px;
+  background: var(--tone-bg);
+  color: var(--tone-fg);
+  font-size: 9px;
+  font-weight: 800;
+}
+.mbt-swatch[data-edge="dashed"] {
+  border-style: dashed;
+}
+
+.mbt-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--muted-bg);
+  overflow: hidden;
+}
+.mbt-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
