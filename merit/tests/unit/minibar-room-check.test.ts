@@ -697,6 +697,28 @@ describe("QR doğrulama kanıtı (KAT-1) ve DND bekleme süresi (KAT-3)", () => 
     expect(await codeOf(mmd.recordMmd(gar.ctx, { roomId: w.room.id, reason: "Misafir uyuyor" }, T0))).toBe("FORBIDDEN");
   });
 
+  it("kontrol edilen odaya (ikame, Sarfiyat Yok, tamamlanan DND) MMD girilemez; önceki kaydın tekrarı yine döner", async () => {
+    const { w, kat, kat2 } = await world();
+    const key = randomUUID();
+    await mmd.recordMmd(kat.ctx, { roomId: w.room.id, reason: "Misafir uyuyor", clientRequestId: key }, T0);
+    await rep(kat.ctx, w, 1, { now: minutes(T0, 10) });
+    expect(await messageOf(mmd.recordMmd(kat.ctx, { roomId: w.room.id, reason: "Misafir uyuyor" }, minutes(T0, 20)))).toBe(
+      "Bu oda bugün zaten kontrol edildi; MMD kaydı girilemez",
+    );
+    // A retried tap of the earlier record is still that record, not a refusal.
+    expect(await codeOf(mmd.recordMmd(kat.ctx, { roomId: w.room.id, reason: "Misafir uyuyor", clientRequestId: key }, minutes(T0, 21)))).toBe("OK");
+
+    const w2 = await minibarWorld({ hotelCode: w.hotelCode });
+    await noUse(kat.ctx, w2.room.id, T0);
+    expect(await codeOf(mmd.recordMmd(kat.ctx, { roomId: w2.room.id, reason: "Misafir uyuyor" }, minutes(T0, 5)))).toBe("CONFLICT");
+
+    const w3 = await minibarWorld({ hotelCode: w.hotelCode });
+    await dnd.markDnd(kat.ctx, { roomId: w3.room.id }, T0);
+    await dnd.markDnd(kat2.ctx, { roomId: w3.room.id }, minutes(T0, 130));
+    expect(await codeOf(mmd.recordMmd(kat.ctx, { roomId: w3.room.id, reason: "Misafir uyuyor" }, minutes(T0, 140)))).toBe("CONFLICT");
+    expect(await testDb.roomMmd.count()).toBe(1);
+  });
+
   it("QR zorunluyken DND ve MMD kanıt istemez: odaya girilemediği için kaydedilirler", async () => {
     const { w, kat } = await world();
     await requireQr(w.hotelId);

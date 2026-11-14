@@ -56,6 +56,16 @@ export async function recordMmd(ctx: Ctx, input: unknown, now: Date = new Date()
         return view(seen);
       }
     }
+    // Same rule as markDnd: a room checked today (replacement, "Sarfiyat Yok" or a completed DND) was entered,
+    // so "could not go in" no longer applies to it.
+    const covered = await tx.roomCheck.count({
+      where: { roomId, checkDate: date, type: { in: ["URUN_EKLENDI", "SARFIYAT_YOK"] } },
+    });
+    if (covered > 0) throw new DomainError("CONFLICT", "Bu oda bugün zaten kontrol edildi; MMD kaydı girilemez");
+    const dnd = await tx.roomDnd.findUnique({ where: { roomId_date: { roomId, date } }, select: { status: true } });
+    if (dnd?.status === "TAMAMLANDI") {
+      throw new DomainError("CONFLICT", "Bu oda için DND kontrolü bugün tamamlandı; MMD kaydı girilemez");
+    }
     const row = await tx.roomMmd.create({
       data: { hotelId: room.hotelId, roomId, userId: ctx.user.id, date, at: now, reason, clientRequestId: clientRequestId ?? null },
     });

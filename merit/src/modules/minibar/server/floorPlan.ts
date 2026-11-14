@@ -437,6 +437,8 @@ export type RoomDetail = {
     type: string;
     occurredAt: string;
     note: string | null;
+    /** Who recorded it. */
+    by: string;
     items: { productId: string; productName: string; added: number; consumed: number }[];
   }[];
 };
@@ -469,6 +471,7 @@ export async function roomDetail(ctx: Ctx, roomId: string, now: Date = new Date(
         type: true,
         occurredAt: true,
         note: true,
+        user: { select: { fullName: true } },
         items: { select: { productId: true, added: true, consumed: true, product: { select: { name: true } } } },
       },
     }),
@@ -502,6 +505,7 @@ export async function roomDetail(ctx: Ctx, roomId: string, now: Date = new Date(
       type: t.type,
       occurredAt: t.occurredAt.toISOString(),
       note: t.note,
+      by: t.user?.fullName ?? "",
       items: t.items.map((i) => ({
         productId: i.productId,
         productName: i.product.name,

@@ -116,6 +116,20 @@ function getDndRecheckStatus(lastDndAtStr: string | null | undefined, recheckMin
 
 type MmdRow = { id: string; at: string; reason: string; by: string };
 
+/** A minibar record of the room (`/api/minibar/room/:id?detail=1`, `recent`). */
+type RoomRecord = {
+  id: string;
+  type: string;
+  occurredAt: string;
+  note: string | null;
+  by: string;
+  items: { productId: string; productName: string; added: number; consumed: number }[];
+};
+
+const timeTr = (iso: string) =>
+  new Date(iso).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Nicosia" });
+const dayOf = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Nicosia" });
+
 export default function KatDolulukDetailPage() {
   const params = useParams<{ floorId: string }>();
   const router = useRouter();
@@ -140,7 +154,8 @@ export default function KatDolulukDetailPage() {
   const [mmdOpen, setMmdOpen] = useState(false);
   const [mmdAsk, setMmdAsk] = useState<string | null>(null);
   const [roomMmds, setRoomMmds] = useState<MmdRow[]>([]);
-
+  // Records of a checked room (when, by whom, what was added); null while loading.
+  const [roomRecords, setRoomRecords] = useState<RoomRecord[] | null>(null);
 
 
   // Periodic clock update for live countdowns
@@ -200,9 +215,24 @@ export default function KatDolulukDetailPage() {
     }
   }, []);
 
+  const loadRoomRecords = useCallback(async (roomId: string) => {
+    setRoomRecords(null);
+    try {
+      const res = await mbFetch(`/api/minibar/room/${roomId}?detail=1`);
+      setRoomRecords(res.ok ? ((await res.json()) as { recent: RoomRecord[] }).recent : []);
+    } catch {
+      setRoomRecords([]);
+    }
+  }, []);
+
   // Only today's earlier checks matter while deciding on the room; older days are in the reports.
   const today = new Date(now).toLocaleDateString("sv-SE", { timeZone: "Europe/Nicosia" });
   const todaysDnd = (roomDndData?.history ?? []).filter((h) => h.date === today);
+  // Today's check records of the open room, oldest first (the order they happened).
+  const todaysChecks = (roomRecords ?? [])
+    .filter((r) => (r.type === "SETUP_KONTROL" || r.type === "SARFIYAT_YOK") && dayOf(r.occurredAt) === today)
+    .reverse();
+  const selectedChecked = selectedRoom?.checkStatus === "completed";
 
   // Opening a room card resets the dialog and loads its DND details (event handler, not an effect).
   // Empty rooms have no DND action, so their history is not loaded.
@@ -211,6 +241,9 @@ export default function KatDolulukDetailPage() {
     setDndKey(newRequestKey());
     setMmdOpen(false);
     setMmdAsk(null);
+    // A checked room shows what the check found: when, by whom and the products put back.
+    if (room?.checkStatus === "completed") void loadRoomRecords(room.id);
+    else setRoomRecords(null);
     if (room && room.status !== "empty") {
       setDndNote("");
       void loadRoomDnd(room.id);
@@ -413,7 +446,9 @@ export default function KatDolulukDetailPage() {
                 {filteredRooms.map((room) => {
                   const isCompleted = room.checkStatus === "completed";
                   const isDndActive = room.checkStatus === "dnd" || room.dndCount > 0;
-                  const dndStatus = isDndActive ? getDndRecheckStatus(room.lastDndAt, recheckMinutes, now) : null;
+                  // A checked room needs no DND re-check: no countdown, no red "DND Kontrolü!".
+                  const dndStatus =
+                    isDndActive && !isCompleted ? getDndRecheckStatus(room.lastDndAt, recheckMinutes, now) : null;
 
                   const hasUpcomingArrival = room.status === "arrival" || room.status === "clash" || Boolean(room.arrivalTime);
                   const arrivalInspection = hasUpcomingArrival && !isCompleted
@@ -427,12 +462,12 @@ export default function KatDolulukDetailPage() {
                   const mybarApproved = Boolean(room.mybarDetails?.approvedAt);
                   const isPriority = isPriorityArrival || isPriorityDnd || isPriorityMybar;
 
-                  // Kontrol edilen, kontrol bekleyen ve DND odalar için belirgin renk tonları
+                  // Kontrol edilen oda her zaman yeşil (bekleyen MyBar talebi rozetle ayrıca görünür).
                   let cardTone = "border-border bg-surface";
-                  if (isPriority) {
+                  if (isCompleted) {
+                    cardTone = "border-ok bg-ok/15 ring-1 ring-ok/40";
+                  } else if (isPriority) {
                     cardTone = "border-danger/80 bg-danger/10 ring-2 ring-danger/30";
-                  } else if (isCompleted) {
-                    cardTone = "border-ok/60 bg-ok/10";
                   } else if (isDndActive) {
                     cardTone = "border-warn/60 bg-warn/10";
                   } else if (room.status === "arrival") {
@@ -575,9 +610,9 @@ export default function KatDolulukDetailPage() {
                       <div className="mt-4 flex items-center justify-between border-t border-border/80 pt-2.5 text-xs">
                         <div>
                           {room.checkStatus === "completed" ? (
-                            <span className="inline-flex items-center gap-1.5 font-bold text-ok">
+                            <span data-testid="oda-kontrol-edildi" className="inline-flex items-center gap-1.5 font-bold text-ok">
                               <Icon name="check" size={15} />
-                              Kontrol Edildi
+                              Kontrol Edildi{room.lastCheckAt ? ` · ${timeTr(room.lastCheckAt)}` : ""}
                             </span>
                           ) : room.checkStatus === "dnd" ? (
                             <span className="inline-flex items-center gap-1.5 font-bold text-warn">
@@ -693,6 +728,53 @@ export default function KatDolulukDetailPage() {
               </div>
             </div>
 
+            {/* Check result of a checked room: when, by whom, what was put back. */}
+            {selectedChecked ? (
+              <div data-testid="kontrol-sonucu" className="rounded-xl border border-ok/50 bg-ok/10 p-4 space-y-3">
+                <h3 className="text-sm font-bold text-ok flex items-center gap-1.5">
+                  <Icon name="check-circle" size={16} />
+                  Bugünkü Kontrol Sonucu
+                </h3>
+                {roomRecords === null ? (
+                  <p className="text-xs text-muted italic">Kontrol kayıtları yükleniyor...</p>
+                ) : todaysChecks.length === 0 ? (
+                  <p className="text-xs text-text">
+                    {selectedRoom.lastCheckAt ? `${timeTr(selectedRoom.lastCheckAt)} · ` : ""}
+                    {selectedRoom.dndCount > 0 ? "DND kontrolleriyle tamamlandı; ürün eklenmedi." : "Kontrol edildi."}
+                  </p>
+                ) : (
+                  <ul className="space-y-2.5">
+                    {todaysChecks.map((r) => {
+                      const added = r.items.filter((i) => i.added > 0);
+                      return (
+                        <li key={r.id} className="rounded-lg border border-ok/30 bg-surface p-2.5 text-xs space-y-1.5">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="font-bold text-text tabular-nums">
+                              {timeTr(r.occurredAt)} · {r.type === "SARFIYAT_YOK" ? "Sarfiyat Yok" : "Ürün eklendi"}
+                            </span>
+                            {r.by ? <span className="text-muted">{r.by}</span> : null}
+                          </div>
+                          {r.type === "SARFIYAT_YOK" ? (
+                            <p className="text-muted">Minibar tam; ürün eklenmedi.</p>
+                          ) : added.length > 0 ? (
+                            <ul className="space-y-0.5">
+                              {added.map((i) => (
+                                <li key={i.productId} className="flex items-center justify-between gap-2 text-text">
+                                  <span>{i.productName}</span>
+                                  <span className="font-bold tabular-nums text-ok">+{i.added}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null}
+                          {r.note && r.type !== "SARFIYAT_YOK" ? <p className="italic text-muted">&ldquo;{r.note}&rdquo;</p> : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            ) : null}
+
             {/* DND Section */}
             {selectedRoom.status !== "empty" ? (
               <div className="rounded-xl border border-warn/30 bg-warn/5 p-4 space-y-3">
@@ -707,8 +789,14 @@ export default function KatDolulukDetailPage() {
                     </span>
                   ) : null}
                 </div>
+                {selectedChecked ? (
+                  <p data-testid="dnd-mmd-kapali" className="text-xs text-muted">
+                    Oda bugün kontrol edildi; DND ve MMD kaydı girilemez.
+                  </p>
+                ) : null}
 
-                {canRecord ? (
+                {/* A checked room takes no DND or MMD for the rest of the day (the server refuses both). */}
+                {canRecord && !selectedChecked ? (
                 <div className="space-y-2">
                   <label htmlFor="dnd-note-input" className="block text-xs font-semibold text-muted">
                     DND Açıklaması / Not (İsteğe bağlı)
