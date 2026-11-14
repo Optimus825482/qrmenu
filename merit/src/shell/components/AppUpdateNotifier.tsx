@@ -3,37 +3,74 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { AUTO_UPDATED_KEY } from "../staleBuildReload";
 import { useAppUpdate } from "../useAppUpdate";
+import { updatedNoticeShouldClose } from "../updatedNotice";
 import { Icon } from "@/components/icons/Icon";
 
 const subscribeNever = () => () => {};
-/** How long the "updated" notice stays when nobody closes it. */
-const UPDATED_NOTICE_MS = 20_000;
 
-/** The page reloaded itself into the new version (staleBuildReload): read once, then forgotten. */
-function takeAutoUpdated(): boolean {
+/** The page reloaded itself into the new version (staleBuildReload). Kept until the notice is closed. */
+function readAutoUpdated(): boolean {
   try {
-    const set = sessionStorage.getItem(AUTO_UPDATED_KEY) === "1";
-    if (set) sessionStorage.removeItem(AUTO_UPDATED_KEY);
-    return set;
+    return sessionStorage.getItem(AUTO_UPDATED_KEY) === "1";
   } catch {
     return false;
   }
 }
 
+function forgetAutoUpdated(): void {
+  try {
+    sessionStorage.removeItem(AUTO_UPDATED_KEY);
+  } catch {
+    // storage blocked: nothing to forget
+  }
+}
+
 /**
- * After an idle page updated itself, a short notice says so (the version and what is new), so the user knows the
- * app changed even though they never pressed "Güncelle".
+ * After an idle page updated itself, a notice says so (the version and what is new), so the user knows the
+ * app changed even though they never pressed "Güncelle". The page usually reloads while nobody is there, so
+ * the notice waits for somebody to come back (updatedNoticeShouldClose) instead of closing on a plain timer.
  */
 function AutoUpdatedNotice({ version, highlights }: { version: string; highlights: string[] }) {
   const [open, setOpen] = useState(false);
+
   useEffect(() => {
-    const show = setTimeout(() => setOpen(takeAutoUpdated()), 0);
-    const hide = setTimeout(() => setOpen(false), UPDATED_NOTICE_MS);
-    return () => {
-      clearTimeout(show);
-      clearTimeout(hide);
-    };
+    const show = setTimeout(() => setOpen(readAutoUpdated()), 0);
+    return () => clearTimeout(show);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const shownAt = Date.now();
+    let seenAt: number | null = null;
+    const unattendedScreen = window.location.pathname.startsWith("/radar");
+    const markSeen = () => {
+      if (seenAt === null) seenAt = Date.now();
+    };
+    const activity = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
+    for (const e of activity) window.addEventListener(e, markSeen, { passive: true });
+    const tick = setInterval(() => {
+      const now = Date.now();
+      const close = updatedNoticeShouldClose({
+        shownForMs: now - shownAt,
+        sinceSeenMs: seenAt === null ? null : now - seenAt,
+        unattendedScreen,
+      });
+      if (close) {
+        forgetAutoUpdated();
+        setOpen(false);
+      }
+    }, 1_000);
+    return () => {
+      clearInterval(tick);
+      for (const e of activity) window.removeEventListener(e, markSeen);
+    };
+  }, [open]);
+
+  const close = () => {
+    forgetAutoUpdated();
+    setOpen(false);
+  };
+
   if (!open) return null;
   return (
     <div
@@ -92,7 +129,7 @@ function AutoUpdatedNotice({ version, highlights }: { version: string; highlight
         </div>
         <button
           type="button"
-          onClick={() => setOpen(false)}
+          onClick={close}
           style={{
             minHeight: "36px",
             padding: "0 14px",
