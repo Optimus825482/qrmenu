@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { RecordDetail } from "../RecordDetail";
+import { useSelection } from "./useSelection";
 import { Icon } from "@/components/icons/Icon";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { orderStatusLabel, tableCardModel, type TableCard } from "../../labels";
@@ -80,7 +81,9 @@ function Detail({
   callOverdueSeconds,
   onOpenApp,
   onClose,
+  detail,
 }: {
+  detail?: boolean;
   table: TableCard;
   hotelId: string;
   now: number;
@@ -139,6 +142,15 @@ function Detail({
       ) : (
         <p className="rd-muted">Aktif istek veya çağrı yok (Boş masa).</p>
       )}
+      {detail !== undefined ? (
+        <RecordDetail
+          hotelId={hotelId}
+          kind="table"
+          id={table.tableId}
+          version={`${table.orders.map((o) => `${o.orderId}:${o.status}:${o.prep ?? ""}`).join(",")}|${table.call?.callId ?? ""}|${table.otherCalls ?? 0}`}
+          enabled={detail}
+        />
+      ) : null}
     </DetailBubble>
   );
 }
@@ -149,11 +161,16 @@ export type TablesProps = {
   outletId?: string;
   onSelectOutlet(outletId: string): void;
   onOpenApp?(appId: string): void;
+  /** Read the record's detail (contents, stages) when its panel opens: only while the screen shows the live state. */
+  recordDetail?: boolean;
+  /** The open table, owned by the radar (alerts, the ticker and the path bar open and close it). */
+  selectedTableId?: string | null;
+  onSelectTable?(tableId: string | null): void;
 };
 
 /** Masa: outlet picker, area grids of table cards and a read-only side panel (nothing here changes an order). */
-export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: TablesProps) {
-  const [selected, setSelected] = useState<string | null>(null);
+export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp, selectedTableId, onSelectTable, recordDetail }: TablesProps) {
+  const [selected, setSelected] = useSelection(selectedTableId, onSelectTable);
   const outlets: Outlet[] = view.layers.order?.outlets ?? [];
   if (outlets.length === 0) return <EmptyState title="Bu otelde aktif QR Menü veya Masa bulunamadı." />;
 
@@ -228,6 +245,7 @@ export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: Table
             callOverdueSeconds={view.config.callAlertSeconds || undefined}
             onOpenApp={onOpenApp}
             onClose={() => setSelected(null)}
+            detail={recordDetail}
           />
         ) : null}
       </div>

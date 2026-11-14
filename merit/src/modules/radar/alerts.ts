@@ -22,6 +22,10 @@ export const KIND_LABEL: Record<RadarAlert["kind"], string> = {
   MYBAR: "MyBar bekliyor",
   DND_EKSIK: "Rahatsız etmeyin eksik",
   EPOSTA: "E-posta hatası",
+  MINIBAR_ONAY: "Minibar onayı bekliyor",
+  SIPARIS_TAKILI: "Kapanmayan masa siparişi",
+  YUKLEME_HATA: "Doluluk dosyası hatalı",
+  PERSONEL_BOSTA: "Boşta personel",
 };
 
 /** The layer an alert belongs to: switching the layer off hides its alerts too. */
@@ -36,7 +40,18 @@ export const ALERT_LAYER: Record<RadarAlert["kind"], RadarLayer> = {
   YUKLEME: "MINIBAR",
   MYBAR: "MINIBAR",
   DND_EKSIK: "MINIBAR",
+  MINIBAR_ONAY: "MINIBAR",
+  YUKLEME_HATA: "MINIBAR",
+  SIPARIS_TAKILI: "SIPARIS",
+  PERSONEL_BOSTA: "PERSONEL",
 };
+
+/** An approved or ready table order still open this long after it was placed is "stuck" (a warning). */
+export const TABLE_ORDER_STUCK_MINUTES = 30;
+/** Role kinds whose long silence is worth a warning: the people on the floor, not the office. */
+const FLOOR_ROLE_KINDS: readonly string[] = ["OUTLET", "MUTFAK", "MINIBAR"];
+/** A floor session is "idle" for the alert after this many times the idle threshold of the staff list. */
+export const IDLE_ALERT_FACTOR = 2;
 
 /** Occupancy files are expected by this local (Nicosia) time. */
 export const UPLOAD_DEADLINE_HOUR = 10;
@@ -86,6 +101,19 @@ export function deriveAlerts(
               since: o.since,
             });
           }
+        }
+        for (const o of table.orders) {
+          if (o.status !== "ONAYLANDI" && o.status !== "HAZIR") continue;
+          const ageMin = Math.floor((t - ms(o.since)) / MINUTE_MS);
+          if (ageMin < TABLE_ORDER_STUCK_MINUTES) continue;
+          add({
+            key: `SIPARIS_TAKILI:${o.orderId}`,
+            severity: "warn",
+            kind: "SIPARIS_TAKILI",
+            ref: { outletId: outlet.outletId, tableId: table.tableId, orderId: o.orderId },
+            text: `Masa ${table.label}: #${o.orderNo} ${ageMin} dk'dır ${o.status === "HAZIR" ? "hazır, servis edilmedi" : "hazırlanıyor"}`,
+            since: o.since,
+          });
         }
         if (table.call && t - ms(table.call.since) > th.callAlertSeconds * 1000) {
           add({
@@ -183,6 +211,29 @@ export function deriveAlerts(
         since: nowIso,
       });
     }
+    for (const u of mb.uploads) {
+      if (u.status !== "HATA") continue;
+      add({
+        key: `YUKLEME_HATA:${u.kind}`,
+        severity: "crit",
+        kind: "YUKLEME_HATA",
+        ref: {},
+        text: `Doluluk dosyası işlenemedi (${u.kind})`,
+        since: u.at ?? nowIso,
+      });
+    }
+    const waiting = mb.approvals ? mb.approvals.corrections + mb.approvals.manualEntries + mb.approvals.stockCorrections : 0;
+    if (mb.approvals && waiting > 0) {
+      add({
+        key: "MINIBAR_ONAY",
+        severity: "warn",
+        kind: "MINIBAR_ONAY",
+        ref: {},
+        text: `${waiting} minibar talebi onay bekliyor`,
+        since: mb.approvals.oldestAt ?? nowIso,
+        count: waiting,
+      });
+    }
     if (nicosiaHour(now) >= UPLOAD_DEADLINE_HOUR) {
       for (const u of mb.uploads) {
         if (u.status !== "EKSIK") continue;
@@ -196,6 +247,21 @@ export function deriveAlerts(
         });
       }
     }
+  }
+
+  const idleMs = Math.max(1, th.idleMinutes) * IDLE_ALERT_FACTOR * MINUTE_MS;
+  for (const s of layers.staff?.sessions ?? []) {
+    if (!FLOOR_ROLE_KINDS.includes(s.roleKind) || s.status !== "ONLINE") continue;
+    const seen = ms(s.lastSeenAt);
+    if (seen === 0 || t - seen < idleMs) continue;
+    add({
+      key: `PERSONEL_BOSTA:${s.sessionId}`,
+      severity: "warn",
+      kind: "PERSONEL_BOSTA",
+      ref: {},
+      text: `${s.name && s.name !== "—" ? s.name : s.roleCode}: ${Math.floor((t - seen) / MINUTE_MS)} dk'dır işlem yok`,
+      since: s.lastSeenAt,
+    });
   }
 
   if (opts.isSystem && (opts.mailFailed ?? 0) > 0) {

@@ -284,3 +284,51 @@ describe("groupAlerts", () => {
     expect(shown.map((a) => a.severity)).toEqual(["crit", "warn"]);
   });
 });
+
+describe("radarda daha önce olmayan operasyon uyarıları", () => {
+  const kinds = (layers: AlertLayers) => deriveAlerts(layers, NOW, TH, OPTS).map((a) => `${a.kind}:${a.severity}`);
+
+  it("onaylanmış masa siparişi 30 dakikadan sonra 'kapanmadı' uyarısı verir, öncesinde vermez", () => {
+    expect(kinds(orderLayer({ orders: [{ status: "ONAYLANDI", since: ago(29 * 60_000) }] }))).toEqual([]);
+    const stuck = deriveAlerts(orderLayer({ orders: [{ status: "ONAYLANDI", since: ago(31 * 60_000) }] }), NOW, TH, OPTS);
+    expect(stuck).toHaveLength(1);
+    expect(stuck[0]).toMatchObject({ kind: "SIPARIS_TAKILI", severity: "warn", ref: { tableId: "t1", orderId: "ord0" } });
+    expect(stuck[0]!.text).toContain("31 dk");
+  });
+
+  it("bekleyen minibar talepleri tek uyarıda toplanır, en eskisinin saatiyle", () => {
+    const none = { corrections: 0, manualEntries: 0, stockCorrections: 0 };
+    expect(kinds(minibarLayer({ approvals: none }))).toEqual([]);
+    const a = deriveAlerts(
+      minibarLayer({ approvals: { corrections: 2, manualEntries: 1, stockCorrections: 0, oldestAt: ago(3_600_000) } }),
+      NOW,
+      TH,
+      OPTS,
+    );
+    expect(a).toEqual([expect.objectContaining({ kind: "MINIBAR_ONAY", severity: "warn", count: 3, since: ago(3_600_000) })]);
+  });
+
+  it("işlenemeyen doluluk dosyası saatten bağımsız kritik uyarıdır", () => {
+    const early = new Date("2026-11-03T05:00:00.000Z");
+    const a = deriveAlerts(minibarLayer({ uploads: [{ kind: "IN_HOUSE", status: "HATA" }] }), early, TH, OPTS);
+    expect(a.map((x) => `${x.kind}:${x.severity}`)).toEqual(["YUKLEME_HATA:crit"]);
+  });
+
+  it("sahadaki personel eşiğin iki katı sessiz kalınca uyarı verir; ofis rolleri ve kısa sessizlik vermez", () => {
+    const session = (roleKind: string, minutes: number) => ({
+      sessionId: `s-${roleKind}-${minutes}`,
+      userId: "u1",
+      name: "Ayşe Kaya",
+      roleCode: "R-GRS",
+      roleKind,
+      status: "ONLINE",
+      loginAt: ago(5 * 3_600_000),
+      lastSeenAt: ago(minutes * 60_000),
+    });
+    const of = (...s: object[]) => ({ staff: { sessions: s } }) as unknown as AlertLayers;
+    expect(kinds(of(session("OUTLET", 19), session("YONETIM", 90), session("SISTEM", 90)))).toEqual([]);
+    const a = deriveAlerts(of(session("OUTLET", 21)), NOW, TH, OPTS);
+    expect(a).toEqual([expect.objectContaining({ kind: "PERSONEL_BOSTA", severity: "warn" })]);
+    expect(a[0]!.text).toBe("Ayşe Kaya: 21 dk'dır işlem yok");
+  });
+});

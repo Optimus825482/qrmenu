@@ -628,7 +628,8 @@ button.rd-counter {
   border-width: 3px;
 }
 
-.rd-card[aria-pressed="true"] {
+.rd-card[aria-pressed="true"],
+.rd-card[aria-current="true"] {
   outline: 2px solid var(--text);
   outline-offset: 1px;
 }
@@ -646,6 +647,44 @@ button.rd-counter {
 
 .rd-card-waiter {
   font-size: var(--rd-small);
+}
+
+.rd-record {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.rd-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rd-path-levels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rd-path-here {
+  font-weight: 700;
+}
+
+.rd-path-place {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .rd-select-row {
@@ -1062,6 +1101,11 @@ button.rd-alert-chip {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
   align-items: start;
+}
+
+.rd-rs-summary {
+  grid-column: 1 / -1;
+  margin: 0;
 }
 
 .rd-rs-lanes {

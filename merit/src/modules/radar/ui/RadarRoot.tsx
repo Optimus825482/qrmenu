@@ -11,6 +11,8 @@ import type { RadarAlert, RadarEvent, RadarLayer, WallView } from "../types";
 import { AlertStrip } from "./AlertStrip";
 import { Legend, consumeInitialLegendOpen } from "./Legend";
 import { MenuBar, type MenuDef } from "./MenuBar";
+import { PathBar, type PathLevel, type PathPlace } from "./PathBar";
+import { VIEW_RECORD, alertRecord, eventRecord, floorOptions, floorRoomNumbers, pathSteps, type RadarRecord } from "./path";
 import { MotionLayer } from "./motion/MotionLayer";
 import { useMotionPreference } from "./motion/useMotionPreference";
 import { useDemoMode } from "./demoPreference";
@@ -107,6 +109,9 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const [choice, setChoice] = useState<ViewKey | null>(null);
   const [off, setOff] = useState<ReadonlySet<RadarLayer>>(new Set());
   const [outletId, setOutletId] = useState<string | undefined>(initial.outletId);
+  // Drill-down below the operation: the place (a floor; the outlet is `outletId`) and the open record.
+  const [floorId, setFloorId] = useState<string | undefined>(undefined);
+  const [record, setRecord] = useState<RadarRecord | null>(null);
   const [help, setHelp] = useState(false);
   const [replayDialog, setReplayDialog] = useState(false);
   const [demoDialog, setDemoDialog] = useState(false);
@@ -143,6 +148,8 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       setHotelId(prev.hotelId);
       setChoice(prev.choice);
       setOutletId(prev.outletId);
+      setFloorId(undefined);
+      setRecord(null);
     },
   });
   const demoStart = demo.start;
@@ -233,6 +240,8 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   // Wall: a view picked by hand holds only while the interaction pause runs, then the rotation takes over again
   // (state adjusted during render, so the stale pick never paints).
   if (wallIdle && choice !== null) setChoice(null);
+  // The same for a record opened by touch: it closes when the rotation resumes.
+  if (wallIdle && record !== null) setRecord(null);
 
   const overviewShown = view === "genel";
   useEffect(() => {
@@ -384,6 +393,20 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     setHotelId(id);
     setChoice(next);
     setOutletId(undefined);
+    setFloorId(undefined);
+    setRecord(null);
+  };
+  /** Another operation of the same hotel: the place filter stays (a floor is a floor in every room view), the record closes. */
+  const goView = (next: ViewKey) => {
+    setChoice(next);
+    setRecord(null);
+  };
+  /** Opens `target` on the record it was asked for; a floor filter must not hide a record of another floor. */
+  const openView = (target: ViewKey, rec: RadarRecord | null) => {
+    if (!views.includes(target)) return;
+    setChoice(target);
+    setRecord(rec);
+    if (rec) setFloorId(undefined);
   };
   // The overview has no moving scene: the switch goes to the first hotel and switches the scene on there.
   const toggleMotion = () => {
@@ -410,35 +433,37 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     });
 
   const focusAlert = (alert: RadarAlert) => {
-    if (alert.kind === "SIPARIS_ONAY" || alert.kind === "CAGRI") {
+    let target: ViewKey | undefined;
+    if (alert.kind === "SIPARIS_ONAY" || alert.kind === "SIPARIS_TAKILI" || alert.kind === "CAGRI") {
       if (alert.ref.outletId) setOutletId(alert.ref.outletId);
-      if (views.includes("masa")) setChoice("masa");
-    } else if (alert.kind === "YAZICI_IS" || alert.kind === "YAZICI") {
-      if (views.includes("kuyruk")) setChoice("kuyruk");
-    } else if (alert.kind === "RS_SLA") {
-      if (views.includes("odaServisi")) setChoice("odaServisi");
-    } else if (alert.kind === "MYBAR" && views.includes("mybar")) {
-      setChoice("mybar");
-    } else if (
-      alert.kind === "MYBAR" ||
+      target = "masa";
+    } else if (alert.kind === "YAZICI_IS" || alert.kind === "YAZICI") target = "kuyruk";
+    else if (alert.kind === "RS_SLA") target = "odaServisi";
+    else if (alert.kind === "MYBAR") target = views.includes("mybar") ? "mybar" : "kat";
+    else if (alert.kind === "PERSONEL_BOSTA") target = "personel";
+    else if (
       alert.kind === "DND_EKSIK" ||
       alert.kind === "STOK" ||
-      alert.kind === "YUKLEME"
+      alert.kind === "YUKLEME" ||
+      alert.kind === "YUKLEME_HATA" ||
+      alert.kind === "MINIBAR_ONAY"
     ) {
-      if (views.includes("kat")) setChoice("kat");
+      target = "kat";
     }
+    if (target) openView(target, alertRecord(alert, target));
   };
 
   const focusEvent = (ev: RadarEvent) => {
-    if (ev.type.startsWith("mybar.") && views.includes("mybar")) setChoice("mybar");
-    else if (ev.layer === "MINIBAR" && views.includes("kat")) setChoice("kat");
+    let target: ViewKey | undefined;
+    if (ev.type.startsWith("mybar.") && views.includes("mybar")) target = "mybar";
+    else if (ev.layer === "MINIBAR") target = "kat";
     else if (ev.layer === "SIPARIS") {
       if (ev.outletId) setOutletId(ev.outletId);
-      if (ev.type === "print.job" && views.includes("kuyruk")) setChoice("kuyruk");
-      else if (views.includes("masa")) setChoice("masa");
-    } else if (ev.layer === "ODA_SERVISI" && views.includes("odaServisi")) setChoice("odaServisi");
-    else if (ev.layer === "PERSONEL" && views.includes("personel")) setChoice("personel");
-    else if (ev.layer === "SISTEM" && views.includes("kuyruk")) setChoice("kuyruk");
+      target = ev.type === "print.job" && views.includes("kuyruk") ? "kuyruk" : "masa";
+    } else if (ev.layer === "ODA_SERVISI") target = "odaServisi";
+    else if (ev.layer === "PERSONEL") target = "personel";
+    else if (ev.layer === "SISTEM") target = "kuyruk";
+    if (target) openView(target, eventRecord(ev, target));
   };
 
   const visibleEvents = useMemo(
@@ -496,7 +521,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
           label: VIEW_LABELS[v],
           shortcut: String(VIEW_SLOTS.indexOf(v) + 1),
           checked: v === view,
-          onSelect: () => setChoice(v),
+          onSelect: () => goView(v),
         })),
         ...scope.map((l, i) => ({
           kind: "check" as const,
@@ -608,7 +633,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       const next = VIEW_SLOTS[Number(e.key) - 1];
       if (next && views.includes(next)) {
         e.preventDefault();
-        setChoice(next);
+        goView(next);
       }
     }
   };
@@ -621,6 +646,52 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const otherBoards = !wall && state.mode === "live" && !demo.running ? initial.hotels : undefined;
   const laneCap = wall ? WALL_LANE_CARDS : undefined;
   const wallPaging = wall ? WALL_PAGING : undefined;
+
+  // The detail of a record is today's: it is read only while the screen shows the live state (not a scrub, a replay or a demo).
+  const detailLive = state.mode === "live" && !demo.running;
+  const openRecord = (kind: RadarRecord["kind"]) => (record?.kind === kind ? record.id : null);
+  const selectRecord = (kind: RadarRecord["kind"]) => (id: string | null) => setRecord(id ? { kind, id } : null);
+
+  // The path, general to specific; every level above the current one is a way back up.
+  const pathUp: Record<string, () => void> = {
+    all: () => pickHotel("ALL", null),
+    hotel: () => {
+      setChoice("genel");
+      setFloorId(undefined);
+      setRecord(null);
+    },
+    view: () => {
+      setFloorId(undefined);
+      setRecord(null);
+    },
+    place: () => setRecord(null),
+  };
+  const pathLevels: PathLevel[] = pathSteps({
+    multi: initial.hotels.length > 1,
+    all,
+    hotelName,
+    view,
+    viewLabel: VIEW_LABELS[view],
+    snap,
+    outletId: activeOutletId,
+    floorId,
+    record,
+  }).map((s) => ({ key: s.key, label: s.label, onSelect: pathUp[s.key] }));
+  const floors = floorOptions(view, snap);
+  const pathPlace: PathPlace | undefined =
+    !all && floors.length > 1
+      ? {
+          label: "Kat",
+          value: floors.some((f) => f.id === floorId) ? (floorId ?? "") : "",
+          allLabel: "Tüm katlar",
+          options: floors,
+          onChange: (id) => {
+            setFloorId(id || undefined);
+            // The open record may not be on the floor that was picked.
+            if (VIEW_RECORD[view] !== "table") setRecord(null);
+          },
+        }
+      : undefined;
 
   let body;
   if (failed) {
@@ -656,7 +727,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
           layers={active}
           views={all ? undefined : views}
           onOpenHotel={(id) => pickHotel(id, null)}
-          onOpenView={(id, v) => (id === hotelId ? setChoice(v) : pickHotel(id, v))}
+          onOpenView={(id, v) => (id === hotelId ? goView(v) : pickHotel(id, v))}
         />
       );
     } else if (overviewError) {
@@ -672,9 +743,31 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       body = skeleton ? <div className="rd-center" aria-busy="true">Genel bakış yükleniyor</div> : null;
     }
   } else if (view === "kat" && snap) {
-    body = <Floor view={snap} now={viewNow} onOpenApp={openApp} paging={wallPaging} />;
+    body = (
+      <Floor
+        view={snap}
+        now={viewNow}
+        onOpenApp={openApp}
+        paging={wallPaging}
+        floorId={floorId}
+        recordDetail={detailLive}
+        selectedRoomId={openRecord("room")}
+        onSelectRoom={selectRecord("room")}
+      />
+    );
   } else if (view === "masa" && snap) {
-    body = <Tables view={snap} now={viewNow} outletId={activeOutletId} onSelectOutlet={setOutletId} onOpenApp={openApp} />;
+    body = (
+      <Tables
+        view={snap}
+        now={viewNow}
+        outletId={activeOutletId}
+        onSelectOutlet={setOutletId}
+        onOpenApp={openApp}
+        recordDetail={detailLive}
+        selectedTableId={openRecord("table")}
+        onSelectTable={selectRecord("table")}
+      />
+    );
   } else if (view === "kuyruk" && snap) {
     body = (
       <Queues
@@ -683,16 +776,28 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
         paging={wallPaging}
         onOpenOutlet={(id) => {
           setOutletId(id);
-          if (views.includes("masa")) setChoice("masa");
+          if (views.includes("masa")) goView("masa");
         }}
       />
     );
   } else if (view === "odaServisi" && snap) {
     // Live only: the other hotels' boards cannot follow a scrub, a replay or a demo of this one.
-    body = <RoomService view={snap} now={viewNow} onOpenApp={openApp} hotels={otherBoards} maxCards={laneCap} />;
+    body = (
+      <RoomService
+        view={snap}
+        now={viewNow}
+        onOpenApp={openApp}
+        hotels={otherBoards}
+        maxCards={laneCap}
+        roomNumbers={floorRoomNumbers(snap, floorId)}
+        recordDetail={detailLive}
+        selectedOrderId={openRecord("order")}
+        onSelectOrder={selectRecord("order")}
+      />
+    );
   } else if (view === "mybar" && snap) {
     // Live only, as the room service boards: the other hotels cannot follow a scrub, a replay or a demo.
-    body = <Mybar view={snap} now={viewNow} hotels={otherBoards} maxCards={laneCap} />;
+    body = <Mybar view={snap} now={viewNow} hotels={otherBoards} maxCards={laneCap} floorId={floorId} focusRoomId={openRecord("room")} />;
   } else if (view === "personel" && snap) {
     body = <Staff view={snap} now={viewNow} nameStyle={wall ? "short" : "full"} paging={wallPaging} />;
   }
@@ -733,7 +838,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
             onToggleLayer={toggleLayer}
             views={views}
             view={view}
-            onView={setChoice}
+            onView={goView}
             connection={connection}
             motion={{
               on: animationOn,
@@ -765,6 +870,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
                   : CONNECTION_TEXT[connection]
             }
           />
+          {!wall && loaded ? <PathBar idPrefix={idPrefix} levels={pathLevels} place={pathPlace} /> : null}
           {!all && state.mode === "scrub" && state.cursor ? (
             <div className="rd-banner" data-tone="warn" role="status">
               <Icon name="rewind" size={14} />

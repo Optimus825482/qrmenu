@@ -48,11 +48,21 @@ export function waitModel(
   return { ageMin, pct, tone: "info", levelLabel: "Normal" };
 }
 
-function OpenCard({ request, staleMinutes, now }: { request: OpenMybar; staleMinutes: number; now: number }) {
+function OpenCard({
+  request,
+  staleMinutes,
+  now,
+  focused,
+}: {
+  request: OpenMybar;
+  staleMinutes: number;
+  now: number;
+  focused?: boolean;
+}) {
   const ref = usePulse<HTMLDivElement>(`room:${request.roomId}`);
   const wait = waitModel(request.since, staleMinutes, now);
   return (
-    <div ref={ref} className="rd-card rd-rs-card" data-tone={wait.tone} data-request-id={request.requestId}>
+    <div ref={ref} className="rd-card rd-rs-card" data-tone={wait.tone} data-request-id={request.requestId} aria-current={focused ? "true" : undefined}>
       <span className="rd-card-label">Oda {request.roomNumber}</span>
       <div
         className="rd-bar"
@@ -124,18 +134,22 @@ export type MybarProps = {
   hotels?: { id: string; name: string }[];
   /** Cards per open lane (longest wait first), the rest as "+N": for a screen that cannot scroll. */
   maxCards?: number;
+  /** Place filter of the window's own hotel: only this floor. */
+  floorId?: string;
+  /** The room an alert or the ticker pointed at: its card is marked. */
+  focusRoomId?: string | null;
 };
 
 /** MyBar: one board per hotel, the window's hotel first. */
-export function Mybar({ view, now, hotels, maxCards }: MybarProps) {
-  if (!hotels || hotels.length < 2) return <MybarBoard view={view} now={now} maxCards={maxCards} />;
+export function Mybar({ view, now, hotels, ...own }: MybarProps) {
+  if (!hotels || hotels.length < 2) return <MybarBoard view={view} now={now} {...own} />;
   return (
     <div className="rd-rs-hotels">
       {[...hotels.filter((h) => h.id === view.hotelId), ...hotels.filter((h) => h.id !== view.hotelId)].map((hotel) => (
         <section key={hotel.id} className="rd-rs-hotel" aria-label={`${hotel.name} MyBar`}>
           <h2 className="rd-rs-hotel-name">{hotel.name}</h2>
           {hotel.id === view.hotelId ? (
-            <MybarBoard view={view} now={now} />
+            <MybarBoard view={view} now={now} {...own} maxCards={undefined} />
           ) : (
             <OtherHotelBoard hotelId={hotel.id} layers={BOARD_LAYERS}>
               {(other) => <MybarBoard view={other} now={now} />}
@@ -148,11 +162,13 @@ export function Mybar({ view, now, hotels, maxCards }: MybarProps) {
 }
 
 /** The four stages of a MyBar request as lanes: waiting for approval, approved, completed today, cancelled today. */
-function MybarBoard({ view, now, maxCards }: Omit<MybarProps, "hotels">) {
+function MybarBoard({ view, now, maxCards, floorId, focusRoomId }: Omit<MybarProps, "hotels">) {
   const layer = view.layers.minibar;
   if (!layer) return <EmptyState title="Bu otelde MyBar izlenmiyor." />;
-  const open = openMybarRequests(layer);
-  const closed = layer.mybarClosed ?? [];
+  const floor = floorId ? layer.floors.find((f) => f.floorId === floorId) : undefined;
+  const numbers = floor ? new Set(floor.rooms.map((r) => r.number)) : undefined;
+  const open = openMybarRequests(floor ? { ...layer, floors: [floor] } : layer);
+  const closed = (layer.mybarClosed ?? []).filter((c) => !numbers || numbers.has(c.roomNumber));
   const staleMinutes = view.config.mybarStaleMinutes || 15;
   const lanes = [
     { title: "Onay bekliyor", empty: "Onay bekleyen talep yok.", items: open.filter((r) => !r.seen) },
@@ -174,7 +190,7 @@ function MybarBoard({ view, now, maxCards }: Omit<MybarProps, "hotels">) {
           ) : (
             <div className="rd-list">
               {(maxCards ? lane.items.slice(0, maxCards) : lane.items).map((r) => (
-                <OpenCard key={r.requestId} request={r} staleMinutes={staleMinutes} now={now} />
+                <OpenCard key={r.requestId} request={r} staleMinutes={staleMinutes} now={now} focused={r.roomId === focusRoomId} />
               ))}
               {maxCards && lane.items.length > maxCards ? (
                 <p className="rd-muted rd-small">+{lane.items.length - maxCards} talep daha</p>

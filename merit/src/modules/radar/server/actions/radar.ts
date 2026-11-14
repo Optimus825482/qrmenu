@@ -3,7 +3,8 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { safeAction, type Result } from "@/lib/result";
-import type { RadarOverview, RadarSnapshot } from "../../types";
+import type { RadarOverview, RadarRecordDetail, RadarSnapshot } from "../../types";
+import { radarRecordDetail } from "../recordDetail";
 import { radarOverview } from "../overview";
 import { radarHotels } from "../scope";
 import { radarSnapshot } from "../snapshot";
@@ -18,6 +19,19 @@ const boardInput = snapshotInput.extend({
 export async function radarSnapshotAction(raw: unknown): Promise<Result<RadarSnapshot>> {
   return safeAction(boardInput, async ({ hotelId, layers }) =>
     radarSnapshot(await requireUser(), hotelId, layers ? { layers } : {}),
+  )(raw);
+}
+
+const recordInput = z.strictObject({
+  hotelId: z.string().min(1).max(64),
+  kind: z.enum(["room", "table", "order"]),
+  id: z.string().min(1).max(64),
+});
+
+/** Server Action behind a record's detail panel: what was ordered and the stages it went through. */
+export async function radarRecordDetailAction(raw: unknown): Promise<Result<RadarRecordDetail>> {
+  return safeAction(recordInput, async ({ hotelId, kind, id }) =>
+    radarRecordDetail(await requireUser(), hotelId, { kind, id }),
   )(raw);
 }
 

@@ -102,7 +102,11 @@ export type RadarAlert = {
     | "YUKLEME"
     | "MYBAR"
     | "DND_EKSIK"
-    | "EPOSTA";
+    | "EPOSTA"
+    | "MINIBAR_ONAY"
+    | "SIPARIS_TAKILI"
+    | "YUKLEME_HATA"
+    | "PERSONEL_BOSTA";
   hotelId: string;
   ref: {
     outletId?: string;
@@ -199,6 +203,11 @@ export type RadarSnapshot = {
       }[];
       stock: { productId: string; name: string; remaining: number; critical: number }[];
       uploads: { kind: string; status: UploadStatus | "EKSIK"; at?: string }[];
+      /**
+       * Minibar requests waiting for a manager's decision: check corrections, manual entries and pool stock
+       * corrections, with the creation time of the oldest. Absent in a replay snapshot.
+       */
+      approvals?: { corrections: number; manualEntries: number; stockCorrections: number; oldestAt?: string };
       /**
        * MyBar requests closed today (business day), oldest first: completed (TAMAM / EKSIK) or cancelled. Kept apart
        * from the rooms' open request: alerts and counters read open requests only.
@@ -304,3 +313,22 @@ export type RadarOverview = {
   }[];
 };
 
+
+/** One stage of a record's history: what happened, when, and (for roles that may read names) who did it. */
+export type RadarRecordStep = { label: string; at: string; by?: string };
+
+/** A block of a record's detail panel: ordered lines, a history, or the `empty` text when it has neither. */
+export type RadarRecordSection = {
+  title: string;
+  lines?: { name: string; qty: number }[];
+  steps?: RadarRecordStep[];
+  empty?: string;
+};
+
+/** The on-demand detail of one record (a room, a table, a room service order): the last level of the drill-down. */
+export type RadarRecordDetail = {
+  kind: "room" | "table" | "order";
+  id: string;
+  generatedAt: string;
+  sections: RadarRecordSection[];
+};

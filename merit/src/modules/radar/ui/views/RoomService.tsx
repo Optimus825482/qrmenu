@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { RecordDetail } from "../RecordDetail";
 import type { OrderStatus } from "@/generated/prisma/client";
 import { Icon } from "@/components/icons/Icon";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -10,6 +10,7 @@ import { DetailBubble } from "../DetailBubble";
 import type { RadarLayer } from "../../types";
 import { usePulse } from "../useRadar";
 import { OtherHotelBoard } from "./OtherHotelBoard";
+import { useSelection } from "./useSelection";
 
 /** What the board of another hotel loads: this operation's layer only. */
 const BOARD_LAYERS: readonly RadarLayer[] = ["ODA_SERVISI"];
@@ -121,21 +122,45 @@ export type RoomServiceProps = {
   hotels?: { id: string; name: string }[];
   /** Cards per lane (oldest first), the rest as "+N": for a screen that cannot scroll. */
   maxCards?: number;
+  /** Place filter of the window's own hotel: only orders of these rooms (a floor). */
+  roomNumbers?: ReadonlySet<string>;
+  /** Read the record's detail (contents, stages) when its panel opens: only while the screen shows the live state. */
+  recordDetail?: boolean;
+  /** The open order, owned by the radar (alerts, the ticker and the path bar open and close it). */
+  selectedOrderId?: string | null;
+  onSelectOrder?(orderId: string | null): void;
 };
 
+/** Today's deliveries in numbers: how many, how long on average, and how many inside the SLA (pure). */
+export function deliverySummary(
+  delivered: readonly { createdAt: string; deliveredAt: string }[],
+  slaMinutes: number,
+): { count: number; avgMin: number; onTimePct: number } | null {
+  const took = delivered
+    .map((o) => (Date.parse(o.deliveredAt) || 0) - (Date.parse(o.createdAt) || 0))
+    .filter((msTook) => msTook >= 0);
+  if (took.length === 0) return null;
+  const slaMs = Math.max(1, slaMinutes) * 60_000;
+  return {
+    count: took.length,
+    avgMin: Math.round(took.reduce((a, b) => a + b, 0) / took.length / 60_000),
+    onTimePct: Math.round((took.filter((msTook) => msTook < slaMs).length / took.length) * 100),
+  };
+}
+
 /** V5 Oda Servisi: one board per hotel, the window's hotel first. */
-export function RoomService({ view, now, onOpenApp, hotels, maxCards }: RoomServiceProps) {
-  if (!hotels || hotels.length < 2) return <RoomServiceBoard view={view} now={now} onOpenApp={onOpenApp} maxCards={maxCards} />;
+export function RoomService({ view, now, onOpenApp, hotels, ...own }: RoomServiceProps) {
+  if (!hotels || hotels.length < 2) return <RoomServiceBoard view={view} now={now} onOpenApp={onOpenApp} {...own} />;
   return (
     <div className="rd-rs-hotels">
       {[...hotels.filter((h) => h.id === view.hotelId), ...hotels.filter((h) => h.id !== view.hotelId)].map((hotel) => (
         <section key={hotel.id} className="rd-rs-hotel" aria-label={`${hotel.name} oda servisi`}>
           <h2 className="rd-rs-hotel-name">{hotel.name}</h2>
           {hotel.id === view.hotelId ? (
-            <RoomServiceBoard view={view} now={now} onOpenApp={onOpenApp} />
+            <RoomServiceBoard view={view} now={now} onOpenApp={onOpenApp} {...own} maxCards={undefined} />
           ) : (
             <OtherHotelBoard hotelId={hotel.id} layers={BOARD_LAYERS}>
-              {(other) => <RoomServiceBoard view={other} now={now} onOpenApp={onOpenApp} />}
+              {(other) => <RoomServiceBoard view={other} now={now} onOpenApp={onOpenApp} recordDetail={own.recordDetail} />}
             </OtherHotelBoard>
           )}
         </section>
@@ -145,17 +170,39 @@ export function RoomService({ view, now, onOpenApp, hotels, maxCards }: RoomServ
 }
 
 /** Status lanes with static SLA bars and read-only detail bubble (spec 2.2). */
-function RoomServiceBoard({ view, now, onOpenApp, maxCards }: Omit<RoomServiceProps, "hotels">) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const rs = view.layers.roomService;
-  if (!rs) return <EmptyState title="Bu otelde Oda Servisi kapalı." />;
-  const delivered = rs.delivered ?? [];
+function RoomServiceBoard({
+  view,
+  now,
+  onOpenApp,
+  maxCards,
+  roomNumbers,
+  selectedOrderId,
+  onSelectOrder,
+  recordDetail,
+}: Omit<RoomServiceProps, "hotels">) {
+  const [selectedId, setSelectedId] = useSelection(selectedOrderId, onSelectOrder);
+  const layer = view.layers.roomService;
+  if (!layer) return <EmptyState title="Bu otelde Oda Servisi kapalı." />;
+  const onFloor = <T extends { roomNumber: string }>(list: readonly T[]) =>
+    roomNumbers ? list.filter((o) => roomNumbers.has(o.roomNumber)) : list;
+  const rs = { ...layer, orders: onFloor(layer.orders) };
+  const delivered = onFloor(layer.delivered ?? []);
 
   const slaMinutes = rs.slaMinutes || view.config.slaMinutes || 30;
   const selected = selectedId ? rs.orders.find((o) => o.orderId === selectedId) : undefined;
 
+  const summary = deliverySummary(delivered, slaMinutes);
+
   return (
     <div className="rd-rs-layout">
+      {summary ? (
+        <p className="rd-rs-summary rd-small" role="status">
+          Bugün {summary.count} teslim · ortalama {summary.avgMin} dk ·{" "}
+          <span className="rd-badge" data-tone={summary.onTimePct >= 90 ? "success" : summary.onTimePct >= 70 ? "warn" : "danger"}>
+            %{summary.onTimePct} zamanında
+          </span>
+        </p>
+      ) : null}
       <div className="rd-rs-lanes">
         {LANES.map((lane) => {
           const items = rs.orders.filter((o) => o.status === lane.status);
@@ -231,6 +278,9 @@ function RoomServiceBoard({ view, now, onOpenApp, maxCards }: Omit<RoomServicePr
             SLA: {slaModel(selected, slaMinutes, now).ageMin}/{slaMinutes} dk (
             {slaModel(selected, slaMinutes, now).levelLabel})
           </p>
+          {recordDetail !== undefined ? (
+            <RecordDetail hotelId={view.hotelId} kind="order" id={selected.orderId} version={selected.status} enabled={recordDetail} />
+          ) : null}
         </DetailBubble>
       ) : null}
     </div>

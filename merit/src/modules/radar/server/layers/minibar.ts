@@ -248,6 +248,28 @@ export async function minibarLayer(env: LayerEnv): Promise<{ layer: MinibarLayer
     })
     .sort((a, b) => (a.userId < b.userId ? -1 : 1));
 
+  // Requests waiting for a decision (live only: a past instant cannot be rebuilt from the status column).
+  let approvals: MinibarLayer["approvals"];
+  if (!env.historical) {
+    const pending = { hotelId, status: "BEKLIYOR" as const };
+    const oldest = { where: pending, select: { createdAt: true }, orderBy: { createdAt: "asc" as const } };
+    const [corrections, manualEntries, stockCorrections, c0, m0, s0] = await Promise.all([
+      prisma.minibarCorrectionRequest.count({ where: pending }),
+      prisma.minibarManualEntryRequest.count({ where: pending }),
+      prisma.stockCorrectionRequest.count({ where: pending }),
+      prisma.minibarCorrectionRequest.findFirst(oldest),
+      prisma.minibarManualEntryRequest.findFirst(oldest),
+      prisma.stockCorrectionRequest.findFirst(oldest),
+    ]);
+    const first = [c0, m0, s0].flatMap((r) => (r ? [r.createdAt.getTime()] : []));
+    approvals = {
+      corrections,
+      manualEntries,
+      stockCorrections,
+      ...(first.length > 0 ? { oldestAt: new Date(Math.min(...first)).toISOString() } : {}),
+    };
+  }
+
   const uploadByKind = new Map(uploadRows.map((u) => [u.kind, u]));
   const uploads: MinibarLayer["uploads"] = UPLOAD_KINDS.map((kind) => {
     const row = uploadByKind.get(kind);
@@ -272,6 +294,7 @@ export async function minibarLayer(env: LayerEnv): Promise<{ layer: MinibarLayer
         critical: Number(s.critical_level),
       })),
       uploads,
+      ...(approvals ? { approvals } : {}),
       mybarClosed,
     },
     people,

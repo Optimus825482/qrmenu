@@ -27,6 +27,7 @@ export type WallController = {
 function alertTargetView(alert: RadarAlert): WallView {
   switch (alert.kind) {
     case "SIPARIS_ONAY":
+    case "SIPARIS_TAKILI":
     case "CAGRI":
       return "masa";
     case "RS_SLA":
@@ -39,7 +40,11 @@ function alertTargetView(alert: RadarAlert): WallView {
     case "DND_EKSIK":
     case "STOK":
     case "YUKLEME":
+    case "YUKLEME_HATA":
+    case "MINIBAR_ONAY":
       return "kat";
+    case "PERSONEL_BOSTA":
+      return "personel";
     default:
       return "genel";
   }

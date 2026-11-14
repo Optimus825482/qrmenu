@@ -1,5 +1,6 @@
 "use client";
 
+import { RecordDetail } from "../RecordDetail";
 import { PageMark, pageOf, type WallPaging } from "../WallPage";
 import { useRef, useState, type KeyboardEvent } from "react";
 import { Icon } from "@/components/icons/Icon";
@@ -9,6 +10,7 @@ import type { RadarState } from "../../state";
 import { DetailBubble } from "../DetailBubble";
 import { nextCell, type GridNavKey } from "../gridNav";
 import { usePulse } from "../useRadar";
+import { useSelection } from "./useSelection";
 
 type Minibar = NonNullable<RadarState["layers"]["minibar"]>;
 
@@ -89,7 +91,9 @@ function RoomDetail({
   now,
   onClose,
   onOpenApp,
+  detail,
 }: {
+  detail?: boolean;
   room: RoomCell;
   floorName: string;
   state: RadarState;
@@ -120,6 +124,15 @@ function RoomDetail({
       {room.mybar ? (
         <p>MyBar talebi {room.mybar.seen ? "onaylandı, tamamlanmayı bekliyor" : "onay bekliyor"} · {clock(room.mybar.since)}</p>
       ) : null}
+      {detail !== undefined ? (
+        <RecordDetail
+          hotelId={state.hotelId}
+          kind="room"
+          id={room.roomId}
+          version={`${room.mybar?.requestId ?? ""}|${room.mybar?.seen ?? ""}|${room.checkedToday?.at ?? ""}|${room.task?.status ?? ""}`}
+          enabled={detail}
+        />
+      ) : null}
     </DetailBubble>
   );
 }
@@ -131,6 +144,13 @@ export type FloorProps = {
   now: number;
   onFocus?(entity: { kind: "room"; roomId: string } | null): void;
   onOpenApp?(appId: string): void;
+  /** Read the record's detail (contents, stages) when its panel opens: only while the screen shows the live state. */
+  recordDetail?: boolean;
+  /** Place filter: only this floor. */
+  floorId?: string;
+  /** The open room, owned by the radar (alerts, the ticker and the path bar open and close it). */
+  selectedRoomId?: string | null;
+  onSelectRoom?(roomId: string | null): void;
   /** Set on the wall: floors and the side lists show one page at a time. */
   paging?: WallPaging;
 };
@@ -140,27 +160,30 @@ const WALL_FLOORS = 8;
 const WALL_SIDE_ROWS = 6;
 
 /** Kat: floors as grid rows, rooms as cells (spec 5.3) and the supervisors, pool stock and uploads on the side. */
-export function Floor({ view, now, onFocus, onOpenApp, paging }: FloorProps) {
+export function Floor({ view, now, onFocus, onOpenApp, paging, floorId, selectedRoomId, onSelectRoom, recordDetail }: FloorProps) {
   const minibar: Minibar | undefined = view.layers.minibar;
   const [focusId, setFocusId] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useSelection(selectedRoomId, onSelectRoom);
   const gridRef = useRef<HTMLDivElement | null>(null);
 
   if (!minibar) return <EmptyState title="Minibar katmanı bu kapsamda yok." />;
+  const floors = floorId && minibar.floors.some((f) => f.floorId === floorId)
+    ? minibar.floors.filter((f) => f.floorId === floorId)
+    : minibar.floors;
 
-  const flat = minibar.floors.flatMap((f, fi) => f.rooms.map((r) => ({ room: r, fi })));
+  const flat = floors.flatMap((f, fi) => f.rooms.map((r) => ({ room: r, fi })));
   const firstId = flat[0]?.room.roomId ?? null;
   const tabStop = focusId && flat.some((x) => x.room.roomId === focusId) ? focusId : firstId;
-  const dims = { rows: minibar.floors.map((f) => f.rooms.length) };
+  const dims = { rows: floors.map((f) => f.rooms.length) };
 
   const move = (fromId: string, e: KeyboardEvent<HTMLDivElement>) => {
     const i = flat.findIndex((x) => x.room.roomId === fromId);
     if (i < 0) return;
     const cur = flat[i];
-    const col = minibar.floors[cur.fi].rooms.findIndex((r) => r.roomId === fromId);
+    const col = floors[cur.fi].rooms.findIndex((r) => r.roomId === fromId);
     if (NAV_KEYS.has(e.key as GridNavKey)) {
       const next = nextCell(dims, { r: cur.fi, c: col }, e.key as GridNavKey);
-      const target = minibar.floors[next.r]?.rooms[next.c];
+      const target = floors[next.r]?.rooms[next.c];
       if (!target || target.roomId === fromId) return;
       e.preventDefault();
       const id = target.roomId;
@@ -179,7 +202,7 @@ export function Floor({ view, now, onFocus, onOpenApp, paging }: FloorProps) {
 
   const selectedRoom = selected ? flat.find((x) => x.room.roomId === selected) : undefined;
   const near = minibar.stock.filter((s) => s.remaining <= s.critical * 1.2).sort((a, b) => a.remaining - b.remaining);
-  const floorPage = pageOf(minibar.floors, WALL_FLOORS, paging, now);
+  const floorPage = pageOf(floors, WALL_FLOORS, paging, now);
   const supervisorPage = pageOf(minibar.supervisors, WALL_SIDE_ROWS, paging, now);
   const stockPage = pageOf(near, WALL_SIDE_ROWS, paging, now);
   const missingAll = minibar.uploads.length === 0 || minibar.uploads.every((u) => u.status === "EKSIK");
@@ -214,7 +237,7 @@ export function Floor({ view, now, onFocus, onOpenApp, paging }: FloorProps) {
                 </div>
               </div>
             ))}
-            <PageMark paged={floorPage} total={minibar.floors.length} unit="kat" />
+            <PageMark paged={floorPage} total={floors.length} unit="kat" />
           </div>
         )}
       </div>
@@ -223,11 +246,12 @@ export function Floor({ view, now, onFocus, onOpenApp, paging }: FloorProps) {
         {selectedRoom ? (
           <RoomDetail
             room={selectedRoom.room}
-            floorName={minibar.floors[selectedRoom.fi].name}
+            floorName={floors[selectedRoom.fi].name}
             state={view}
             now={now}
             onClose={() => setSelected(null)}
             onOpenApp={onOpenApp}
+            detail={recordDetail}
           />
         ) : null}
 
@@ -259,6 +283,35 @@ export function Floor({ view, now, onFocus, onOpenApp, paging }: FloorProps) {
             </ul>
           )}
         </section>
+
+        {minibar.approvals ? (
+          <section className="rd-panel" aria-label="Onay bekleyen minibar talepleri">
+            <h3>Onay bekleyenler</h3>
+            {minibar.approvals.corrections + minibar.approvals.manualEntries + minibar.approvals.stockCorrections === 0 ? (
+              <p className="rd-muted">Bekleyen talep yok.</p>
+            ) : (
+              <ul className="rd-list">
+                {(
+                  [
+                    ["Oda kontrolü düzeltme", minibar.approvals.corrections],
+                    ["Manuel giriş", minibar.approvals.manualEntries],
+                    ["Stok düzeltme", minibar.approvals.stockCorrections],
+                  ] as const
+                ).map(([label, n]) => (
+                  <li key={label} className="rd-row">
+                    <span>{label}</span>
+                    <span className="rd-badge" data-tone={n > 0 ? "warn" : "muted"}>
+                      {n}
+                    </span>
+                  </li>
+                ))}
+                {minibar.approvals.oldestAt ? (
+                  <li className="rd-muted rd-small">En eski talep {clock(minibar.approvals.oldestAt)}</li>
+                ) : null}
+              </ul>
+            )}
+          </section>
+        ) : null}
 
         <section className="rd-panel" aria-label="Otel deposu stoku">
           <h3>Otel deposu stoku</h3>
