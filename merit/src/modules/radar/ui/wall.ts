@@ -22,6 +22,11 @@ export type WallController = {
   interaction(nowMs: number): void;
   critical(alert: RadarAlert, nowMs: number): void;
   state(nowMs: number): WallControllerState;
+  /**
+   * New rotation list or period (another hotel, changed settings). The pause that is running and the place in
+   * the rotation are kept: switching the hotel by hand must not end the pause that the same hand started.
+   */
+  configure(opts: Pick<WallControllerOptions, "views" | "rotateSeconds">): void;
 };
 
 function alertTargetView(alert: RadarAlert): WallView {
@@ -54,8 +59,9 @@ function alertTargetView(alert: RadarAlert): WallView {
  * Pure rotation & hold state machine for `/radar` wall mode (Task 11).
  */
 export function createWallController(opts: WallControllerOptions): WallController {
-  const list: WallView[] = opts.views.length > 0 ? opts.views.slice() : ["genel"];
-  const rotateMs = Math.max(5, Math.min(300, Math.round(opts.rotateSeconds || 20))) * 1000;
+  const periodMs = (seconds: number) => Math.max(5, Math.min(300, Math.round(seconds || 20))) * 1000;
+  let list: WallView[] = opts.views.length > 0 ? opts.views.slice() : ["genel"];
+  let rotateMs = periodMs(opts.rotateSeconds);
   const critHoldMs = (opts.criticalHoldSeconds ?? 60) * 1000;
   const interactHoldMs = (opts.interactionPauseSeconds ?? 60) * 1000;
 
@@ -120,6 +126,17 @@ export function createWallController(opts: WallControllerOptions): WallControlle
       pauseUntilMs = Math.max(pauseUntilMs, nowMs + critHoldMs);
       criticalView = target;
       criticalFocus = alert.ref;
+    },
+
+    configure(next): void {
+      const views: WallView[] = next.views.length > 0 ? next.views.slice() : ["genel"];
+      const period = periodMs(next.rotateSeconds);
+      if (period === rotateMs && views.join("|") === list.join("|")) return;
+      const at = views.indexOf(list[idx]!);
+      list = views;
+      idx = at >= 0 ? at : 0;
+      rotateMs = period;
+      remainingMs = Math.min(remainingMs, rotateMs);
     },
 
     state(nowMs: number): WallControllerState {

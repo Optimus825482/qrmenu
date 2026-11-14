@@ -401,15 +401,15 @@ describe("Radar penceresinde modül demosu", () => {
     throw last;
   };
 
-  it("Tüm kompleks'te Demo başlat ve Animasyon etkindir; Animasyon ilk otele geçip açar", async () => {
+  it("Tüm kompleks'te Demo başlat ve Animasyon etkindir; Animasyon kapsamı değiştirmeden açılıp kapanır", async () => {
     render(<RadarRoot mode="window" initial={initial} />);
     expect((screen.getByTestId("radar-demo-start") as HTMLButtonElement).disabled).toBe(false);
     const motion = screen.getByRole("button", { name: "Animasyon" }) as HTMLButtonElement;
     expect(motion.disabled).toBe(false);
+    const before = motion.getAttribute("aria-pressed");
     fireEvent.click(motion);
-    await until(() => expect((screen.getByLabelText("Otel") as HTMLSelectElement).value).toBe("h1"));
-    expect(window.localStorage.getItem("merit.u.radar.motion")).not.toBe("0");
-    expect(screen.getByRole("button", { name: "Animasyon" }).getAttribute("aria-pressed")).toBe("true");
+    await until(() => expect(screen.getByRole("button", { name: "Animasyon" }).getAttribute("aria-pressed")).not.toBe(before));
+    expect((screen.getByLabelText("Otel") as HTMLSelectElement).value).toBe("ALL");
   });
 
   it("Başlat oteli ve görünümü değiştirir, rozet modülü yazar, Demo durdur öncekini geri koyar", async () => {

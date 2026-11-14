@@ -1386,3 +1386,8 @@ button.rd-alert-chip {
   .rd-menu:nth-last-child(-n+2) .rd-menu-list { left: auto; right: 0; }
   .rd-help { width: min(340px, calc(100% - 24px)); }
 }
+
+/* One stacked board of the whole complex: the box its own animated scene is laid over. */
+.rd-board-scene {
+  position: relative;
+}

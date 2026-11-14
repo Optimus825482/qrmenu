@@ -213,20 +213,19 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
             : "genel";
 
   const wallRotateViews = useMemo<WallView[]>(() => {
-    // The whole complex has no settings of its own: it rotates through every view it has, unless the address pins some.
-    const raw = initial.views ?? (all ? views : snap?.config.wallViews) ?? ["genel", "kat", "masa", "kuyruk"];
+    // The whole complex has no rotation settings of its own: it stays on its overview unless the address pins views.
+    const raw = initial.views ?? (all ? (["genel"] as WallView[]) : snap?.config.wallViews) ?? ["genel", "kat", "masa", "kuyruk"];
     const filtered = raw.filter((v) => views.includes(v));
     return filtered.length > 0 ? filtered : [views[0] ?? "genel"];
   }, [initial.views, all, snap?.config.wallViews, views]);
 
   const wallRotateSec = initial.rotateSeconds ?? snap?.config.wallRotateSeconds ?? 20;
-  // Keyed by content: a new snapshot hands over an equal list in a new array, and rebuilding the controller
-  // would drop the rotation position and an interaction/critical pause that is in progress.
-  const wallRotateKey = wallRotateViews.join("|");
-  const wallCtrl = useMemo(
-    () => createWallController({ views: wallRotateKey.split("|") as WallView[], rotateSeconds: wallRotateSec }),
-    [wallRotateKey, wallRotateSec],
-  );
+  // One controller for the life of the screen: a new list (another hotel, a new snapshot) is handed to it, so
+  // the rotation position and an interaction/critical pause that is in progress survive the change.
+  const [wallCtrl] = useState(() => createWallController({ views: wallRotateViews, rotateSeconds: wallRotateSec }));
+  wallCtrl.configure({ views: wallRotateViews, rotateSeconds: wallRotateSec });
+  // Nothing to rotate through: a view picked by hand has nowhere to be taken back to, so it stays.
+  const wallSticky = wallRotateViews.length <= 1;
   const wallState = wall ? wallCtrl.state(now) : null;
 
   const view: ViewKey =
@@ -243,9 +242,17 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const wallIdle = wall && wallState?.paused !== "interaction";
   // Wall: a view picked by hand holds only while the interaction pause runs, then the rotation takes over again
   // (state adjusted during render, so the stale pick never paints).
-  if (wallIdle && choice !== null) setChoice(null);
+  if (wallIdle && !wallSticky && choice !== null) setChoice(null);
   // The same for a record opened by touch: it closes when the rotation resumes.
   if (wallIdle && record !== null) setRecord(null);
+
+  // The header names the view on screen: a hand-picked one is not the rotation's.
+  const wallLabel =
+    !wallState || wallState.paused === "critical" || !choice || view === wallState.view
+      ? (wallState?.label ?? "")
+      : wallState.paused === "interaction" && !wallSticky
+        ? `Dönüş duraklatıldı · ${VIEW_LABELS[view]} · ${wallState.secondsLeft} sn`
+        : `Sabit · ${VIEW_LABELS[view]}`;
 
   const overviewShown = view === "genel";
   useEffect(() => {
@@ -415,14 +422,8 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     setRecord(rec);
     if (rec) setFloorId(undefined);
   };
-  // The overview has no moving scene: the switch goes to the first hotel and switches the scene on there.
-  const toggleMotion = () => {
-    if (!all) return motionPref.toggle();
-    const first = initial.hotels[0];
-    if (!first) return;
-    if (!motionPref.on) motionPref.toggle();
-    pickHotel(first.id, null);
-  };
+  // One switch everywhere: in the whole complex it stays there and moves the stacked boards.
+  const toggleMotion = () => motionPref.toggle();
   const beginDemo = ({ focus, hotelId: target }: { focus: DemoFocus; hotelId: string }) => {
     setDemoDialog(false);
     const prev: DemoPrev = { hotelId, choice, outletId };
@@ -481,8 +482,9 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const motionSpeed = state.mode === "replay" && state.replay ? state.replay.speed : 1;
   // A module demo shows its moving scene whatever the toolbar switch says.
   const demoMotion = demo.running && demo.focus !== undefined;
-  const animationOn = (motionPref.on || demoMotion) && !all;
-  const motionOn = animationOn && state.mode !== "scrub";
+  const animationOn = motionPref.on || demoMotion;
+  // The window's own scene belongs to one hotel; the whole complex animates each stacked board by itself.
+  const motionOn = animationOn && !all && state.mode !== "scrub";
 
   const currentHotel = useMemo(
     () => initial.hotels.find((h) => h.id === hotelId) ?? initial.hotels[0],
@@ -757,10 +759,10 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     }
   } else if (all && view === "odaServisi") {
     const boards = complexHotels("ODA_SERVISI");
-    body = <RoomServiceAll hotels={boards} now={now} onOpenApp={openApp} maxCards={complexCap(boards.length)} />;
+    body = <RoomServiceAll hotels={boards} now={now} onOpenApp={openApp} maxCards={complexCap(boards.length)} motion={animationOn} />;
   } else if (all && view === "mybar") {
     const boards = complexHotels("MINIBAR");
-    body = <MybarAll hotels={boards} now={now} maxCards={complexCap(boards.length)} />;
+    body = <MybarAll hotels={boards} now={now} maxCards={complexCap(boards.length)} motion={animationOn} />;
   } else if (view === "kat" && snap) {
     body = (
       <Floor
@@ -837,7 +839,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
               hotelName={hotelName}
               clockText={clock(now)}
               connection={connection}
-              rotationLabel={wallState?.label ?? ""}
+              rotationLabel={wallLabel}
               soundEnabled={soundEnabled}
               onToggleSound={toggleSound}
               onWakeLockStatus={setWakeLockAvailable}
@@ -865,7 +867,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
               on: animationOn,
               reduced: motionPref.reduced,
               onToggle: toggleMotion,
-              hint: all ? "Animasyon otel görünümünde çalışır: ilk otele geçip açar" : undefined,
+              hint: all && view === "genel" ? "Animasyon pano görünümlerinde çalışır (Oda Servisi, MyBar)" : undefined,
             }}
             sound={{
               enabled: soundEnabled,

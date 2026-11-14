@@ -188,3 +188,24 @@ describe("wall: reload after a release", () => {
     expect(wallShouldReload({ clientBuildId: "a", serverBuildId: "c", reloadedFor: "b" })).toBe(true);
   });
 });
+
+describe("wall: configure", () => {
+  it("keeps a running interaction pause when the rotation list changes (hotel switched by hand)", () => {
+    const wc = createWallController({ views: ["genel", "kat"], rotateSeconds: 20 });
+    wc.tick(0);
+    wc.interaction(1_000);
+    wc.configure({ views: ["genel"], rotateSeconds: 20 });
+    expect(wc.state(2_000).paused).toBe("interaction");
+    expect(wc.state(62_000).paused).toBeNull();
+  });
+
+  it("keeps the place in the rotation when the view on screen is still in the new list", () => {
+    const wc = createWallController({ views: ["genel", "kat", "masa"], rotateSeconds: 20 });
+    wc.tick(0);
+    expect(wc.state(21_000).view).toBe("kat");
+    wc.configure({ views: ["kat", "masa"], rotateSeconds: 20 });
+    expect(wc.state(22_000).view).toBe("kat");
+    wc.configure({ views: ["genel", "masa"], rotateSeconds: 20 });
+    expect(wc.state(23_000).view).toBe("genel");
+  });
+});

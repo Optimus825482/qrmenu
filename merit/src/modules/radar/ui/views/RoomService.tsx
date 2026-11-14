@@ -9,6 +9,7 @@ import type { RadarState } from "../../state";
 import { DetailBubble } from "../DetailBubble";
 import type { RadarLayer } from "../../types";
 import { usePulse } from "../useRadar";
+import { BoardScene } from "./BoardScene";
 import { OtherHotelBoard } from "./OtherHotelBoard";
 import { useSelection } from "./useSelection";
 
@@ -178,7 +179,12 @@ export function RoomServiceAll({
   now,
   onOpenApp,
   maxCards,
-}: Pick<RoomServiceProps, "now" | "onOpenApp" | "maxCards"> & { hotels: { id: string; name: string }[] }) {
+  motion = false,
+}: Pick<RoomServiceProps, "now" | "onOpenApp" | "maxCards"> & {
+  hotels: { id: string; name: string }[];
+  /** The animated scene, one per board. */
+  motion?: boolean;
+}) {
   if (hotels.length === 0) return <EmptyState title="Oda Servisi izlenen otel yok." />;
   return (
     <div className="rd-rs-hotels">
@@ -186,7 +192,11 @@ export function RoomServiceAll({
         <section key={hotel.id} className="rd-rs-hotel" aria-label={`${hotel.name} oda servisi`}>
           <h2 className="rd-rs-hotel-name">{hotel.name}</h2>
           <OtherHotelBoard hotelId={hotel.id} layers={BOARD_LAYERS}>
-            {(other) => <RoomServiceBoard view={other} now={now} onOpenApp={onOpenApp} maxCards={maxCards} recordDetail />}
+            {(other) => (
+              <BoardScene view={other} enabled={motion}>
+                <RoomServiceBoard view={other} now={now} onOpenApp={onOpenApp} maxCards={maxCards} recordDetail />
+              </BoardScene>
+            )}
           </OtherHotelBoard>
         </section>
       ))}
