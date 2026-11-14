@@ -1,0 +1,28 @@
+# Coolify'da ANA UYGULAMADAN AYRI bir kaynak olarak kurulur (bkz. KURULUM.md).
+# Alan adı (Domain) VERİLMEZ: yönlendirmeyi Traefik dinamik ayarı (traefik-merit-bakim.yaml) yapar.
+# Ana uygulama deploy edilirken bu konteyner ayakta kalmalıdır; bu yüzden ayrı kaynaktır ve
+# otomatik deploy'u kapalıdır / yalnız kendi dosyalarını izler.
+services:
+  bakim:
+    build:
+      context: ../..
+      dockerfile: deploy/maintenance/Dockerfile
+    restart: unless-stopped
+    networks:
+      coolify:
+        # Traefik bu adla ulaşır (traefik-merit-bakim.yaml → http://merit-bakim:80).
+        aliases:
+          - merit-bakim
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/brand/hotels/royal-transparent.webp"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 32m
+
+networks:
+  coolify:
+    external: true

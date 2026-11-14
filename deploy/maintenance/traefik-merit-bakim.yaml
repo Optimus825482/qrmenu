@@ -1,0 +1,38 @@
+# Coolify → Servers → (sunucu) → Proxy → Dynamic Configurations → "+ Add" ile
+# dosya adı: merit-bakim.yaml olarak eklenir. Traefik dosyayı kendiliğinden okur, yeniden başlatma gerekmez.
+#
+# Nasıl çalışır: Coolify'ın uygulama için kurduğu yönlendirme (Host + PathPrefix, daha uzun kural) her zaman
+# önceliklidir. Deploy sırasında uygulama konteyneri kapanınca o yönlendirme kaybolur ve aşağıdaki en düşük
+# öncelikli (priority: 1) yedek devreye girer: istek bakım sayfasına gider. Uygulama açılınca her şey
+# kendiliğinden eski haline döner.
+http:
+  routers:
+    merit-bakim-https:
+      rule: "Host(`qrmenu.merithotels.com`)"
+      entryPoints:
+        - https
+      priority: 1
+      service: merit-bakim
+      tls:
+        certResolver: letsencrypt
+
+    merit-bakim-http:
+      rule: "Host(`qrmenu.merithotels.com`)"
+      entryPoints:
+        - http
+      priority: 1
+      middlewares:
+        - merit-bakim-https
+      service: merit-bakim
+
+  middlewares:
+    merit-bakim-https:
+      redirectScheme:
+        scheme: https
+        permanent: false
+
+  services:
+    merit-bakim:
+      loadBalancer:
+        servers:
+          - url: "http://merit-bakim:80"

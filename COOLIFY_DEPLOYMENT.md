@@ -198,6 +198,12 @@ değişkenleri konteynere verir; yeni bir değişken eklenecekse `docker-compose
 * Masa QR kodları: yönetim arayüzünde **Masa QR Kodları** penceresi; Denetim Masası → Sistem →
   `qr.baseUrl` alanına genel HTTPS adresini yazın.
 
+## Deploy sırasında logolu güncelleme ekranı
+
+Compose dağıtımında uygulama yeniden başlarken 25-30 sn kesinti olur. Bu sürede herkese otel logolu
+"kısa süreli güncelleme" sayfasını göstermek için ayrı bir bakım servisi ve Traefik yedek yönlendirmesi kurulur:
+[deploy/maintenance/KURULUM.md](deploy/maintenance/KURULUM.md).
+
 ## Basılı oda QR kartları (değişmez kodlar)
 
 3 otelin 558 odasının QR kartı 10.11.2026'da `https://qrmenu.merithotels.com/q/<oda kodu>` adresiyle
