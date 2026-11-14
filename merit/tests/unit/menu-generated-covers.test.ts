@@ -69,14 +69,14 @@ describe("oda servisi: ölçüyle fiyatlanan içkiler", () => {
   const SPIRITS = ["VOTKALAR", "CİNLER", "ROMLAR", "TEKİLALAR", "KONYAKLAR", "BOURBON & TENNESSEE VİSKİLER", "MALT VİSKİLER", "İSKOÇ VİSKİLER", "İRLANDA VİSKİLERİ"];
 
   it.each(dataset.outlets.filter((o) => o.isRoomService))("$hotelCode: fiyatın 5 cl için olduğu ürün açıklamasında yazar", (outlet) => {
-    const spirits = outlet.items.filter((i) => SPIRITS.includes(i.catPath[0]!));
+    const spirits = outlet.items.filter((i) => i.catPath[0] === "ALKOLLÜ İÇECEKLER" && SPIRITS.includes(i.catPath[1]!));
     expect(spirits.length).toBeGreaterThan(80);
     for (const item of spirits) {
       expect(item.detail, item.name).toMatch(/^5 cl\b/);
       expect(item.detailEn, item.name).toMatch(/^5 cl\b/);
     }
     // Sıcak içecek ve meşrubatlar listede: ölçü notu almazlar, kaynak sistemin seçenek listesi de metne girmez.
-    const soft = outlet.items.filter((i) => ["SICAK İÇECEKLER", "MEŞRUBATLAR"].includes(i.catPath[0]!));
+    const soft = outlet.items.filter((i) => ["SICAK İÇECEKLER", "SOĞUK İÇECEKLER"].includes(i.catPath[0]!));
     expect(soft).toHaveLength(25);
     for (const item of soft) {
       expect(item.price, item.name).toBeGreaterThan(0);
@@ -84,8 +84,22 @@ describe("oda servisi: ölçüyle fiyatlanan içkiler", () => {
       expect(item.nameEn, item.name).not.toMatch(/[ÇĞİÖŞÜçğıöşü]/);
     }
     // Kokteyl ve biralar ölçüyle satılmaz.
-    for (const item of outlet.items.filter((i) => ["BİRALAR", "İMZA KOKTEYLLER", "ULUSLARARASI KOKTEYLLER"].includes(i.catPath[0]!))) {
+    for (const item of outlet.items.filter((i) => ["BİRALAR", "İMZA KOKTEYLLER", "ULUSLARARASI KOKTEYLLER"].includes(i.catPath[1]!))) {
       expect(item.detail ?? "", item.name).not.toMatch(/^\d+ cl\b/);
     }
+  });
+
+  it.each(dataset.outlets.filter((o) => o.isRoomService))("$hotelCode: içecekler sıcak, soğuk ve alkollü başlıklarının alt grubundadır", (outlet) => {
+    const HEADS = ["SICAK İÇECEKLER", "SOĞUK İÇECEKLER", "ALKOLLÜ İÇECEKLER"];
+    const drinks = outlet.items.filter((i) => HEADS.includes(i.catPath[0]!));
+    expect(drinks).toHaveLength(179);
+    // Her içecek bir alt grupta durur; hiçbir içki grubu üst düzeyde kalmaz.
+    for (const item of drinks) expect(item.catPath, item.name).toHaveLength(2);
+    const tops = new Set(outlet.items.map((i) => i.catPath[0]));
+    for (const group of [...SPIRITS, "BİRALAR", "MEŞRUBATLAR", "LİKÖRLER", "İMZA KOKTEYLLER"]) expect(tops.has(group), group).toBe(false);
+    const subs = (head: string) => new Set(drinks.filter((i) => i.catPath[0] === head).map((i) => i.catPath[1]));
+    expect(subs("ALKOLLÜ İÇECEKLER").size).toBe(14);
+    expect(subs("SICAK İÇECEKLER")).toEqual(new Set(["KAHVELER", "ÇAYLAR", "SALEP & SICAK ÇİKOLATA"]));
+    expect(subs("SOĞUK İÇECEKLER")).toEqual(new Set(["SULAR", "GAZLI İÇECEKLER", "MEYVE SUYU & SOĞUK ÇAY"]));
   });
 });

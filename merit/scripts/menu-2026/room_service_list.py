@@ -33,6 +33,36 @@ DRINK_GROUPS = [
     ("ULUSLARARASI KOKTEYLLER", ("ULUSLARARASI KOKTEYLLER", "INTERNATIONAL COCKTAILS")),
 ]
 COCKTAILS = {"İMZA KOKTEYLLER", "ULUSLARARASI KOKTEYLLER"}
+
+# The drinks sit under three headings, each group a sub-category of one: the guest picks hot, cold or
+# alcoholic first instead of scrolling past sixteen groups.
+HOT = ("SICAK İÇECEKLER", "HOT DRINKS")
+COLD = ("SOĞUK İÇECEKLER", "COLD DRINKS")
+ALCOHOL = ("ALKOLLÜ İÇECEKLER", "ALCOHOLIC DRINKS")
+# Hot and cold drinks are one group each in the list; on the menu they are split by kind (item name -> group).
+HOT_KINDS = [
+    (("KAHVELER", "COFFEES"), ["TÜRK KAHVESİ", "SINGLE ESPRESSO", "DOUBLE ESPRESSO", "AMERICANO", "CAFE LATTE", "CAPPUCCINO"]),
+    (("ÇAYLAR", "TEAS"), ["DEMLEME ÇAY", "TAZE DEMLEME BİTKİ ÇAYLARI", "RONNEFELDT BİTKİ ÇAYLARI"]),
+    (("SALEP & SICAK ÇİKOLATA", "SALEP & HOT CHOCOLATE"), ["SALEP", "SICAK ÇİKOLATA"]),
+]
+COLD_KINDS = [
+    (("SULAR", "WATERS"), ["SU CAM 330 ML.", "SAN PELLEGRINO", "SODA"]),
+    (("GAZLI İÇECEKLER", "SOFT DRINKS"), ["COCA COLA", "COCA COLA ZERO", "SPRITE", "FANTA", "BRITVIC", "ENERJİ İÇECEĞİ", "LOKAL ENERJİ İÇECEĞİ"]),
+    (("MEYVE SUYU & SOĞUK ÇAY", "JUICES & ICED TEA"), ["MEYVE SUYU", "LİMONATA", "ICE TEA ŞEFTALİ", "ICE TEA LİMON"]),
+]
+# Kinds a new item of the list falls into until it is placed above.
+HOT_OTHER = ("DİĞER SICAK İÇECEKLER", "OTHER HOT DRINKS")
+COLD_OTHER = ("MEŞRUBATLAR", "SOFT DRINKS")
+
+
+def menu_path(list_cat, group, list_name):
+    """Category path of a drink on the menu: ((heading, group) names, the same in English)."""
+    if list_cat in ("SICAK İÇECEKLER", "MEŞRUBATLAR"):
+        hot = list_cat == "SICAK İÇECEKLER"
+        head = HOT if hot else COLD
+        kind = next((k for k, names in (HOT_KINDS if hot else COLD_KINDS) if list_name in names), HOT_OTHER if hot else COLD_OTHER)
+        return [head[0], kind[0]], [head[1], kind[1]]
+    return [ALCOHOL[0], group[0]], [ALCOHOL[1], group[1]]
 # Groups whose note in the list is the item's own text (flavours, kinds), not a measure.
 DESCRIBED = COCKTAILS | {"SICAK İÇECEKLER", "MEŞRUBATLAR"}
 
@@ -171,6 +201,7 @@ def apply(outlets):
         for row in (lobby["items"] if lobby else []):
             by_cat.setdefault(row["catPath"][0], {})[norm(row["name"])] = row
         added = own = 0
+        rows = []
         for group in data["drinks"]:
             cat_tr, cat_en = names[group["category"]]
             for it in group["items"]:
@@ -179,8 +210,9 @@ def apply(outlets):
                 own += twin is None
                 if ours:
                     twin = {"name": it["name"], "nameEn": ours[0], "detail": ours[1] or it["detail"], "detailEn": ours[2], "imageUrl": None}
-                outlet["items"].append({
-                    "catPath": [cat_tr], "catPathEn": [cat_en],
+                path_tr, path_en = menu_path(group["category"], (cat_tr, cat_en), it["name"])
+                rows.append((path_tr, {
+                    "catPath": path_tr, "catPathEn": path_en,
                     "name": twin["name"] if twin else it["name"],
                     "nameEn": twin["nameEn"] if twin else it["name"],
                     "detail": measured(it.get("measure"), twin["detail"] if twin else it["detail"]),
@@ -188,8 +220,12 @@ def apply(outlets):
                     "price": it["price"],
                     "imageUrl": twin["imageUrl"] if twin else None,
                     "allergens": [], "tags": [],
-                })
+                }))
                 added += 1
+        # A sub-category keeps its items together and the kinds follow the order above, not the list's.
+        order = [k[0] for k, _ in HOT_KINDS] + [HOT_OTHER[0]] + [k[0] for k, _ in COLD_KINDS] + [COLD_OTHER[0]]
+        rows.sort(key=lambda r: order.index(r[0][1]) if r[0][1] in order else len(order))
+        outlet["items"].extend(row for _, row in rows)
         report.append("%-8s oda servisi: %d yemek fiyatlandı, %d fiyatsız %s; %d içki eklendi (%d'i lobi barda yok)" % (
             hotel, len(outlet["items"]) - added - len(unpriced), len(unpriced), unpriced or "", added, own))
     return report

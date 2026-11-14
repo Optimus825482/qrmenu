@@ -995,7 +995,7 @@
      "detail": null,
      "detailEn": null,
      "price": 25.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/633870b2ba64602e12cd8bc6.webp",
      "allergens": [],
      "tags": []
     },
@@ -1129,26 +1129,12 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
-     ],
-     "name": "DEMLEME ÇAY",
-     "nameEn": "BREWED TEA",
-     "detail": null,
-     "detailEn": null,
-     "price": 7.0,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "SICAK İÇECEKLER"
-     ],
-     "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "TÜRK KAHVESİ",
      "nameEn": "TURKISH COFFEE",
@@ -1161,42 +1147,48 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "SINGLE ESPRESSO",
      "nameEn": "SINGLE ESPRESSO",
      "detail": null,
      "detailEn": null,
      "price": 10.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/3cdc4d15d0ba92edd6d53a6e.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "DOUBLE ESPRESSO",
      "nameEn": "DOUBLE ESPRESSO",
      "detail": null,
      "detailEn": null,
      "price": 15.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/cd6821505ad55f8e1f450755.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "AMERICANO",
      "nameEn": "AMERICANO",
@@ -1209,10 +1201,12 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "CAFE LATTE",
      "nameEn": "CAFE LATTE",
@@ -1225,10 +1219,12 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "CAPPUCCINO",
      "nameEn": "CAPPUCCINO",
@@ -1241,42 +1237,66 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "TEAS"
+     ],
+     "name": "DEMLEME ÇAY",
+     "nameEn": "BREWED TEA",
+     "detail": null,
+     "detailEn": null,
+     "price": 7.0,
+     "imageUrl": "/merit-menus/cb64cfe92ae255a1cd5456b9.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SICAK İÇECEKLER",
+      "ÇAYLAR"
+     ],
+     "catPathEn": [
+      "HOT DRINKS",
+      "TEAS"
      ],
      "name": "TAZE DEMLEME BİTKİ ÇAYLARI",
      "nameEn": "FRESHLY BREWED HERBAL TEAS",
      "detail": "KIŞ ÇAYI, REZENE, IHLAMUR, ADA ÇAYI, HİBİSKUS, PAPATYA, YASEMİN, EKİNEZYA, MELİSA",
      "detailEn": "WINTER TEA, FENNEL, LINDEN, SAGE, HIBISCUS, CHAMOMILE, JASMINE, ECHINACEA, LEMON BALM",
      "price": 7.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/bc4b40b7890bc0637d933700.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "TEAS"
      ],
      "name": "RONNEFELDT BİTKİ ÇAYLARI",
      "nameEn": "RONNEFELDT TEAS",
      "detail": "ENGLISH BREAKFAST, EARL GREY, MORGENTAU (MANGO, LİMON, GÜL YAPRAKLARI), NANE, PAPATYA, AYURVEDA HERBS & GINGER (ZENCEFİL, LİMON), ROOIBOS CREAM ORANGE (PORTAKAL, VANİLYA), SWEET BERRIES (ÇİLEK, AHUDUDU, KIRMIZI MEYVELER), BEYAZ ÇAY",
      "detailEn": "ENGLISH BREAKFAST, EARL GREY, MORGENTAU (MANGO, LEMON, ROSE PETALS), PEPPERMINT, CHAMOMILE, AYURVEDA HERBS & GINGER (GINGER, LEMON), ROOIBOS CREAM ORANGE (ORANGE, VANILLA), SWEET BERRIES (STRAWBERRY, RASPBERRY, RED FRUITS), WHITE TEA",
      "price": 10.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/43f2f4fdb31b368c7cfcdeb6.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "SALEP & SICAK ÇİKOLATA"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "SALEP & HOT CHOCOLATE"
      ],
      "name": "SALEP",
      "nameEn": "SALEP",
@@ -1289,10 +1309,12 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "SALEP & SICAK ÇİKOLATA"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "SALEP & HOT CHOCOLATE"
      ],
      "name": "SICAK ÇİKOLATA",
      "nameEn": "HOT CHOCOLATE",
@@ -1305,26 +1327,12 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "SULAR"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "MEYVE SUYU",
-     "nameEn": "FRUIT JUICE",
-     "detail": "ANANAS, DOMATES, ELMA, GREYFURT, KAYISI, KIZILCIK, NAR, PORTAKAL, ŞEFTALİ, VİŞNE",
-     "detailEn": "PINEAPPLE, TOMATO, APPLE, GRAPEFRUIT, APRICOT, CRANBERRY, POMEGRANATE, ORANGE, PEACH, CHERRY",
-     "price": 7.0,
-     "imageUrl": "/merit-menus/94e58303b2050098483f28e5.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
-      "SOFT DRINKS"
+      "COLD DRINKS",
+      "WATERS"
      ],
      "name": "SU CAM 330 ml.",
      "nameEn": "WATER 330 ml.",
@@ -1337,10 +1345,12 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "SULAR"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
+      "COLD DRINKS",
+      "WATERS"
      ],
      "name": "SAN PELLEGRINO",
      "nameEn": "SAN PELLEGRINO",
@@ -1353,10 +1363,12 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "SULAR"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
+      "COLD DRINKS",
+      "WATERS"
      ],
      "name": "SODA",
      "nameEn": "MINERAL WATER",
@@ -1369,9 +1381,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "COCA COLA",
@@ -1385,9 +1399,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "COCA COLA ZERO",
@@ -1395,15 +1411,17 @@
      "detail": null,
      "detailEn": null,
      "price": 5.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/d5c6a4ba5702d802cf42e49a.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "SPRITE",
@@ -1417,9 +1435,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "FANTA",
@@ -1433,41 +1453,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "ICE TEA ŞEFTALİ",
-     "nameEn": "ICE TEA PEACH",
-     "detail": null,
-     "detailEn": null,
-     "price": 5.0,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "ICE TEA LİMON",
-     "nameEn": "ICE TEA LEMON",
-     "detail": null,
-     "detailEn": null,
-     "price": 5.0,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "ENERJİ İÇECEĞİ",
@@ -1481,9 +1471,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "LOKAL ENERJİ İÇECEĞİ",
@@ -1491,31 +1483,17 @@
      "detail": null,
      "detailEn": null,
      "price": 7.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/268190f8dec3c1cde984ee1d.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "LİMONATA",
-     "nameEn": "LEMONADE",
-     "detail": null,
-     "detailEn": null,
-     "price": 5.0,
-     "imageUrl": "/merit-menus/6095e88b36fdd829a2da66bd.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "BRITVIC",
@@ -1529,9 +1507,83 @@
     },
     {
      "catPath": [
+      "SOĞUK İÇECEKLER",
+      "MEYVE SUYU & SOĞUK ÇAY"
+     ],
+     "catPathEn": [
+      "COLD DRINKS",
+      "JUICES & ICED TEA"
+     ],
+     "name": "MEYVE SUYU",
+     "nameEn": "FRUIT JUICE",
+     "detail": "ANANAS, DOMATES, ELMA, GREYFURT, KAYISI, KIZILCIK, NAR, PORTAKAL, ŞEFTALİ, VİŞNE",
+     "detailEn": "PINEAPPLE, TOMATO, APPLE, GRAPEFRUIT, APRICOT, CRANBERRY, POMEGRANATE, ORANGE, PEACH, CHERRY",
+     "price": 7.0,
+     "imageUrl": "/merit-menus/94e58303b2050098483f28e5.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK İÇECEKLER",
+      "MEYVE SUYU & SOĞUK ÇAY"
+     ],
+     "catPathEn": [
+      "COLD DRINKS",
+      "JUICES & ICED TEA"
+     ],
+     "name": "ICE TEA ŞEFTALİ",
+     "nameEn": "ICE TEA PEACH",
+     "detail": null,
+     "detailEn": null,
+     "price": 5.0,
+     "imageUrl": "/merit-menus/29def488e0395e3155cd8959.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK İÇECEKLER",
+      "MEYVE SUYU & SOĞUK ÇAY"
+     ],
+     "catPathEn": [
+      "COLD DRINKS",
+      "JUICES & ICED TEA"
+     ],
+     "name": "ICE TEA LİMON",
+     "nameEn": "ICE TEA LEMON",
+     "detail": null,
+     "detailEn": null,
+     "price": 5.0,
+     "imageUrl": "/merit-menus/0854823d0806bfc10424fd52.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK İÇECEKLER",
+      "MEYVE SUYU & SOĞUK ÇAY"
+     ],
+     "catPathEn": [
+      "COLD DRINKS",
+      "JUICES & ICED TEA"
+     ],
+     "name": "LİMONATA",
+     "nameEn": "LEMONADE",
+     "detail": null,
+     "detailEn": null,
+     "price": 5.0,
+     "imageUrl": "/merit-menus/6095e88b36fdd829a2da66bd.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "EFES PILSEN",
@@ -1545,9 +1597,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "BUD",
@@ -1561,9 +1615,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "TUBORG",
@@ -1577,9 +1633,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "BECK'S",
@@ -1593,9 +1651,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "CARLSBERG",
@@ -1609,9 +1669,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "BUDWEISER",
@@ -1625,9 +1687,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "HEINEKEN",
@@ -1641,9 +1705,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "MILLER",
@@ -1657,9 +1723,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "CORONA",
@@ -1673,9 +1741,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "LIMONCELLO",
@@ -1689,9 +1759,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "GRAPPA",
@@ -1705,9 +1777,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "APEROL",
@@ -1721,9 +1795,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "CAMPARI",
@@ -1737,9 +1813,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "MARTINI EXTRA DRY",
@@ -1753,9 +1831,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "MARTINI ROSSO",
@@ -1769,9 +1849,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "MARTINI BIANCO",
@@ -1785,9 +1867,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "ABSOLUT BLUE",
@@ -1801,9 +1885,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "ABSOLUT VANILLA",
@@ -1817,9 +1903,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "ABSOLUT CITRON",
@@ -1833,9 +1921,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "SMIRNOFF RED",
@@ -1849,9 +1939,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "SMIRNOFF NORTH",
@@ -1865,9 +1957,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "RUSSIAN STANDARD",
@@ -1881,9 +1975,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "CIROC",
@@ -1897,9 +1993,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "GREY GOOSE SUPER PREMIUM",
@@ -1913,9 +2011,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "BELUGA GOLD",
@@ -1929,9 +2029,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "BELUGA NOBLE",
@@ -1945,9 +2047,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "BELVEDERE",
@@ -1961,9 +2065,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "KETEL ONE",
@@ -1977,9 +2083,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "HAKU",
@@ -1993,9 +2101,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "BEEFEATER PINK",
@@ -2009,9 +2119,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "BEEFEATER",
@@ -2025,9 +2137,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "BOMBAY SAPPHIRE",
@@ -2041,9 +2155,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "GORDON'S",
@@ -2057,9 +2173,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "HENDRICK'S",
@@ -2073,9 +2191,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "TANQUERAY NO:10",
@@ -2089,9 +2209,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "TANQUERAY CLASSIC",
@@ -2105,9 +2227,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "THE BOTANIST",
@@ -2121,9 +2245,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "ROKU",
@@ -2137,9 +2263,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "MONKEY 47",
@@ -2153,9 +2281,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "MALFY",
@@ -2169,9 +2299,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "MALFY GRAPEFRUIT",
@@ -2185,9 +2317,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "CANARIO CACHAÇA",
@@ -2201,9 +2335,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "CAPTAIN MORGAN WHITE",
@@ -2217,9 +2353,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "CAPTAIN MORGAN DARK",
@@ -2233,9 +2371,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "CAPTAIN MORGAN SPICED",
@@ -2243,15 +2383,17 @@
      "detail": "5 cl",
      "detailEn": "5 cl",
      "price": 10.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/230404b68603df767cc20d84.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "BACARDI CARTA BLANCA",
@@ -2265,9 +2407,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "BACARDI CARTA NEGRA (BLACK)",
@@ -2281,9 +2425,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "BACARDI CARTA ORO (GOLD)",
@@ -2297,9 +2443,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "BACARDI SPICED",
@@ -2313,9 +2461,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "HAVANA CLUB 3 ANOS",
@@ -2329,9 +2479,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "RON ZACAPA 23",
@@ -2345,9 +2497,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "MALIBU CARIBBEAN RUM",
@@ -2361,9 +2515,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "OLMECA SILVER",
@@ -2377,9 +2533,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "OLMECA GOLD",
@@ -2393,9 +2551,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "MILAGRO SILVER",
@@ -2409,9 +2569,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "MILAGRO REPOSADO",
@@ -2425,9 +2587,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "PATRON ANEJO",
@@ -2441,9 +2605,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "PATRON SILVER",
@@ -2457,9 +2623,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "DON JULIO BLANCO",
@@ -2473,9 +2641,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "DON JULIO 1942",
@@ -2489,9 +2659,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "NAPOLEON V.S.O.P.",
@@ -2505,9 +2677,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "HENNESSY V.S.",
@@ -2521,9 +2695,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "HENNESSY V.S.O.P.",
@@ -2537,9 +2713,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "HENNESSY X.O.",
@@ -2553,9 +2731,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "COURVOISIER V.S.",
@@ -2569,9 +2749,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "COURVOISIER V.S.O.P.",
@@ -2585,9 +2767,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "COURVOISIER X.O.",
@@ -2601,9 +2785,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "MARTELL V.S.",
@@ -2617,9 +2803,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "MARTELL V.S.O.P.",
@@ -2633,9 +2821,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "MARTELL X.O.",
@@ -2649,9 +2839,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "REMY MARTIN V.S.",
@@ -2665,9 +2857,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "REMY MARTIN V.S.O.P.",
@@ -2681,9 +2875,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "REMY MARTIN X.O.",
@@ -2697,9 +2893,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "METAXA 5 STAR",
@@ -2713,9 +2911,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "METAXA 7 STAR",
@@ -2729,9 +2929,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "FRANGELICO",
@@ -2745,9 +2947,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "ST. GERMAIN",
@@ -2761,9 +2965,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "DOM BÉNÉDICTINE",
@@ -2777,9 +2983,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "GALLIANO",
@@ -2793,9 +3001,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "GRANDE ABSENTE",
@@ -2809,9 +3019,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SHERIDAN'S",
@@ -2825,9 +3037,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "DRAMBUIE",
@@ -2841,9 +3055,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "PIMM'S",
@@ -2857,9 +3073,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "PISANG AMBON",
@@ -2873,9 +3091,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "COINTREAU",
@@ -2889,9 +3109,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "PASSOA",
@@ -2905,9 +3127,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SKINOS",
@@ -2921,9 +3145,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "BATIDA DE CÔCO",
@@ -2937,9 +3163,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "ARCHERS",
@@ -2953,9 +3181,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SAFARI",
@@ -2969,9 +3199,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "GRAND MARNIER",
@@ -2985,9 +3217,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "JÄGERMEISTER",
@@ -3001,9 +3235,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "FERNET BRANCA",
@@ -3017,9 +3253,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "TIA MARIA",
@@ -3033,9 +3271,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SAMBUCA",
@@ -3049,9 +3289,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "AMARETTO DISARONNO ORIGINALE",
@@ -3065,9 +3307,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "BAILEYS IRISH CREAM",
@@ -3081,9 +3325,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "KAHLUA",
@@ -3097,9 +3343,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "CARDINAL MELON",
@@ -3113,9 +3361,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SOUTHERN COMFORT",
@@ -3129,9 +3379,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "WENNEKER APRICOT BRANDY",
@@ -3145,9 +3397,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "CHAMBORD",
@@ -3161,9 +3415,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "UNDERBERG",
@@ -3177,9 +3433,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JIM BEAM BLACK",
@@ -3193,9 +3451,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JIM BEAM WHITE",
@@ -3209,9 +3469,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JACK DANIEL'S NO:7",
@@ -3225,9 +3487,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JACK DANIEL'S HONEY",
@@ -3241,9 +3505,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JACK DANIEL'S SINGLE BARREL",
@@ -3257,9 +3523,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "GENTLEMAN JACK",
@@ -3273,9 +3541,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JACK DANIEL'S NO:27 GOLD",
@@ -3289,9 +3559,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "WOODFORD RESERVE",
@@ -3305,9 +3577,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "BULLEIT BOURBON",
@@ -3321,9 +3595,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "BULLEIT RYE",
@@ -3337,9 +3613,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "MAKER'S MARK",
@@ -3353,9 +3631,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "OBAN 14 Y.O.",
@@ -3369,9 +3649,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENFIDDICH 12 Y.O.",
@@ -3385,9 +3667,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENFIDDICH 15 Y.O.",
@@ -3401,9 +3685,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENFIDDICH 18 Y.O.",
@@ -3417,9 +3703,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENFIDDICH 21 Y.O.",
@@ -3433,9 +3721,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "MACALLAN 12 Y.O.",
@@ -3449,9 +3739,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "MACALLAN 15 Y.O.",
@@ -3465,9 +3757,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "SINGLETON 12 Y.O.",
@@ -3481,9 +3775,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENMORANGIE ORIGINAL 10 Y.O.",
@@ -3497,9 +3793,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "BALVENIE DOUBLE WOOD 12 Y.O.",
@@ -3513,9 +3811,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENLIVET 12 Y.O.",
@@ -3529,9 +3829,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "TALISKER 10 Y.O.",
@@ -3545,9 +3847,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "LAGAVULIN DE 1995 16 Y.O.",
@@ -3561,9 +3865,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "FAMOUS GROUSE",
@@ -3577,9 +3883,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "BALLANTINE'S",
@@ -3593,9 +3901,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JUSTERINI & BROOKS RARE",
@@ -3609,9 +3919,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 12 Y.O.",
@@ -3625,9 +3937,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 15 Y.O.",
@@ -3641,9 +3955,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 18 Y.O.",
@@ -3657,9 +3973,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 21 Y.O.",
@@ -3673,9 +3991,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 25 Y.O.",
@@ -3689,9 +4009,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JOHNNIE WALKER RED LABEL",
@@ -3705,9 +4027,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JOHNNIE WALKER BLACK LABEL 12 Y.O.",
@@ -3721,9 +4045,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JOHNNIE WALKER 18 Y.O.",
@@ -3737,9 +4063,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JOHNNIE WALKER GOLD RESERVE",
@@ -3753,9 +4081,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "DIMPLE 15 Y.O.",
@@ -3769,9 +4099,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "MONKEY SHOULDER",
@@ -3785,9 +4117,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İRLANDA VİSKİLERİ"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "IRISH WHISKIES"
      ],
      "name": "JAMESON",
@@ -3801,9 +4135,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İRLANDA VİSKİLERİ"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "IRISH WHISKIES"
      ],
      "name": "JAMESON STOUT EDITION",
@@ -3817,9 +4153,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İRLANDA VİSKİLERİ"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "IRISH WHISKIES"
      ],
      "name": "CONNEMARA",
@@ -3833,9 +4171,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "AURA",
@@ -3849,9 +4189,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "HARMONY",
@@ -3865,9 +4207,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "ILLUSION",
@@ -3881,9 +4225,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "THE PASSION",
@@ -3897,9 +4243,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "PORT",
@@ -3913,9 +4261,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "OLD FASHIONED",
@@ -3929,9 +4279,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "NEGRONI",
@@ -3945,9 +4297,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "ESPRESSO MARTINI",
@@ -3961,9 +4315,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "WHISKEY SOUR",
@@ -3977,9 +4333,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "APEROL SPRITZ",
@@ -4330,7 +4688,7 @@
      "detail": null,
      "detailEn": null,
      "price": 7,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/b54e2fbef75b5ede5c6910f9.webp",
      "allergens": [],
      "tags": []
     },
@@ -8017,7 +8375,7 @@
      "detail": null,
      "detailEn": null,
      "price": 10,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/b875410924d5af08bdf39744.webp",
      "allergens": [],
      "tags": []
     },
@@ -8225,7 +8583,7 @@
      "detail": null,
      "detailEn": null,
      "price": 7,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/b54e2fbef75b5ede5c6910f9.webp",
      "allergens": [],
      "tags": []
     },
@@ -8241,7 +8599,7 @@
      "detail": null,
      "detailEn": null,
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/74492ced2cde93cc1ceb58c3.webp",
      "allergens": [],
      "tags": []
     },
@@ -10968,7 +11326,7 @@
      "detail": null,
      "detailEn": null,
      "price": 7,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/bd7db18bfc8f447b9e7b463d.webp",
      "allergens": [],
      "tags": []
     },
@@ -11016,7 +11374,7 @@
      "detail": null,
      "detailEn": null,
      "price": 15,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/76e6aa561b4559178cd09eaa.webp",
      "allergens": [],
      "tags": []
     },
@@ -11032,7 +11390,7 @@
      "detail": null,
      "detailEn": null,
      "price": 15,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/38122740d0e8051ae277f288.webp",
      "allergens": [],
      "tags": []
     },
@@ -11112,7 +11470,7 @@
      "detail": null,
      "detailEn": null,
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/f0842650531bac901b68cc04.webp",
      "allergens": [],
      "tags": []
     },
@@ -11582,7 +11940,7 @@
      "detail": null,
      "detailEn": null,
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/289e719bb128e5ccb76f5509.webp",
      "allergens": [],
      "tags": []
     },
@@ -12527,7 +12885,7 @@
      "detail": null,
      "detailEn": null,
      "price": 20,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/d1c626761f23b34998478268.webp",
      "allergens": [],
      "tags": []
     },
@@ -13311,7 +13669,7 @@
      "detail": null,
      "detailEn": null,
      "price": 40,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/26b92bc272e99c50d838fed8.webp",
      "allergens": [],
      "tags": []
     },
@@ -13343,7 +13701,7 @@
      "detail": null,
      "detailEn": null,
      "price": 90,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/6714804e218e58d8a5510123.webp",
      "allergens": [],
      "tags": []
     },
@@ -20285,7 +20643,7 @@
      "detail": null,
      "detailEn": null,
      "price": 25.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/633870b2ba64602e12cd8bc6.webp",
      "allergens": [],
      "tags": []
     },
@@ -20419,26 +20777,12 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
-     ],
-     "name": "DEMLEME ÇAY",
-     "nameEn": "BREWED TEA",
-     "detail": null,
-     "detailEn": null,
-     "price": 7.0,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "SICAK İÇECEKLER"
-     ],
-     "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "TÜRK KAHVESİ",
      "nameEn": "TURKISH COFFEE",
@@ -20451,42 +20795,48 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "SINGLE ESPRESSO",
      "nameEn": "SINGLE ESPRESSO",
      "detail": null,
      "detailEn": null,
      "price": 10.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/3cdc4d15d0ba92edd6d53a6e.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "DOUBLE ESPRESSO",
      "nameEn": "DOUBLE ESPRESSO",
      "detail": null,
      "detailEn": null,
      "price": 15.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/cd6821505ad55f8e1f450755.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "AMERICANO",
      "nameEn": "AMERICANO",
@@ -20499,10 +20849,12 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "CAFE LATTE",
      "nameEn": "CAFE LATTE",
@@ -20515,10 +20867,12 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "CAPPUCCINO",
      "nameEn": "CAPPUCCINO",
@@ -20531,42 +20885,66 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "TEAS"
+     ],
+     "name": "DEMLEME ÇAY",
+     "nameEn": "BREWED TEA",
+     "detail": null,
+     "detailEn": null,
+     "price": 7.0,
+     "imageUrl": "/merit-menus/cb64cfe92ae255a1cd5456b9.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SICAK İÇECEKLER",
+      "ÇAYLAR"
+     ],
+     "catPathEn": [
+      "HOT DRINKS",
+      "TEAS"
      ],
      "name": "TAZE DEMLEME BİTKİ ÇAYLARI",
      "nameEn": "FRESHLY BREWED HERBAL TEAS",
      "detail": "KIŞ ÇAYI, REZENE, IHLAMUR, ADA ÇAYI, HİBİSKUS, PAPATYA, YASEMİN, EKİNEZYA, MELİSA",
      "detailEn": "WINTER TEA, FENNEL, LINDEN, SAGE, HIBISCUS, CHAMOMILE, JASMINE, ECHINACEA, LEMON BALM",
      "price": 7.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/bc4b40b7890bc0637d933700.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "TEAS"
      ],
      "name": "RONNEFELDT BİTKİ ÇAYLARI",
      "nameEn": "RONNEFELDT TEAS",
      "detail": "ENGLISH BREAKFAST, EARL GREY, MORGENTAU (MANGO, LİMON, GÜL YAPRAKLARI), NANE, PAPATYA, AYURVEDA HERBS & GINGER (ZENCEFİL, LİMON), ROOIBOS CREAM ORANGE (PORTAKAL, VANİLYA), SWEET BERRIES (ÇİLEK, AHUDUDU, KIRMIZI MEYVELER), BEYAZ ÇAY",
      "detailEn": "ENGLISH BREAKFAST, EARL GREY, MORGENTAU (MANGO, LEMON, ROSE PETALS), PEPPERMINT, CHAMOMILE, AYURVEDA HERBS & GINGER (GINGER, LEMON), ROOIBOS CREAM ORANGE (ORANGE, VANILLA), SWEET BERRIES (STRAWBERRY, RASPBERRY, RED FRUITS), WHITE TEA",
      "price": 10.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/43f2f4fdb31b368c7cfcdeb6.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "SALEP & SICAK ÇİKOLATA"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "SALEP & HOT CHOCOLATE"
      ],
      "name": "SALEP",
      "nameEn": "SALEP",
@@ -20579,10 +20957,12 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "SALEP & SICAK ÇİKOLATA"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "SALEP & HOT CHOCOLATE"
      ],
      "name": "SICAK ÇİKOLATA",
      "nameEn": "HOT CHOCOLATE",
@@ -20595,26 +20975,12 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "SULAR"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "MEYVE SUYU",
-     "nameEn": "FRUIT JUICE",
-     "detail": "ANANAS, DOMATES, ELMA, GREYFURT, KAYISI, KIZILCIK, NAR, PORTAKAL, ŞEFTALİ, VİŞNE",
-     "detailEn": "PINEAPPLE, TOMATO, APPLE, GRAPEFRUIT, APRICOT, CRANBERRY, POMEGRANATE, ORANGE, PEACH, CHERRY",
-     "price": 7.0,
-     "imageUrl": "/merit-menus/3d095f89b8a505124c2eb191.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
-      "SOFT DRINKS"
+      "COLD DRINKS",
+      "WATERS"
      ],
      "name": "SU CAM 330 ml.",
      "nameEn": "WATER 330 ml.",
@@ -20627,10 +20993,12 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "SULAR"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
+      "COLD DRINKS",
+      "WATERS"
      ],
      "name": "SAN PELLEGRINO",
      "nameEn": "SAN PELLEGRINO",
@@ -20643,10 +21011,12 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "SULAR"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
+      "COLD DRINKS",
+      "WATERS"
      ],
      "name": "SODA",
      "nameEn": "MINERAL WATER",
@@ -20659,9 +21029,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "COCA COLA",
@@ -20675,9 +21047,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "COCA COLA ZERO",
@@ -20685,15 +21059,17 @@
      "detail": null,
      "detailEn": null,
      "price": 5.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/d5c6a4ba5702d802cf42e49a.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "SPRITE",
@@ -20707,9 +21083,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "FANTA",
@@ -20723,41 +21101,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "ICE TEA ŞEFTALİ",
-     "nameEn": "ICE TEA PEACH",
-     "detail": null,
-     "detailEn": null,
-     "price": 5.0,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "ICE TEA LİMON",
-     "nameEn": "ICE TEA LEMON",
-     "detail": null,
-     "detailEn": null,
-     "price": 5.0,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "ENERJİ İÇECEĞİ",
@@ -20771,9 +21119,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "LOKAL ENERJİ İÇECEĞİ",
@@ -20781,31 +21131,17 @@
      "detail": null,
      "detailEn": null,
      "price": 7.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/268190f8dec3c1cde984ee1d.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "LİMONATA",
-     "nameEn": "LEMONADE",
-     "detail": null,
-     "detailEn": null,
-     "price": 5.0,
-     "imageUrl": "/merit-menus/b8bccd3e8b01e31c8bad815f.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "BRITVIC",
@@ -20819,9 +21155,83 @@
     },
     {
      "catPath": [
+      "SOĞUK İÇECEKLER",
+      "MEYVE SUYU & SOĞUK ÇAY"
+     ],
+     "catPathEn": [
+      "COLD DRINKS",
+      "JUICES & ICED TEA"
+     ],
+     "name": "MEYVE SUYU",
+     "nameEn": "FRUIT JUICE",
+     "detail": "ANANAS, DOMATES, ELMA, GREYFURT, KAYISI, KIZILCIK, NAR, PORTAKAL, ŞEFTALİ, VİŞNE",
+     "detailEn": "PINEAPPLE, TOMATO, APPLE, GRAPEFRUIT, APRICOT, CRANBERRY, POMEGRANATE, ORANGE, PEACH, CHERRY",
+     "price": 7.0,
+     "imageUrl": "/merit-menus/3d095f89b8a505124c2eb191.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK İÇECEKLER",
+      "MEYVE SUYU & SOĞUK ÇAY"
+     ],
+     "catPathEn": [
+      "COLD DRINKS",
+      "JUICES & ICED TEA"
+     ],
+     "name": "ICE TEA ŞEFTALİ",
+     "nameEn": "ICE TEA PEACH",
+     "detail": null,
+     "detailEn": null,
+     "price": 5.0,
+     "imageUrl": "/merit-menus/29def488e0395e3155cd8959.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK İÇECEKLER",
+      "MEYVE SUYU & SOĞUK ÇAY"
+     ],
+     "catPathEn": [
+      "COLD DRINKS",
+      "JUICES & ICED TEA"
+     ],
+     "name": "ICE TEA LİMON",
+     "nameEn": "ICE TEA LEMON",
+     "detail": null,
+     "detailEn": null,
+     "price": 5.0,
+     "imageUrl": "/merit-menus/0854823d0806bfc10424fd52.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK İÇECEKLER",
+      "MEYVE SUYU & SOĞUK ÇAY"
+     ],
+     "catPathEn": [
+      "COLD DRINKS",
+      "JUICES & ICED TEA"
+     ],
+     "name": "LİMONATA",
+     "nameEn": "LEMONADE",
+     "detail": null,
+     "detailEn": null,
+     "price": 5.0,
+     "imageUrl": "/merit-menus/b8bccd3e8b01e31c8bad815f.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "EFES PILSEN",
@@ -20835,9 +21245,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "BUD",
@@ -20851,9 +21263,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "TUBORG",
@@ -20867,9 +21281,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "BECK'S",
@@ -20883,9 +21299,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "CARLSBERG",
@@ -20899,9 +21317,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "BUDWEISER",
@@ -20915,9 +21335,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "HEINEKEN",
@@ -20931,9 +21353,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "MILLER",
@@ -20947,9 +21371,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "CORONA",
@@ -20963,9 +21389,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "LIMONCELLO",
@@ -20979,9 +21407,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "GRAPPA",
@@ -20995,9 +21425,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "APEROL",
@@ -21011,9 +21443,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "CAMPARI",
@@ -21027,9 +21461,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "MARTINI EXTRA DRY",
@@ -21043,9 +21479,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "MARTINI ROSSO",
@@ -21059,9 +21497,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "MARTINI BIANCO",
@@ -21075,9 +21515,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "ABSOLUT BLUE",
@@ -21091,9 +21533,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "ABSOLUT VANILLA",
@@ -21107,9 +21551,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "ABSOLUT CITRON",
@@ -21123,9 +21569,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "SMIRNOFF RED",
@@ -21139,9 +21587,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "SMIRNOFF NORTH",
@@ -21155,9 +21605,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "RUSSIAN STANDARD",
@@ -21171,9 +21623,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "CIROC",
@@ -21187,9 +21641,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "GREY GOOSE SUPER PREMIUM",
@@ -21203,9 +21659,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "BELUGA GOLD",
@@ -21219,9 +21677,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "BELUGA NOBLE",
@@ -21235,9 +21695,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "BELVEDERE",
@@ -21251,9 +21713,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "KETEL ONE",
@@ -21267,9 +21731,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "HAKU",
@@ -21283,9 +21749,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "BEEFEATER PINK",
@@ -21299,9 +21767,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "BEEFEATER",
@@ -21315,9 +21785,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "BOMBAY SAPPHIRE",
@@ -21331,9 +21803,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "GORDON'S",
@@ -21347,9 +21821,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "HENDRICK'S",
@@ -21363,9 +21839,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "TANQUERAY NO:10",
@@ -21379,9 +21857,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "TANQUERAY CLASSIC",
@@ -21395,9 +21875,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "THE BOTANIST",
@@ -21411,9 +21893,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "ROKU",
@@ -21427,9 +21911,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "MONKEY 47",
@@ -21443,9 +21929,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "MALFY",
@@ -21459,9 +21947,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "MALFY GRAPEFRUIT",
@@ -21475,9 +21965,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "CANARIO CACHAÇA",
@@ -21491,9 +21983,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "CAPTAIN MORGAN WHITE",
@@ -21507,9 +22001,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "CAPTAIN MORGAN DARK",
@@ -21523,9 +22019,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "CAPTAIN MORGAN SPICED",
@@ -21533,15 +22031,17 @@
      "detail": "5 cl",
      "detailEn": "5 cl",
      "price": 10.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/230404b68603df767cc20d84.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "BACARDI CARTA BLANCA",
@@ -21555,9 +22055,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "BACARDI CARTA NEGRA (BLACK)",
@@ -21571,9 +22073,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "BACARDI CARTA ORO (GOLD)",
@@ -21587,9 +22091,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "BACARDI SPICED",
@@ -21603,9 +22109,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "HAVANA CLUB 3 ANOS",
@@ -21619,9 +22127,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "RON ZACAPA 23",
@@ -21635,9 +22145,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "MALIBU CARIBBEAN RUM",
@@ -21651,9 +22163,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "OLMECA SILVER",
@@ -21667,9 +22181,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "OLMECA GOLD",
@@ -21683,9 +22199,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "MILAGRO SILVER",
@@ -21699,9 +22217,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "MILAGRO REPOSADO",
@@ -21715,9 +22235,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "PATRON ANEJO",
@@ -21731,9 +22253,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "PATRON SILVER",
@@ -21747,9 +22271,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "DON JULIO BLANCO",
@@ -21763,9 +22289,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "DON JULIO 1942",
@@ -21779,9 +22307,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "NAPOLEON V.S.O.P.",
@@ -21795,9 +22325,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "HENNESSY V.S.",
@@ -21811,9 +22343,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "HENNESSY V.S.O.P.",
@@ -21827,9 +22361,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "HENNESSY X.O.",
@@ -21843,9 +22379,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "COURVOISIER V.S.",
@@ -21859,9 +22397,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "COURVOISIER V.S.O.P.",
@@ -21875,9 +22415,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "COURVOISIER X.O.",
@@ -21891,9 +22433,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "MARTELL V.S.",
@@ -21907,9 +22451,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "MARTELL V.S.O.P.",
@@ -21923,9 +22469,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "MARTELL X.O.",
@@ -21939,9 +22487,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "REMY MARTIN V.S.",
@@ -21955,9 +22505,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "REMY MARTIN V.S.O.P.",
@@ -21971,9 +22523,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "REMY MARTIN X.O.",
@@ -21987,9 +22541,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "METAXA 5 STAR",
@@ -22003,9 +22559,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "METAXA 7 STAR",
@@ -22019,9 +22577,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "FRANGELICO",
@@ -22035,9 +22595,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "ST. GERMAIN",
@@ -22051,9 +22613,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "DOM BÉNÉDICTINE",
@@ -22067,9 +22631,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "GALLIANO",
@@ -22083,9 +22649,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "GRANDE ABSENTE",
@@ -22099,9 +22667,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SHERIDAN'S",
@@ -22115,9 +22685,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "DRAMBUIE",
@@ -22131,9 +22703,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "PIMM'S",
@@ -22147,9 +22721,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "PISANG AMBON",
@@ -22163,9 +22739,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "COINTREAU",
@@ -22179,9 +22757,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "PASSOA",
@@ -22195,9 +22775,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SKINOS",
@@ -22211,9 +22793,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "BATIDA DE CÔCO",
@@ -22227,9 +22811,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "ARCHERS",
@@ -22243,9 +22829,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SAFARI",
@@ -22259,9 +22847,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "GRAND MARNIER",
@@ -22275,9 +22865,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "JÄGERMEISTER",
@@ -22291,9 +22883,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "FERNET BRANCA",
@@ -22307,9 +22901,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "TIA MARIA",
@@ -22323,9 +22919,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SAMBUCA",
@@ -22339,9 +22937,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "AMARETTO DISARONNO ORIGINALE",
@@ -22355,9 +22955,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "BAILEYS IRISH CREAM",
@@ -22371,9 +22973,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "KAHLUA",
@@ -22387,9 +22991,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "CARDINAL MELON",
@@ -22403,9 +23009,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SOUTHERN COMFORT",
@@ -22419,9 +23027,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "WENNEKER APRICOT BRANDY",
@@ -22435,9 +23045,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "CHAMBORD",
@@ -22451,9 +23063,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "UNDERBERG",
@@ -22467,9 +23081,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JIM BEAM BLACK",
@@ -22483,9 +23099,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JIM BEAM WHITE",
@@ -22499,9 +23117,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JACK DANIEL'S NO:7",
@@ -22515,9 +23135,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JACK DANIEL'S HONEY",
@@ -22531,9 +23153,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JACK DANIEL'S SINGLE BARREL",
@@ -22547,9 +23171,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "GENTLEMAN JACK",
@@ -22563,9 +23189,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JACK DANIEL'S NO:27 GOLD",
@@ -22579,9 +23207,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "WOODFORD RESERVE",
@@ -22595,9 +23225,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "BULLEIT BOURBON",
@@ -22611,9 +23243,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "BULLEIT RYE",
@@ -22627,9 +23261,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "MAKER'S MARK",
@@ -22643,9 +23279,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "OBAN 14 Y.O.",
@@ -22659,9 +23297,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENFIDDICH 12 Y.O.",
@@ -22675,9 +23315,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENFIDDICH 15 Y.O.",
@@ -22691,9 +23333,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENFIDDICH 18 Y.O.",
@@ -22707,9 +23351,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENFIDDICH 21 Y.O.",
@@ -22723,9 +23369,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "MACALLAN 12 Y.O.",
@@ -22739,9 +23387,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "MACALLAN 15 Y.O.",
@@ -22755,9 +23405,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "SINGLETON 12 Y.O.",
@@ -22771,9 +23423,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENMORANGIE ORIGINAL 10 Y.O.",
@@ -22787,9 +23441,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "BALVENIE DOUBLE WOOD 12 Y.O.",
@@ -22803,9 +23459,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENLIVET 12 Y.O.",
@@ -22819,9 +23477,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "TALISKER 10 Y.O.",
@@ -22835,9 +23495,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "LAGAVULIN DE 1995 16 Y.O.",
@@ -22851,9 +23513,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "FAMOUS GROUSE",
@@ -22867,9 +23531,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "BALLANTINE'S",
@@ -22883,9 +23549,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JUSTERINI & BROOKS RARE",
@@ -22899,9 +23567,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 12 Y.O.",
@@ -22915,9 +23585,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 15 Y.O.",
@@ -22931,9 +23603,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 18 Y.O.",
@@ -22947,9 +23621,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 21 Y.O.",
@@ -22963,9 +23639,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 25 Y.O.",
@@ -22979,9 +23657,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JOHNNIE WALKER RED LABEL",
@@ -22995,9 +23675,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JOHNNIE WALKER BLACK LABEL 12 Y.O.",
@@ -23011,9 +23693,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JOHNNIE WALKER 18 Y.O.",
@@ -23027,9 +23711,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JOHNNIE WALKER GOLD RESERVE",
@@ -23043,9 +23729,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "DIMPLE 15 Y.O.",
@@ -23059,9 +23747,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "MONKEY SHOULDER",
@@ -23075,9 +23765,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İRLANDA VİSKİLERİ"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "IRISH WHISKIES"
      ],
      "name": "JAMESON",
@@ -23091,9 +23783,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İRLANDA VİSKİLERİ"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "IRISH WHISKIES"
      ],
      "name": "JAMESON STOUT EDITION",
@@ -23107,9 +23801,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İRLANDA VİSKİLERİ"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "IRISH WHISKIES"
      ],
      "name": "CONNEMARA",
@@ -23123,9 +23819,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "AURA",
@@ -23139,9 +23837,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "HARMONY",
@@ -23155,9 +23855,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "ILLUSION",
@@ -23171,9 +23873,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "THE PASSION",
@@ -23187,9 +23891,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "PORT",
@@ -23203,9 +23909,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "OLD FASHIONED",
@@ -23219,9 +23927,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "NEGRONI",
@@ -23235,9 +23945,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "ESPRESSO MARTINI",
@@ -23251,9 +23963,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "WHISKEY SOUR",
@@ -23267,9 +23981,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "APEROL SPRITZ",
@@ -23620,7 +24336,7 @@
      "detail": null,
      "detailEn": null,
      "price": 7,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/b54e2fbef75b5ede5c6910f9.webp",
      "allergens": [],
      "tags": []
     },
@@ -26555,7 +27271,7 @@
      "detail": "Cheddar peynir, hamburger köftesi",
      "detailEn": "Cheddar cheese, beef patty",
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/ccf232901fbc8508d85ce64e.webp",
      "allergens": [],
      "tags": []
     },
@@ -26843,7 +27559,7 @@
      "detail": "Çikolata sos, orman meyveleri",
      "detailEn": "Chocolate sauce, mixed berries",
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/c96da1c4e6e909d0abce9bf2.webp",
      "allergens": [],
      "tags": []
     },
@@ -27179,7 +27895,7 @@
      "detail": null,
      "detailEn": null,
      "price": 7,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/b54e2fbef75b5ede5c6910f9.webp",
      "allergens": [],
      "tags": []
     },
@@ -27195,7 +27911,7 @@
      "detail": null,
      "detailEn": null,
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/74492ced2cde93cc1ceb58c3.webp",
      "allergens": [],
      "tags": []
     },
@@ -27387,7 +28103,7 @@
      "detail": null,
      "detailEn": null,
      "price": 10,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/5311a69e368fe2782e04ac86.webp",
      "allergens": [],
      "tags": []
     },
@@ -30370,7 +31086,7 @@
      "detail": null,
      "detailEn": null,
      "price": 7,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/b54e2fbef75b5ede5c6910f9.webp",
      "allergens": [],
      "tags": []
     },
@@ -31234,7 +31950,7 @@
      "detail": null,
      "detailEn": null,
      "price": 20,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/758fc55c0ac13998da085b5d.webp",
      "allergens": [],
      "tags": []
     },
@@ -41791,7 +42507,7 @@
      "detail": null,
      "detailEn": null,
      "price": 25.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/633870b2ba64602e12cd8bc6.webp",
      "allergens": [],
      "tags": []
     },
@@ -41925,26 +42641,12 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
-     ],
-     "name": "DEMLEME ÇAY",
-     "nameEn": "BREWED TEA",
-     "detail": null,
-     "detailEn": null,
-     "price": 7.0,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "SICAK İÇECEKLER"
-     ],
-     "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "TÜRK KAHVESİ",
      "nameEn": "TURKISH COFFEE",
@@ -41957,42 +42659,48 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "SINGLE ESPRESSO",
      "nameEn": "SINGLE ESPRESSO",
      "detail": null,
      "detailEn": null,
      "price": 10.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/3cdc4d15d0ba92edd6d53a6e.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "DOUBLE ESPRESSO",
      "nameEn": "DOUBLE ESPRESSO",
      "detail": null,
      "detailEn": null,
      "price": 15.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/cd6821505ad55f8e1f450755.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "AMERICANO",
      "nameEn": "AMERICANO",
@@ -42005,10 +42713,12 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "CAFE LATTE",
      "nameEn": "CAFE LATTE",
@@ -42021,10 +42731,12 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "KAHVELER"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "COFFEES"
      ],
      "name": "CAPPUCCINO",
      "nameEn": "CAPPUCCINO",
@@ -42037,42 +42749,66 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "TEAS"
+     ],
+     "name": "DEMLEME ÇAY",
+     "nameEn": "BREWED TEA",
+     "detail": null,
+     "detailEn": null,
+     "price": 7.0,
+     "imageUrl": "/merit-menus/cb64cfe92ae255a1cd5456b9.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SICAK İÇECEKLER",
+      "ÇAYLAR"
+     ],
+     "catPathEn": [
+      "HOT DRINKS",
+      "TEAS"
      ],
      "name": "TAZE DEMLEME BİTKİ ÇAYLARI",
      "nameEn": "FRESHLY BREWED HERBAL TEAS",
      "detail": "KIŞ ÇAYI, REZENE, IHLAMUR, ADA ÇAYI, HİBİSKUS, PAPATYA, YASEMİN, EKİNEZYA, MELİSA",
      "detailEn": "WINTER TEA, FENNEL, LINDEN, SAGE, HIBISCUS, CHAMOMILE, JASMINE, ECHINACEA, LEMON BALM",
      "price": 7.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/bc4b40b7890bc0637d933700.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "TEAS"
      ],
      "name": "RONNEFELDT BİTKİ ÇAYLARI",
      "nameEn": "RONNEFELDT TEAS",
      "detail": "ENGLISH BREAKFAST, EARL GREY, MORGENTAU (MANGO, LİMON, GÜL YAPRAKLARI), NANE, PAPATYA, AYURVEDA HERBS & GINGER (ZENCEFİL, LİMON), ROOIBOS CREAM ORANGE (PORTAKAL, VANİLYA), SWEET BERRIES (ÇİLEK, AHUDUDU, KIRMIZI MEYVELER), BEYAZ ÇAY",
      "detailEn": "ENGLISH BREAKFAST, EARL GREY, MORGENTAU (MANGO, LEMON, ROSE PETALS), PEPPERMINT, CHAMOMILE, AYURVEDA HERBS & GINGER (GINGER, LEMON), ROOIBOS CREAM ORANGE (ORANGE, VANILLA), SWEET BERRIES (STRAWBERRY, RASPBERRY, RED FRUITS), WHITE TEA",
      "price": 10.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/43f2f4fdb31b368c7cfcdeb6.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "SALEP & SICAK ÇİKOLATA"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "SALEP & HOT CHOCOLATE"
      ],
      "name": "SALEP",
      "nameEn": "SALEP",
@@ -42085,10 +42821,12 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER"
+      "SICAK İÇECEKLER",
+      "SALEP & SICAK ÇİKOLATA"
      ],
      "catPathEn": [
-      "HOT DRINKS"
+      "HOT DRINKS",
+      "SALEP & HOT CHOCOLATE"
      ],
      "name": "SICAK ÇİKOLATA",
      "nameEn": "HOT CHOCOLATE",
@@ -42101,26 +42839,12 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "SULAR"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "MEYVE SUYU",
-     "nameEn": "FRUIT JUICE",
-     "detail": "ANANAS, DOMATES, ELMA, GREYFURT, KAYISI, KIZILCIK, NAR, PORTAKAL, ŞEFTALİ, VİŞNE",
-     "detailEn": "PINEAPPLE, TOMATO, APPLE, GRAPEFRUIT, APRICOT, CRANBERRY, POMEGRANATE, ORANGE, PEACH, CHERRY",
-     "price": 7.0,
-     "imageUrl": "/merit-menus/3d095f89b8a505124c2eb191.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
-      "SOFT DRINKS"
+      "COLD DRINKS",
+      "WATERS"
      ],
      "name": "SU CAM 330 ml.",
      "nameEn": "WATER 330 ml.",
@@ -42133,10 +42857,12 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "SULAR"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
+      "COLD DRINKS",
+      "WATERS"
      ],
      "name": "SAN PELLEGRINO",
      "nameEn": "SAN PELLEGRINO",
@@ -42149,10 +42875,12 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "SULAR"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
+      "COLD DRINKS",
+      "WATERS"
      ],
      "name": "SODA",
      "nameEn": "MINERAL WATER",
@@ -42165,9 +42893,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "COCA COLA",
@@ -42181,9 +42911,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "COCA COLA ZERO",
@@ -42191,15 +42923,17 @@
      "detail": null,
      "detailEn": null,
      "price": 5.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/d5c6a4ba5702d802cf42e49a.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "SPRITE",
@@ -42213,9 +42947,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "FANTA",
@@ -42229,41 +42965,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "ICE TEA ŞEFTALİ",
-     "nameEn": "ICE TEA PEACH",
-     "detail": null,
-     "detailEn": null,
-     "price": 5.0,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "ICE TEA LİMON",
-     "nameEn": "ICE TEA LEMON",
-     "detail": null,
-     "detailEn": null,
-     "price": 5.0,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "ENERJİ İÇECEĞİ",
@@ -42277,9 +42983,11 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "LOKAL ENERJİ İÇECEĞİ",
@@ -42287,31 +42995,17 @@
      "detail": null,
      "detailEn": null,
      "price": 7.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/268190f8dec3c1cde984ee1d.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
-      "MEŞRUBATLAR"
+      "SOĞUK İÇECEKLER",
+      "GAZLI İÇECEKLER"
      ],
      "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "LİMONATA",
-     "nameEn": "LEMONADE",
-     "detail": null,
-     "detailEn": null,
-     "price": 5.0,
-     "imageUrl": "/merit-menus/b8bccd3e8b01e31c8bad815f.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
+      "COLD DRINKS",
       "SOFT DRINKS"
      ],
      "name": "BRITVIC",
@@ -42325,9 +43019,83 @@
     },
     {
      "catPath": [
+      "SOĞUK İÇECEKLER",
+      "MEYVE SUYU & SOĞUK ÇAY"
+     ],
+     "catPathEn": [
+      "COLD DRINKS",
+      "JUICES & ICED TEA"
+     ],
+     "name": "MEYVE SUYU",
+     "nameEn": "FRUIT JUICE",
+     "detail": "ANANAS, DOMATES, ELMA, GREYFURT, KAYISI, KIZILCIK, NAR, PORTAKAL, ŞEFTALİ, VİŞNE",
+     "detailEn": "PINEAPPLE, TOMATO, APPLE, GRAPEFRUIT, APRICOT, CRANBERRY, POMEGRANATE, ORANGE, PEACH, CHERRY",
+     "price": 7.0,
+     "imageUrl": "/merit-menus/3d095f89b8a505124c2eb191.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK İÇECEKLER",
+      "MEYVE SUYU & SOĞUK ÇAY"
+     ],
+     "catPathEn": [
+      "COLD DRINKS",
+      "JUICES & ICED TEA"
+     ],
+     "name": "ICE TEA ŞEFTALİ",
+     "nameEn": "ICE TEA PEACH",
+     "detail": null,
+     "detailEn": null,
+     "price": 5.0,
+     "imageUrl": "/merit-menus/29def488e0395e3155cd8959.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK İÇECEKLER",
+      "MEYVE SUYU & SOĞUK ÇAY"
+     ],
+     "catPathEn": [
+      "COLD DRINKS",
+      "JUICES & ICED TEA"
+     ],
+     "name": "ICE TEA LİMON",
+     "nameEn": "ICE TEA LEMON",
+     "detail": null,
+     "detailEn": null,
+     "price": 5.0,
+     "imageUrl": "/merit-menus/0854823d0806bfc10424fd52.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK İÇECEKLER",
+      "MEYVE SUYU & SOĞUK ÇAY"
+     ],
+     "catPathEn": [
+      "COLD DRINKS",
+      "JUICES & ICED TEA"
+     ],
+     "name": "LİMONATA",
+     "nameEn": "LEMONADE",
+     "detail": null,
+     "detailEn": null,
+     "price": 5.0,
+     "imageUrl": "/merit-menus/b8bccd3e8b01e31c8bad815f.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "EFES PILSEN",
@@ -42341,9 +43109,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "BUD",
@@ -42357,9 +43127,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "TUBORG",
@@ -42373,9 +43145,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "BECK'S",
@@ -42389,9 +43163,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "CARLSBERG",
@@ -42405,9 +43181,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "BUDWEISER",
@@ -42421,9 +43199,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "HEINEKEN",
@@ -42437,9 +43217,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "MILLER",
@@ -42453,9 +43235,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BİRALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BEERS"
      ],
      "name": "CORONA",
@@ -42469,9 +43253,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "LIMONCELLO",
@@ -42485,9 +43271,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "GRAPPA",
@@ -42501,9 +43289,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "APEROL",
@@ -42517,9 +43307,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "CAMPARI",
@@ -42533,9 +43325,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "MARTINI EXTRA DRY",
@@ -42549,9 +43343,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "MARTINI ROSSO",
@@ -42565,9 +43361,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "APERATİFLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "APERITIFS"
      ],
      "name": "MARTINI BIANCO",
@@ -42581,9 +43379,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "ABSOLUT BLUE",
@@ -42597,9 +43397,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "ABSOLUT VANILLA",
@@ -42613,9 +43415,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "ABSOLUT CITRON",
@@ -42629,9 +43433,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "SMIRNOFF RED",
@@ -42645,9 +43451,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "SMIRNOFF NORTH",
@@ -42661,9 +43469,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "RUSSIAN STANDARD",
@@ -42677,9 +43487,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "CIROC",
@@ -42693,9 +43505,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "GREY GOOSE SUPER PREMIUM",
@@ -42709,9 +43523,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "BELUGA GOLD",
@@ -42725,9 +43541,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "BELUGA NOBLE",
@@ -42741,9 +43559,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "BELVEDERE",
@@ -42757,9 +43577,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "KETEL ONE",
@@ -42773,9 +43595,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "VOTKALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "VODKAS"
      ],
      "name": "HAKU",
@@ -42789,9 +43613,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "BEEFEATER PINK",
@@ -42805,9 +43631,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "BEEFEATER",
@@ -42821,9 +43649,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "BOMBAY SAPPHIRE",
@@ -42837,9 +43667,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "GORDON'S",
@@ -42853,9 +43685,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "HENDRICK'S",
@@ -42869,9 +43703,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "TANQUERAY NO:10",
@@ -42885,9 +43721,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "TANQUERAY CLASSIC",
@@ -42901,9 +43739,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "THE BOTANIST",
@@ -42917,9 +43757,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "ROKU",
@@ -42933,9 +43775,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "MONKEY 47",
@@ -42949,9 +43793,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "MALFY",
@@ -42965,9 +43811,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "CİNLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "GINS"
      ],
      "name": "MALFY GRAPEFRUIT",
@@ -42981,9 +43829,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "CANARIO CACHAÇA",
@@ -42997,9 +43847,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "CAPTAIN MORGAN WHITE",
@@ -43013,9 +43865,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "CAPTAIN MORGAN DARK",
@@ -43029,9 +43883,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "CAPTAIN MORGAN SPICED",
@@ -43039,15 +43895,17 @@
      "detail": "5 cl",
      "detailEn": "5 cl",
      "price": 10.0,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/230404b68603df767cc20d84.webp",
      "allergens": [],
      "tags": []
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "BACARDI CARTA BLANCA",
@@ -43061,9 +43919,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "BACARDI CARTA NEGRA (BLACK)",
@@ -43077,9 +43937,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "BACARDI CARTA ORO (GOLD)",
@@ -43093,9 +43955,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "BACARDI SPICED",
@@ -43109,9 +43973,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "HAVANA CLUB 3 ANOS",
@@ -43125,9 +43991,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "RON ZACAPA 23",
@@ -43141,9 +44009,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ROMLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "RUMS"
      ],
      "name": "MALIBU CARIBBEAN RUM",
@@ -43157,9 +44027,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "OLMECA SILVER",
@@ -43173,9 +44045,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "OLMECA GOLD",
@@ -43189,9 +44063,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "MILAGRO SILVER",
@@ -43205,9 +44081,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "MILAGRO REPOSADO",
@@ -43221,9 +44099,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "PATRON ANEJO",
@@ -43237,9 +44117,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "PATRON SILVER",
@@ -43253,9 +44135,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "DON JULIO BLANCO",
@@ -43269,9 +44153,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "TEKİLALAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "TEQUILAS"
      ],
      "name": "DON JULIO 1942",
@@ -43285,9 +44171,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "NAPOLEON V.S.O.P.",
@@ -43301,9 +44189,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "HENNESSY V.S.",
@@ -43317,9 +44207,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "HENNESSY V.S.O.P.",
@@ -43333,9 +44225,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "HENNESSY X.O.",
@@ -43349,9 +44243,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "COURVOISIER V.S.",
@@ -43365,9 +44261,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "COURVOISIER V.S.O.P.",
@@ -43381,9 +44279,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "COURVOISIER X.O.",
@@ -43397,9 +44297,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "MARTELL V.S.",
@@ -43413,9 +44315,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "MARTELL V.S.O.P.",
@@ -43429,9 +44333,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "MARTELL X.O.",
@@ -43445,9 +44351,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "REMY MARTIN V.S.",
@@ -43461,9 +44369,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "REMY MARTIN V.S.O.P.",
@@ -43477,9 +44387,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "REMY MARTIN X.O.",
@@ -43493,9 +44405,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "METAXA 5 STAR",
@@ -43509,9 +44423,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "KONYAKLAR"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "COGNACS"
      ],
      "name": "METAXA 7 STAR",
@@ -43525,9 +44441,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "FRANGELICO",
@@ -43541,9 +44459,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "ST. GERMAIN",
@@ -43557,9 +44477,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "DOM BÉNÉDICTINE",
@@ -43573,9 +44495,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "GALLIANO",
@@ -43589,9 +44513,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "GRANDE ABSENTE",
@@ -43605,9 +44531,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SHERIDAN'S",
@@ -43621,9 +44549,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "DRAMBUIE",
@@ -43637,9 +44567,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "PIMM'S",
@@ -43653,9 +44585,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "PISANG AMBON",
@@ -43669,9 +44603,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "COINTREAU",
@@ -43685,9 +44621,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "PASSOA",
@@ -43701,9 +44639,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SKINOS",
@@ -43717,9 +44657,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "BATIDA DE CÔCO",
@@ -43733,9 +44675,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "ARCHERS",
@@ -43749,9 +44693,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SAFARI",
@@ -43765,9 +44711,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "GRAND MARNIER",
@@ -43781,9 +44729,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "JÄGERMEISTER",
@@ -43797,9 +44747,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "FERNET BRANCA",
@@ -43813,9 +44765,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "TIA MARIA",
@@ -43829,9 +44783,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SAMBUCA",
@@ -43845,9 +44801,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "AMARETTO DISARONNO ORIGINALE",
@@ -43861,9 +44819,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "BAILEYS IRISH CREAM",
@@ -43877,9 +44837,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "KAHLUA",
@@ -43893,9 +44855,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "CARDINAL MELON",
@@ -43909,9 +44873,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "SOUTHERN COMFORT",
@@ -43925,9 +44891,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "WENNEKER APRICOT BRANDY",
@@ -43941,9 +44909,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "CHAMBORD",
@@ -43957,9 +44927,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "LİKÖRLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "LIQUEURS"
      ],
      "name": "UNDERBERG",
@@ -43973,9 +44945,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JIM BEAM BLACK",
@@ -43989,9 +44963,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JIM BEAM WHITE",
@@ -44005,9 +44981,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JACK DANIEL'S NO:7",
@@ -44021,9 +44999,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JACK DANIEL'S HONEY",
@@ -44037,9 +45017,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JACK DANIEL'S SINGLE BARREL",
@@ -44053,9 +45035,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "GENTLEMAN JACK",
@@ -44069,9 +45053,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "JACK DANIEL'S NO:27 GOLD",
@@ -44085,9 +45071,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "WOODFORD RESERVE",
@@ -44101,9 +45089,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "BULLEIT BOURBON",
@@ -44117,9 +45107,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "BULLEIT RYE",
@@ -44133,9 +45125,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "BOURBON & TENNESSEE VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "BOURBON & TENNESSEE WHISKIES"
      ],
      "name": "MAKER'S MARK",
@@ -44149,9 +45143,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "OBAN 14 Y.O.",
@@ -44165,9 +45161,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENFIDDICH 12 Y.O.",
@@ -44181,9 +45179,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENFIDDICH 15 Y.O.",
@@ -44197,9 +45197,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENFIDDICH 18 Y.O.",
@@ -44213,9 +45215,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENFIDDICH 21 Y.O.",
@@ -44229,9 +45233,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "MACALLAN 12 Y.O.",
@@ -44245,9 +45251,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "MACALLAN 15 Y.O.",
@@ -44261,9 +45269,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "SINGLETON 12 Y.O.",
@@ -44277,9 +45287,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENMORANGIE ORIGINAL 10 Y.O.",
@@ -44293,9 +45305,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "BALVENIE DOUBLE WOOD 12 Y.O.",
@@ -44309,9 +45323,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "GLENLIVET 12 Y.O.",
@@ -44325,9 +45341,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "TALISKER 10 Y.O.",
@@ -44341,9 +45359,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "MALT VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "MALT WHISKIES"
      ],
      "name": "LAGAVULIN DE 1995 16 Y.O.",
@@ -44357,9 +45377,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "FAMOUS GROUSE",
@@ -44373,9 +45395,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "BALLANTINE'S",
@@ -44389,9 +45413,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JUSTERINI & BROOKS RARE",
@@ -44405,9 +45431,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 12 Y.O.",
@@ -44421,9 +45449,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 15 Y.O.",
@@ -44437,9 +45467,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 18 Y.O.",
@@ -44453,9 +45485,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 21 Y.O.",
@@ -44469,9 +45503,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "CHIVAS REGAL 25 Y.O.",
@@ -44485,9 +45521,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JOHNNIE WALKER RED LABEL",
@@ -44501,9 +45539,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JOHNNIE WALKER BLACK LABEL 12 Y.O.",
@@ -44517,9 +45557,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JOHNNIE WALKER 18 Y.O.",
@@ -44533,9 +45575,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "JOHNNIE WALKER GOLD RESERVE",
@@ -44549,9 +45593,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "DIMPLE 15 Y.O.",
@@ -44565,9 +45611,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İSKOÇ VİSKİLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SCOTCH WHISKIES"
      ],
      "name": "MONKEY SHOULDER",
@@ -44581,9 +45629,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İRLANDA VİSKİLERİ"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "IRISH WHISKIES"
      ],
      "name": "JAMESON",
@@ -44597,9 +45647,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İRLANDA VİSKİLERİ"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "IRISH WHISKIES"
      ],
      "name": "JAMESON STOUT EDITION",
@@ -44613,9 +45665,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İRLANDA VİSKİLERİ"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "IRISH WHISKIES"
      ],
      "name": "CONNEMARA",
@@ -44629,9 +45683,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "AURA",
@@ -44645,9 +45701,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "HARMONY",
@@ -44661,9 +45719,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "ILLUSION",
@@ -44677,9 +45737,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "THE PASSION",
@@ -44693,9 +45755,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "İMZA KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "SIGNATURE COCKTAILS"
      ],
      "name": "PORT",
@@ -44709,9 +45773,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "OLD FASHIONED",
@@ -44725,9 +45791,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "NEGRONI",
@@ -44741,9 +45809,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "ESPRESSO MARTINI",
@@ -44757,9 +45827,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "WHISKEY SOUR",
@@ -44773,9 +45845,11 @@
     },
     {
      "catPath": [
+      "ALKOLLÜ İÇECEKLER",
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
+      "ALCOHOLIC DRINKS",
       "INTERNATIONAL COCKTAILS"
      ],
      "name": "APEROL SPRITZ",
@@ -45126,7 +46200,7 @@
      "detail": null,
      "detailEn": null,
      "price": 7,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/b54e2fbef75b5ede5c6910f9.webp",
      "allergens": [],
      "tags": []
     },
@@ -48317,7 +49391,7 @@
      "detail": "Acı domates soslu Penne",
      "detailEn": "Penne Pasta with spicy tomato sauce",
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/c199f57215e901bb45e3f273.webp",
      "allergens": [],
      "tags": []
     },
@@ -48525,7 +49599,7 @@
      "detail": null,
      "detailEn": null,
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/83da2faac68cd1881598681c.webp",
      "allergens": [],
      "tags": []
     },
@@ -48557,7 +49631,7 @@
      "detail": null,
      "detailEn": null,
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/e1e62b085837139331b663f1.webp",
      "allergens": [],
      "tags": []
     },
@@ -48797,7 +49871,7 @@
      "detail": null,
      "detailEn": null,
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/c7bafad9818a0f00a6eb26f1.webp",
      "allergens": [],
      "tags": []
     },
@@ -48829,7 +49903,7 @@
      "detail": null,
      "detailEn": null,
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/fbc7b001073b7f82434f9d5f.webp",
      "allergens": [],
      "tags": []
     }
@@ -48852,7 +49926,7 @@
      "detail": null,
      "detailEn": null,
      "price": 7,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/665dcf520cdb3332bf6b74c2.webp",
      "allergens": [],
      "tags": []
     },
@@ -48900,7 +49974,7 @@
      "detail": null,
      "detailEn": null,
      "price": 15,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/c23ced2a27f1d6ef3ac6fff1.webp",
      "allergens": [],
      "tags": []
     },
@@ -48916,7 +49990,7 @@
      "detail": null,
      "detailEn": null,
      "price": 15,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/38122740d0e8051ae277f288.webp",
      "allergens": [],
      "tags": []
     },
@@ -48996,7 +50070,7 @@
      "detail": null,
      "detailEn": null,
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/cd9f1be52e88304fcbb0c456.webp",
      "allergens": [],
      "tags": []
     },
@@ -49450,7 +50524,7 @@
      "detail": null,
      "detailEn": null,
      "price": null,
-     "imageUrl": null,
+     "imageUrl": "/merit-menus/289e719bb128e5ccb76f5509.webp",
      "allergens": [],
      "tags": []
     },

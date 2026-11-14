@@ -5,6 +5,7 @@ from spelling import fix, fix_pair
 from item_fixes import fix_item
 from structure import restructure
 import room_service_list
+import extra_images
 
 MERIT = r"D:\PROJECTS\qrmenu\merit"
 OUT = os.path.join(MERIT, "prisma", "seed", "data", "merit-menus.json")
@@ -88,6 +89,34 @@ for hotel, name, variant, menu, flt in OUTLETS:
         hotel, name or "Oda Servisi", c["items"], c["priced"], c["image"], len({r["catPath"][0] for r in out})))
 
 stats += room_service_list.apply(outlets)
+
+# Items the photo shoot left without a picture take the one of the hotel's QR menu archive (extra_images.py).
+# The file name carries the product number, so the same product is one picture on every menu.
+# A "docs:" entry is a picture of the photo shoot chosen by hand; its key may carry the item's category.
+extra = json.load(io.open(os.path.join(HERE, "extra_images.json"), encoding="utf8"))
+extra_jobs, docs_jobs = {}, {}
+for outlet in outlets:
+    found = extra.get(extra_images.outlet_key(outlet), {})
+    n = 0
+    for row in outlet["items"]:
+        rel = None if row["imageUrl"] else found.get("%s|%s" % (row["name"], row["catPath"][-1])) or found.get(row["name"])
+        if rel and rel.startswith("docs:"):
+            rel = rel[5:].replace("/", "\\")
+            out = hashlib.sha1(("x1|" + rel).encode("utf8")).hexdigest()[:24] + ".webp"
+            docs_jobs.setdefault(out, rel)
+            row["imageUrl"] = "/merit-menus/" + out
+            n += 1
+        elif rel:
+            out = hashlib.sha1(("x1|" + os.path.basename(rel)).encode("utf8")).hexdigest()[:24] + ".webp"
+            extra_jobs.setdefault(out, rel)
+            row["imageUrl"] = "/merit-menus/" + out
+            n += 1
+    if n:
+        stats.append("%-8s %-32s %4d görsel arşivden" % (outlet["hotelCode"], outlet["outletName"] or "Oda Servisi", n))
+io.open(os.path.join(HERE, "img_jobs_extra.json"), "w", encoding="utf8").write(
+    json.dumps([{"src": v, "out": k} for k, v in extra_jobs.items()], ensure_ascii=False, indent=1))
+io.open(os.path.join(HERE, "img_jobs_extra_docs.json"), "w", encoding="utf8").write(
+    json.dumps([{"src": v, "out": k} for k, v in docs_jobs.items()], ensure_ascii=False, indent=1))
 data = {"version": 3, "currency": "USD", "outlets": outlets}
 io.open(OUT, "w", encoding="utf8", newline="\n").write(json.dumps(data, ensure_ascii=False, indent=1) + "\n")
 io.open(os.path.join(HERE, "img_jobs.json"), "w", encoding="utf8").write(
