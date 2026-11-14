@@ -47,7 +47,17 @@ async function packshotBox(input) {
   let ringWhite = 0;
   for (let x = 0; x < w; x++) for (const y of [0, 1, h - 2, h - 1]) (ring++, white(x, y) && ringWhite++);
   for (let y = 0; y < h; y++) for (const x of [0, 1, w - 2, w - 1]) (ring++, white(x, y) && ringWhite++);
-  if (ringWhite / ring < 0.97) return null;
+  if (ringWhite / ring < 0.97) {
+    // A tight product shot: the bottle touches the frame, so the ring is not white, but the corners still are
+    // and the picture is tall. It is shown whole as it is (a 118x395 Talisker used to become a 104x104 label).
+    const patch = (x0, y0) => {
+      for (let y = y0; y < y0 + 4; y++) for (let x = x0; x < x0 + 4; x++) if (!white(x, y)) return false;
+      return true;
+    };
+    const corners = [patch(0, 0), patch(w - 4, 0), patch(0, h - 4), patch(w - 4, h - 4)].filter(Boolean).length;
+    // Only small web-sized pictures: a tall dish photograph on white marble has white corners too.
+    return corners >= 3 && h / w >= 1.15 && Math.max(w, h) <= 700 ? flat : null;
+  }
   let trimmed;
   try {
     trimmed = await sharp(flat).trim({ background: "#ffffff", threshold: 14 }).toBuffer({ resolveWithObject: true });
