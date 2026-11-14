@@ -20,7 +20,8 @@ import { DemoDialog } from "./DemoDialog";
 import { ReplayPlayer } from "./ReplayPlayer";
 import { Ticker } from "./Ticker";
 import { Timeline } from "./Timeline";
-import { CONNECTION_TEXT, Toolbar, VIEW_LABELS, type ConnectionState, type ViewKey } from "./Toolbar";
+import { ALERT_LAYER } from "../alerts";
+import { CONNECTION_TEXT, Toolbar, VIEW_LABELS, VIEW_SLOTS, type ConnectionState, type ViewKey } from "./Toolbar";
 import { WallShell } from "./WallShell";
 import type { PlaybackSpeed } from "./playback";
 import { RadarStoreContext, useNow, useRadar } from "./useRadar";
@@ -53,7 +54,6 @@ export type RadarRootProps = {
   chrome?: { setTitle?(title: string): void; setStatus?(text: string): void };
 };
 
-const VIEW_SLOTS: ViewKey[] = ["genel", "kat", "masa", "kuyruk", "odaServisi", "personel", "mybar"];
 const LAYER_ORDER: RadarLayer[] = ["MINIBAR", "SIPARIS", "ODA_SERVISI", "PERSONEL", "SISTEM"];
 const SKELETON_DELAY_MS = 300;
 /** The hotel, view and outlet a module demo replaced. */
@@ -84,7 +84,7 @@ function useDelayed(on: boolean, ms: number): boolean {
 }
 
 const SHORTCUTS: [string, string][] = [
-  ["1…6", "Genel Bakış · Kat · Masa · Kuyruklar · Oda Servisi · Personel"],
+  ["1…7", "Genel Bakış · Kat · Masa · Kuyruklar · Oda Servisi · Personel · MyBar"],
   ["Alt + 1…5", "Katmanı aç veya kapat"],
   ["Sol / Sağ ok", "10 saniye geri veya ileri sar (Shift ile 1 dk)"],
   ["End", "Canlıya dön / tekrarda sona atla"],
@@ -117,6 +117,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const helpClose = useRef<HTMLButtonElement | null>(null);
   const seenCritKeysRef = useRef<Set<string>>(new Set());
+  const critSeededRef = useRef<string | null>(null);
   const soundGateRef = useRef(createSoundGate({ minGapMs: 30_000, enabled: Boolean(initial.soundOnEscalation) }));
 
   const { store, state } = useRadar(hotelId);
@@ -165,6 +166,11 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     );
   }, [all, snap, overview]);
   const active = useMemo(() => new Set(scope.filter((l) => !off.has(l))), [scope, off]);
+  // A layer that is switched off takes its alerts with it (strip, sound and the wall's critical hold).
+  const visibleAlerts = useMemo(
+    () => (scoped ? state.alerts.filter((a) => active.has(ALERT_LAYER[a.kind])) : []),
+    [scoped, state.alerts, active],
+  );
 
   const views = useMemo<ViewKey[]>(() => {
     const out: ViewKey[] = ["genel"];
@@ -218,6 +224,17 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
           ? fallback
           : "genel";
 
+  const wallIdle = wall && wallState?.paused !== "interaction";
+  // Wall: a view picked by hand holds only while the interaction pause runs, then the rotation takes over again
+  // (state adjusted during render, so the stale pick never paints).
+  if (wallIdle && choice !== null) setChoice(null);
+
+  const overviewShown = view === "genel";
+  useEffect(() => {
+    store.getState().watchOverview(overviewShown);
+    return () => store.getState().watchOverview(true);
+  }, [store, overviewShown]);
+
   const activeOutletId =
     wall && wallState?.paused === "critical" && wallState.focus?.outletId
       ? wallState.focus.outletId
@@ -242,28 +259,46 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       initializedEventsRef.current = true;
       return;
     }
-    if (!soundEnabled) return;
+    // Every event is marked as heard, sound on or off: switching the sound on must not replay the buffer.
+    // A replay or the demo is silent: a jump would play a whole day at once.
+    const audible = soundEnabled && state.mode === "live";
+    if (seenEventIdsRef.current.size > 4 * state.buffer.length + 1000) {
+      seenEventIdsRef.current = new Set(state.buffer.map((ev) => ev.id));
+      return;
+    }
     for (const ev of state.buffer) {
       if (seenEventIdsRef.current.has(ev.id)) continue;
       seenEventIdsRef.current.add(ev.id);
+      if (!audible) continue;
       if (ev.type === "call.opened") {
         playRadarSound("call");
       } else if (ev.type === "order.status" && ev.to === "GONDERILDI") {
         playRadarSound("new-order");
       }
     }
-  }, [soundEnabled, state.buffer]);
+  }, [soundEnabled, state.buffer, state.mode]);
 
   useEffect(() => {
     soundGateRef.current.setEnabled(soundEnabled);
   }, [soundEnabled]);
 
   useEffect(() => {
-    for (const alert of state.alerts) {
-      if (seenCritKeysRef.current.has(alert.key)) continue;
-      seenCritKeysRef.current.add(alert.key);
+    // Only the live floor rings: a replay, the demo or a scope that is still loading stays quiet.
+    if (!scoped || !state.view || state.mode !== "live") return;
+    const seen = seenCritKeysRef.current;
+    const first = critSeededRef.current !== state.hotelId;
+    critSeededRef.current = state.hotelId;
+    const current = new Set<string>();
+    for (const alert of visibleAlerts) {
+      // An alert that got worse (dikkat -> kritik) is a new thing to hear.
+      const mark = `${alert.severity}|${alert.key}`;
+      current.add(mark);
+      if (seen.has(mark)) continue;
+      seen.add(mark);
+      // What was already there when the screen opened is shown, not announced.
+      if (first || alert.severity !== "crit") continue;
       if (wall) wallCtrl.critical(alert, Date.now());
-      if (soundEnabled && alert.severity === "crit" && soundGateRef.current.shouldPlay(Date.now())) {
+      if (soundEnabled && soundGateRef.current.shouldPlay(Date.now())) {
         if (alert.kind === "CAGRI") {
           playRadarSound("call");
         } else if (alert.kind === "SIPARIS_ONAY") {
@@ -273,7 +308,9 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
         }
       }
     }
-  }, [wall, soundEnabled, state.alerts, wallCtrl]);
+    // A cleared alert is forgotten, so the same printer or room failing again is announced again.
+    for (const mark of seen) if (!current.has(mark)) seen.delete(mark);
+  }, [wall, soundEnabled, visibleAlerts, wallCtrl, scoped, state.view, state.mode, state.hotelId]);
 
   useEffect(() => {
     if (!wall) return;
@@ -286,10 +323,12 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     };
     window.addEventListener("mousemove", onMove, { passive: true });
     window.addEventListener("keydown", onMove, { passive: true });
+    window.addEventListener("pointerdown", onMove, { passive: true });
     return () => {
       if (id) clearTimeout(id);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("keydown", onMove);
+      window.removeEventListener("pointerdown", onMove);
     };
   }, [wall, wallCtrl]);
 
@@ -401,7 +440,6 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     () => (scoped ? state.buffer.filter((e) => active.has(e.layer)) : []),
     [scoped, state.buffer, active],
   );
-  const visibleAlerts = useMemo(() => (scoped ? state.alerts : []), [scoped, state.alerts]);
   // The animated scene follows the live stream and the day replay (at the replay speed); a scrubbed past is still.
   const motionSpeed = state.mode === "replay" && state.replay ? state.replay.speed : 1;
   // A module demo shows its moving scene whatever the toolbar switch says.
@@ -561,7 +599,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
         e.preventDefault();
         toggleLayer(layer);
       }
-    } else if (!e.altKey && !e.ctrlKey && !e.metaKey && /^[1-6]$/.test(e.key)) {
+    } else if (!e.altKey && !e.ctrlKey && !e.metaKey && /^[1-7]$/.test(e.key)) {
       const next = VIEW_SLOTS[Number(e.key) - 1];
       if (next && views.includes(next)) {
         e.preventDefault();
@@ -569,6 +607,10 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       }
     }
   };
+
+  // The cards age against the instant they show: the replay's clock or the scrub cursor, not the wall clock.
+  const viewNow =
+    state.mode === "replay" && state.replay ? state.replay.virtualMs : state.mode === "scrub" && state.cursor !== null ? state.cursor : now;
 
   let body;
   if (failed) {
@@ -620,14 +662,14 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       body = skeleton ? <div className="rd-center" aria-busy="true">Genel bakış yükleniyor</div> : null;
     }
   } else if (view === "kat" && snap) {
-    body = <Floor view={snap} now={now} onOpenApp={openApp} />;
+    body = <Floor view={snap} now={viewNow} onOpenApp={openApp} />;
   } else if (view === "masa" && snap) {
-    body = <Tables view={snap} now={now} outletId={activeOutletId} onSelectOutlet={setOutletId} onOpenApp={openApp} />;
+    body = <Tables view={snap} now={viewNow} outletId={activeOutletId} onSelectOutlet={setOutletId} onOpenApp={openApp} />;
   } else if (view === "kuyruk" && snap) {
     body = (
       <Queues
         view={snap}
-        now={now}
+        now={viewNow}
         onOpenOutlet={(id) => {
           setOutletId(id);
           if (views.includes("masa")) setChoice("masa");
@@ -636,12 +678,12 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     );
   } else if (view === "odaServisi" && snap) {
     // Live only: the other hotels' boards cannot follow a scrub, a replay or a demo of this one.
-    body = <RoomService view={snap} now={now} onOpenApp={openApp} hotels={state.mode === "live" && !demo.running ? initial.hotels : undefined} />;
+    body = <RoomService view={snap} now={viewNow} onOpenApp={openApp} hotels={state.mode === "live" && !demo.running ? initial.hotels : undefined} />;
   } else if (view === "mybar" && snap) {
     // Live only, as the room service boards: the other hotels cannot follow a scrub, a replay or a demo.
-    body = <Mybar view={snap} now={now} hotels={state.mode === "live" && !demo.running ? initial.hotels : undefined} />;
+    body = <Mybar view={snap} now={viewNow} hotels={state.mode === "live" && !demo.running ? initial.hotels : undefined} />;
   } else if (view === "personel" && snap) {
-    body = <Staff view={snap} now={now} nameStyle={wall ? "short" : "full"} />;
+    body = <Staff view={snap} now={viewNow} nameStyle={wall ? "short" : "full"} />;
   }
 
   return (

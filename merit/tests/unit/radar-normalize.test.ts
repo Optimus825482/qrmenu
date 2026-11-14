@@ -216,6 +216,18 @@ describe("toRadarEvent: minibar ve sistem", () => {
     }
   });
 
+  it("otelsiz (genel) settings.changed de yeniler; ilgisiz anahtar ve otelsiz başka olay etkisiz", () => {
+    expect(toRadarEvent(env("settings.changed", { key: "rs.slaMinutes" }, { hotelId: undefined }))).toEqual({ events: [], refresh: "ALL" });
+    expect(toRadarEvent(env("settings.changed", { key: "price.display" }, { hotelId: undefined }))).toEqual({ events: [] });
+  });
+
+  it("oda servisi siparişi oda numarasını taşır; masa siparişi taşımaz", () => {
+    const rs = toRadarEvent(env("order.created", { ...ORDER_P, status: "GONDERILDI", kind: "ODA_SERVISI", roomId: "r1", roomNumber: "204" }));
+    expect(rs.events[0]).toMatchObject({ type: "order.status", roomNumber: "204" });
+    const masa = toRadarEvent(env("order.created", { ...ORDER_P, status: "GONDERILDI", roomNumber: "204" }));
+    expect(masa.events[0]).not.toHaveProperty("roomNumber");
+  });
+
   it("definition.changed her zaman yeniler; bilinmeyen tip ve hotelId'siz zarf olay üretmez", () => {
     expect(toRadarEvent(env("definition.changed", { entity: "Table" })).refresh).toBe("ALL");
     expect(toRadarEvent(env("no.such.type", {}))).toEqual({ events: [] });

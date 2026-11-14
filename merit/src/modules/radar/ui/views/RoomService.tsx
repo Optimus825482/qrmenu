@@ -30,7 +30,7 @@ function slaModel(order: RsOrder, slaMinutes: number, now: number): {
   tone: Tone;
   levelLabel: string;
 } {
-  const ageMs = Math.max(0, now - (Date.parse(order.createdAt) || now));
+  const ageMs = Math.max(0, now - (Date.parse(order.slaStartAt ?? order.createdAt) || now));
   // Quantise to 10-second steps as required by spec 2.2 ("SLA çubuğu 10 sn'de bir güncellenir")
   const quantisedMs = Math.floor(ageMs / 10_000) * 10_000;
   const ageMin = Math.floor(quantisedMs / 60_000);

@@ -1,6 +1,6 @@
 // Client-safe alert derivation (spec 3.4). Pure: the same layers and clock always give the same alerts.
 import { SLA_WARN_RATIO } from "@/modules/order/server/roomService/slaConstants";
-import type { RadarAlert, RadarSnapshot } from "./types";
+import type { RadarAlert, RadarLayer, RadarSnapshot } from "./types";
 
 export type AlertThresholds = {
   callAlertSeconds: number;
@@ -22,6 +22,20 @@ export const KIND_LABEL: Record<RadarAlert["kind"], string> = {
   MYBAR: "MyBar bekliyor",
   DND_EKSIK: "Rahatsız etmeyin eksik",
   EPOSTA: "E-posta hatası",
+};
+
+/** The layer an alert belongs to: switching the layer off hides its alerts too. */
+export const ALERT_LAYER: Record<RadarAlert["kind"], RadarLayer> = {
+  SIPARIS_ONAY: "SIPARIS",
+  CAGRI: "SIPARIS",
+  YAZICI_IS: "SIPARIS",
+  YAZICI: "SISTEM",
+  EPOSTA: "SISTEM",
+  RS_SLA: "ODA_SERVISI",
+  STOK: "MINIBAR",
+  YUKLEME: "MINIBAR",
+  MYBAR: "MINIBAR",
+  DND_EKSIK: "MINIBAR",
 };
 
 /** Occupancy files are expected by this local (Nicosia) time. */
@@ -136,10 +150,13 @@ export function deriveAlerts(
         if (r.mybar && t - ms(r.mybar.since) > th.mybarStaleMinutes * MINUTE_MS) {
           add({
             key: `MYBAR:${r.mybar.requestId}`,
-            severity: "crit",
+            // "Gördüm" is the approval: an approved request no longer waits for an answer, it waits to be closed.
+            severity: r.mybar.seen ? "warn" : "crit",
             kind: "MYBAR",
             ref: { roomId: r.roomId },
-            text: `Oda ${r.number}: MyBar talebi bekliyor`,
+            text: r.mybar.seen
+              ? `Oda ${r.number}: MyBar talebi onaylandı, tamamlanmadı`
+              : `Oda ${r.number}: MyBar talebi onay bekliyor`,
             since: r.mybar.since,
           });
         }

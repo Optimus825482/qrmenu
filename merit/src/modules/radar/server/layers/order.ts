@@ -2,6 +2,7 @@
 // printer health. Read-only; no prices, notes or IPs are selected.
 import type { PrintJobStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { isWithdrawnTicket, NOT_WITHDRAWN } from "@/modules/order/server/printWithdrawn";
 import type { RadarSnapshot } from "../../types";
 import { nameFor, type LayerEnv } from "../config";
 import { latestOperations, orderStatusesAt } from "./asOf";
@@ -95,10 +96,11 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
     prisma.printJob.findMany({
       where: env.historical
         ? { hotelId, createdAt: { gte: env.todayStart, lte: now } }
-        : { hotelId, status: { in: COUNTED_JOBS }, createdAt: { gte: env.todayStart } },
+        : { hotelId, status: { in: COUNTED_JOBS }, ...NOT_WITHDRAWN, createdAt: { gte: env.todayStart } },
       select: {
         id: true,
         status: true,
+        error: true,
         printerId: true,
         startedAt: true,
         printedAt: true,
@@ -140,6 +142,8 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
     orders.splice(0, orders.length, ...rebuilt);
     const jobsAt = jobs.flatMap((j) => {
       const status = jobStatusAt(j, now);
+      // A ticket withdrawn with its cancelled order was queued until then and is no fault afterwards.
+      if (status === "HATA" && isWithdrawnTicket(j)) return [];
       return status ? [{ ...j, status }] : [];
     });
     jobs.splice(0, jobs.length, ...jobsAt);

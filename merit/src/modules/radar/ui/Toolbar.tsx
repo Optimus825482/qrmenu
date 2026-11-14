@@ -6,6 +6,9 @@ import type { RadarLayer, WallView } from "../types";
 
 export type ViewKey = WallView;
 
+/** The digit key of each view (slot + 1): fixed, whatever views the hotel has. */
+export const VIEW_SLOTS: ViewKey[] = ["genel", "kat", "masa", "kuyruk", "odaServisi", "personel", "mybar"];
+
 export const VIEW_LABELS: Record<ViewKey, string> = {
   genel: "Genel Bakış",
   kat: "Kat",
@@ -96,7 +99,7 @@ export function Toolbar(p: ToolbarProps) {
       </div>
       <span className="rd-toolbar-sep" aria-hidden="true" />
       <div role="tablist" aria-label="Görünümler" className="rd-tabs" data-guide="radar-genel">
-        {p.views.map((v, i) => (
+        {p.views.map((v) => (
           <button
             key={v}
             type="button"
@@ -105,7 +108,7 @@ export function Toolbar(p: ToolbarProps) {
             id={`${p.idPrefix}-tab-${v}`}
             aria-selected={p.view === v}
             aria-controls={`${p.idPrefix}-view`}
-            title={`${i + 1}`}
+            title={`${VIEW_SLOTS.indexOf(v) + 1}`}
             onClick={() => p.onView(v)}
           >
             {VIEW_LABELS[v]}

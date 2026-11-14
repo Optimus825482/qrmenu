@@ -11,7 +11,7 @@ export type TableCard = StateTable;
 const MIN_MS = 60_000;
 /** Table activity (QR scan, waiter call, order): active within 40 minutes makes the table occupied (Dolu). */
 export const GUEST_PRESENT_MS = 40 * MIN_MS;
-/** An open call older than this is overdue (UX `CALL_OVERDUE_SEC`). */
+/** An open call older than this is overdue when the hotel sets no `callAlertSeconds` (UX `CALL_OVERDUE_SEC`). */
 export const CALL_OVERDUE_SECONDS = 60;
 
 const MASA_LABELS: Partial<Record<OrderStatus, string>> = {
@@ -99,6 +99,7 @@ export function tableCardModel(
   now: number,
   waiterAssignmentEnabled?: boolean,
   occupancyMinutes?: number | null,
+  callOverdueSeconds: number = CALL_OVERDUE_SECONDS,
 ): TableCardModel {
   const open = t.orders;
   const awaiting = open.filter((o) => o.status === "GONDERILDI").length;
@@ -115,7 +116,7 @@ export function tableCardModel(
     !isEmptied && effectiveWindowMs > 0 && scanMs !== undefined && scanMs >= 0 && scanMs <= effectiveWindowMs;
   const scanMinutes = scanMs !== undefined && scanMs >= 0 ? Math.floor(scanMs / 60_000) : undefined;
   const callSeconds = t.call ? Math.max(0, Math.floor((now - (Date.parse(t.call.since) || now)) / 1000)) : undefined;
-  const callOverdue = callSeconds !== undefined && callSeconds >= CALL_OVERDUE_SECONDS;
+  const callOverdue = callSeconds !== undefined && callSeconds >= callOverdueSeconds;
 
   let tone: Tone;
   let statusText: string;

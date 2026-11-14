@@ -52,6 +52,8 @@ export function MenuBar({ menus }: { menus: MenuDef[] }) {
   const onItemKey = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
     const items = Array.from(e.currentTarget.parentElement?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? []);
     const at = items.indexOf(e.currentTarget);
+    // Keys handled here stay in the menu: the radar's own shortcuts (scrub, leave replay) must not fire with them.
+    if (["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "Escape", " ", "End"].includes(e.key)) e.stopPropagation();
     if (e.key === "ArrowDown") {
       e.preventDefault();
       items[(at + 1) % items.length]?.focus();

@@ -33,10 +33,13 @@ export function WallShell({
   const lockRef = useRef<{ release(): void } | null>(null);
 
   useEffect(() => {
+    // A reloaded wall page has no click to hang the lock on: ask for it at once ("Tam ekran başlat" asks again).
+    lockRef.current = acquireWakeLock(undefined, undefined, (ok) => onWakeLockStatus?.(ok));
     return () => {
       lockRef.current?.release();
       lockRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per mount; the status callback is stable enough
   }, []);
 
   const handleStartFullscreen = () => {

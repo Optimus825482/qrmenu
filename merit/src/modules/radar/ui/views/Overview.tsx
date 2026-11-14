@@ -25,6 +25,13 @@ const LAYER_VIEW: Partial<Record<RadarLayer, ViewKey>> = {
   SISTEM: "kuyruk",
 };
 
+/** Counters whose own view is more specific than their layer's (the MyBar lanes rather than the floor grid). */
+const METRIC_VIEW: Partial<Record<RadarMetric["key"], ViewKey>> = {
+  mybarPending: "mybar",
+  mybarApproved: "mybar",
+  mybarStale: "mybar",
+};
+
 export type OverviewProps = {
   overview: RadarOverview;
   /** Layers switched on in the toolbar; counters of the others are hidden. */
@@ -92,7 +99,7 @@ export function Overview({ overview, layers, onOpenHotel, onOpenView, views }: O
     return <EmptyState title="Bu kapsamda izlenecek otel yok." hint="Canlı Radar yetkisi olan bir otel görünmüyor." />;
   }
   const hasView = (v: ViewKey | undefined): v is ViewKey =>
-    v !== undefined && (views ?? ["kat", "masa", "kuyruk", "odaServisi", "personel"]).includes(v);
+    v !== undefined && (views ?? ["kat", "masa", "kuyruk", "odaServisi", "mybar", "personel"]).includes(v);
 
   return (
     <div className="rd-overview">
@@ -126,7 +133,8 @@ export function Overview({ overview, layers, onOpenHotel, onOpenView, views }: O
                   <h4 className="rd-layer-title">{LAYER_LABELS[layer]}</h4>
                   <ul className="rd-counters">
                     {metrics.map((m) => {
-                      const target = LAYER_VIEW[layer];
+                      const own = METRIC_VIEW[m.key];
+                      const target = hasView(own) ? own : LAYER_VIEW[layer];
                       return (
                         <Counter
                           key={m.key}

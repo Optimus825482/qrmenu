@@ -8,6 +8,7 @@ import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { UPLOAD_KINDS } from "@/modules/minibar/constants";
 import { SLA_OPEN_STATUSES, SLA_SWEEP_STATUSES } from "@/modules/order/server/roomService/sla";
 import { slaStateOf } from "@/modules/order/server/roomService/slaConstants";
+import { NOT_WITHDRAWN } from "@/modules/order/server/printWithdrawn";
 import { UPLOAD_DEADLINE_HOUR } from "@/modules/radar/alerts";
 import type { RadarMetric, RadarMetricKey } from "@/modules/radar/types";
 
@@ -342,7 +343,7 @@ export const RADAR_METRICS: RadarMetricDef[] = [
     collect: async (hotelIds, now) => {
       const g = await prisma.printJob.groupBy({
         by: ["hotelId"],
-        where: { hotelId: { in: hotelIds }, status: "HATA", createdAt: { gte: businessDateStart(businessDate(now)) } },
+        where: { hotelId: { in: hotelIds }, status: "HATA", ...NOT_WITHDRAWN, createdAt: { gte: businessDateStart(businessDate(now)) } },
         _count: { _all: true },
       });
       return toMap(g.map((r) => ({ hotelId: r.hotelId, n: r._count._all })));

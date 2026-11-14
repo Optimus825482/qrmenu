@@ -9,6 +9,7 @@ import { audit } from "@/modules/core/server/audit";
 import { notify } from "@/modules/core/server/notifications";
 import { approvals, onlineAt, outletAllowed } from "./approvals";
 import { printJobs } from "./printJobs";
+import { PRINT_WITHDRAWN_ERROR } from "./printWithdrawn";
 import { coveredMode } from "./roomService/coverageAccess";
 import { CLOSED_STATUSES, isAllowed } from "./transitions";
 
@@ -274,7 +275,7 @@ export type TransitionOptions = { reason?: string; print?: PrintEnqueuer };
 async function cancelPrintJobs(tx: Prisma.TransactionClient, order: OrderDetail, now: Date): Promise<void> {
   await tx.printJob.updateMany({
     where: { orderId: order.id, status: "KUYRUKTA" },
-    data: { status: "HATA", error: "Sipariş iptal edildi" },
+    data: { status: "HATA", error: PRINT_WITHDRAWN_ERROR },
   });
   if (order.prepStartedAt) await printJobs.enqueueKitchenCancel(tx, order, now);
 }
@@ -361,7 +362,7 @@ async function transition(
       // Only the queued receipt is withdrawn: a room order never had a kitchen ticket to cancel.
       await tx.printJob.updateMany({
         where: { orderId: order.id, status: "KUYRUKTA" },
-        data: { status: "HATA", error: "Sipariş iptal edildi" },
+        data: { status: "HATA", error: PRINT_WITHDRAWN_ERROR },
       });
     }
     await publish(

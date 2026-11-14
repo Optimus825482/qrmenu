@@ -8,15 +8,15 @@ export type SystemLayer = RadarSnapshot["layers"]["system"];
 
 const MAIL_WINDOW_MS = 24 * 3_600_000;
 
-/** Failed e-mails of the last 24 hours (the mail log carries no hotel, so the count is complex-wide). */
-export async function failedMailCount(now: Date, historical = false): Promise<number> {
+/** Failed e-mails of the last 24 hours: the hotel's own and those without a hotel, never another hotel's. */
+export async function failedMailCount(hotelId: string, now: Date, historical = false): Promise<number> {
   const window = { gte: new Date(now.getTime() - MAIL_WINDOW_MS), lte: now };
   // Replay: a mail counts from the moment it failed (`updatedAt`), the same stamp the replay events use.
-  return prisma.emailLog.count({ where: { status: "HATA", ...(historical ? { updatedAt: window } : { createdAt: window }) } });
+  return prisma.emailLog.count({ where: { status: "HATA", OR: [{ hotelId }, { hotelId: null }], ...(historical ? { updatedAt: window } : { createdAt: window }) } });
 }
 
 export async function systemLayer(env: LayerEnv, layers: AlertLayers): Promise<SystemLayer> {
-  const mailFailed = env.isSystem ? await failedMailCount(env.now, env.historical === true) : 0;
+  const mailFailed = env.isSystem ? await failedMailCount(env.hotelId, env.now, env.historical === true) : 0;
   const alerts = deriveAlerts(
     layers,
     env.now,

@@ -40,7 +40,7 @@ export function reduceRoomServiceOrder(s: RadarState, e: Ev<"order.status">): Ra
     const orders = replaceAt(layer.orders, idx, { ...layer.orders[idx], status: e.to });
     return { ...s, layers: { ...s.layers, roomService: { ...layer, orders } } };
   }
-  const roomNumber = e.roomId ? roomNumberOf(s, e.roomId) : undefined;
+  const roomNumber = e.roomNumber ?? (e.roomId ? roomNumberOf(s, e.roomId) : undefined);
   if (roomNumber === undefined) return addRefresh(s, e.roomId ? `room:${e.roomId}` : `order:${e.orderId}`);
   const created = {
     orderId: e.orderId,

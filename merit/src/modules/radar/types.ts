@@ -40,6 +40,8 @@ export type RadarEvent = RadarEventBase &
         from?: OrderStatus;
         tableId?: string;
         roomId?: string;
+        /** Room-service orders: lets the card appear without the minibar layer's room list. */
+        roomNumber?: string;
         waiterId?: string;
         /** KDS "start preparing": status stays ONAYLANDI. */
         prep?: boolean;

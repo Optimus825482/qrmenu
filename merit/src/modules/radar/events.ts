@@ -304,6 +304,11 @@ function kindOf(p: Obj, e: MeritEvent): "MASA" | "ODA_SERVISI" {
   return str(p, "roomId") || str(p, "roomNumber") || e.roomId ? "ODA_SERVISI" : "MASA";
 }
 
+/** Whether a changed setting moves what the radar shows (its own keys, module switches, thresholds). */
+function radarSettingKey(key: string | undefined): boolean {
+  return key !== undefined && (key.startsWith("radar.") || key.startsWith("module.") || THRESHOLD_KEYS.has(key));
+}
+
 /**
  * Normalises one SSE event into zero or more RadarEvents. Pure and side-effect free.
  * `refresh: "ALL"` asks the store for a new snapshot; `gap` marks a connection gap.
@@ -311,6 +316,10 @@ function kindOf(p: Obj, e: MeritEvent): "MASA" | "ODA_SERVISI" {
 export function toRadarEvent(e: MeritEvent | null | undefined): NormalizeResult {
   if (!e || typeof e !== "object") return NONE;
   if (e.type === "realtime.resync") return { events: [], gap: true, refresh: "ALL" };
+  // A setting saved for the whole complex carries no hotel, and it changes the thresholds of every hotel.
+  if (!e.hotelId && e.type === "settings.changed" && radarSettingKey(str(asObj(e.payload), "key"))) {
+    return { events: [], refresh: "ALL" };
+  }
   if (!e.hotelId) return NONE;
   const hotelId = e.hotelId;
   const p = asObj(e.payload);
@@ -332,9 +341,7 @@ export function toRadarEvent(e: MeritEvent | null | undefined): NormalizeResult 
   if (e.type === "definition.changed") return { events: [], refresh: "ALL" };
   if (e.type === "settings.changed") {
     const key = str(p, "key");
-    if (key && (key.startsWith("radar.") || key.startsWith("module.") || THRESHOLD_KEYS.has(key))) {
-      return { events: [], refresh: "ALL" };
-    }
+    if (radarSettingKey(key)) return { events: [], refresh: "ALL" };
     return truncated ? { events: [], refresh: "ALL" } : NONE;
   }
   if (e.payloadTruncated === true) return { events: [], refresh: "ALL" };
@@ -349,6 +356,7 @@ export function toRadarEvent(e: MeritEvent | null | undefined): NormalizeResult 
     const tableId = str(p, "tableId");
     const roomId = str(p, "roomId") ?? e.roomId;
     const waiterId = str(p, "assignedWaiterId");
+    const roomNumber = str(p, "roomNumber");
     return out([
       make(orderId, {
         type: "order.status",
@@ -360,6 +368,7 @@ export function toRadarEvent(e: MeritEvent | null | undefined): NormalizeResult 
         ...(from && ORDER_STATUSES.has(from) ? { from: from as OrderStatus } : {}),
         ...(tableId ? { tableId } : {}),
         ...(roomId ? { roomId } : {}),
+        ...(roomNumber && kind === "ODA_SERVISI" ? { roomNumber: roomNumber.slice(0, 16) } : {}),
         ...(waiterId ? { waiterId } : {}),
         ...(e.type === "order.prep" ? { prep: true } : {}),
         ...by,

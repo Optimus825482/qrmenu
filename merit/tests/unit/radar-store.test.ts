@@ -276,6 +276,31 @@ describe("radar store: resync, tazeleme, sapma", () => {
   });
 });
 
+describe("radar store: genel bakış ve tekrar korumaları", () => {
+  it("genel bakış ekranda değilken olaylar onu yeniden çekmez; geri gelince bir kez çeker", async () => {
+    let calls = 0;
+    const h = harness({ fetchOverview: async () => { calls++; return { generatedAt: iso(T0), hotels: [] }; } });
+    await h.boot();
+    h.store.getState().watchOverview(false);
+    const c0 = calls;
+    for (let i = 0; i < 5; i++) h.emit(wireOrder(h.getNow() + i, `o${i}`, "t1"));
+    await h.advance(2500);
+    expect(calls - c0).toBe(0);
+    h.store.getState().watchOverview(true);
+    await h.advance(1200);
+    expect(calls - c0).toBe(1);
+  });
+
+  it("tekrar modunda refresh canlı anlık görüntüyü çekmez", async () => {
+    const h = harness();
+    await h.boot();
+    const before = h.fetchSnapshot.mock.calls.length;
+    h.store.setState({ mode: "replay" });
+    await h.store.getState().refresh();
+    expect(h.fetchSnapshot.mock.calls.length).toBe(before);
+  });
+});
+
 describe("radar store: performans", () => {
   it("10k olay besle; 30 dk icinde geri sarma < 150 ms (toleransli, 5 denemenin medyani)", async () => {
     const h = harness({ snapshot: () => tables(300) });

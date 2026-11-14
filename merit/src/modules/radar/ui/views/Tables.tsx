@@ -23,6 +23,7 @@ function Card({
   selected,
   waiterAssignmentEnabled,
   occupancyMinutes,
+  callOverdueSeconds,
   onSelect,
 }: {
   table: TableCard;
@@ -30,9 +31,10 @@ function Card({
   selected: boolean;
   waiterAssignmentEnabled?: boolean;
   occupancyMinutes?: number | null;
+  callOverdueSeconds?: number;
   onSelect(): void;
 }) {
-  const m = tableCardModel(table, now, waiterAssignmentEnabled, occupancyMinutes);
+  const m = tableCardModel(table, now, waiterAssignmentEnabled, occupancyMinutes, callOverdueSeconds);
   const ref = usePulse<HTMLButtonElement>(`table:${table.tableId}`);
   return (
     <button
@@ -75,6 +77,7 @@ function Detail({
   now,
   waiterAssignmentEnabled,
   occupancyMinutes,
+  callOverdueSeconds,
   onOpenApp,
   onClose,
 }: {
@@ -83,10 +86,11 @@ function Detail({
   now: number;
   waiterAssignmentEnabled?: boolean;
   occupancyMinutes?: number | null;
+  callOverdueSeconds?: number;
   onOpenApp?: (appId: string) => void;
   onClose(): void;
 }) {
-  const m = tableCardModel(table, now, waiterAssignmentEnabled, occupancyMinutes);
+  const m = tableCardModel(table, now, waiterAssignmentEnabled, occupancyMinutes, callOverdueSeconds);
   const occLabel = occupancyMinutes === null || occupancyMinutes === 0 ? "kapalı" : `son ${occupancyMinutes ?? 40} dk`;
   return (
     <DetailBubble
@@ -206,6 +210,7 @@ export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: Table
                       selected={t.tableId === selected}
                       waiterAssignmentEnabled={outlet.waiterAssignmentEnabled}
                       occupancyMinutes={outlet.tableOccupancyMinutes}
+                      callOverdueSeconds={view.config.callAlertSeconds || undefined}
                       onSelect={() => setSelected(t.tableId === selected ? null : t.tableId)}
                     />
                   ))}
@@ -220,6 +225,7 @@ export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: Table
             now={now}
             waiterAssignmentEnabled={outlet.waiterAssignmentEnabled}
             occupancyMinutes={outlet.tableOccupancyMinutes}
+            callOverdueSeconds={view.config.callAlertSeconds || undefined}
             onOpenApp={onOpenApp}
             onClose={() => setSelected(null)}
           />

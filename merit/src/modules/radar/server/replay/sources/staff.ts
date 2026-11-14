@@ -143,7 +143,7 @@ async function* mailFailures(q: ReplaySourceArgs): AsyncGenerator<RadarEvent> {
     q,
     async (range, take) => {
       const rows = await prisma.emailLog.findMany({
-        where: { status: "HATA", updatedAt: timeFilter(range) },
+        where: { status: "HATA", OR: [{ hotelId: q.hotelId }, { hotelId: null }], updatedAt: timeFilter(range) },
         select: { id: true, kind: true, updatedAt: true },
         orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
         ...(take ? { take } : {}),

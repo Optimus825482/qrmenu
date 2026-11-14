@@ -71,6 +71,8 @@ export type RadarStoreState = {
   start(hotelId: string): void;
   stop(): void;
   refresh(): Promise<void>;
+  /** Whether the overview is on screen: off, live events stop refetching it and it is reloaded when shown again. */
+  watchOverview(on: boolean): void;
   scrubTo(ms: number): void;
   goLive(): void;
   /** `loader` replaces the replay source for this one call (the client-side demo scenario); it never touches the server. */
@@ -275,6 +277,10 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
       }
     };
 
+    // The overview is a server-side build of every layer: it follows live events only while it is on screen.
+    let overviewWatched = true;
+    let overviewStale = false;
+
     const adopt = (snap: RadarSnapshot) => {
       const floor = (Date.parse(snap.generatedAt) || 0) - SKEW_MS;
       for (const k of [...cps.keys()]) if (k >= floor) cps.delete(k);
@@ -303,6 +309,12 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
     const flush = () => {
       flushCancel = undefined;
       const s = get();
+      // A day replay owns the buffer and the checkpoints: live leftovers queued while it loaded are dropped
+      // (leaving the replay restarts the live store from a new snapshot).
+      if (s.mode === "replay") {
+        queue = [];
+        return;
+      }
       if (!s.live || !s.base) return;
       if (queue.length === 0) return;
       if (deps.hidden()) {
@@ -386,6 +398,10 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
     };
 
     const refreshOverview = () => {
+      if (!overviewWatched) {
+        overviewStale = true;
+        return;
+      }
       if (overviewCancel || !deps.fetchOverview) return;
       overviewCancel = deps.schedule(() => {
         overviewCancel = undefined;
@@ -580,9 +596,20 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
         stop();
       },
 
+      watchOverview(on) {
+        if (overviewWatched === on) return;
+        overviewWatched = on;
+        if (on && overviewStale) {
+          overviewStale = false;
+          refreshOverview();
+        }
+      },
+
       refresh() {
-        const { hotelId } = get();
+        const { hotelId, mode } = get();
         if (!hotelId) return Promise.resolve();
+        // A day replay (and the demo built on it) shows a past state: a live snapshot must not replace it.
+        if (mode === "replay") return Promise.resolve();
         if (hotelId === "ALL") return loadOverview();
         if (inflight) return inflight;
         const gen = generation;

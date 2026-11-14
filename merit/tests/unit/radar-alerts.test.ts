@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveAlerts, groupAlerts, type AlertLayers, type AlertThresholds } from "@/modules/radar/alerts";
+import { ALERT_LAYER, deriveAlerts, groupAlerts, type AlertLayers, type AlertThresholds } from "@/modules/radar/alerts";
 import type { RadarAlert } from "@/modules/radar/types";
 
 const TH: AlertThresholds = { callAlertSeconds: 60, mybarStaleMinutes: 30, idleMinutes: 10, approvalEscalationMinutes: 2 };
@@ -114,6 +114,22 @@ describe("deriveAlerts", () => {
     expect(mk(30)).toHaveLength(0);
     expect(mk(31)).toHaveLength(1);
     expect(mk(31, { ...TH, mybarStaleMinutes: 45 })).toHaveLength(0);
+  });
+
+  it("an approved (seen) MyBar request is a warning about closing it, not a critical 'waiting' alert", () => {
+    const of = (seen: boolean) =>
+      deriveAlerts(
+        minibarLayer({ room: { mybar: { requestId: "m1", since: ago(31 * 60_000), seen } } }),
+        NOW,
+        TH,
+        OPTS,
+      ).filter((a) => a.kind === "MYBAR")[0];
+    expect(of(false)).toMatchObject({ severity: "crit", text: "Oda 101: MyBar talebi onay bekliyor" });
+    expect(of(true)).toMatchObject({ severity: "warn", text: "Oda 101: MyBar talebi onaylandı, tamamlanmadı" });
+  });
+
+  it("every alert kind belongs to a layer", () => {
+    expect(ALERT_LAYER).toMatchObject({ MYBAR: "MINIBAR", CAGRI: "SIPARIS", RS_SLA: "ODA_SERVISI", EPOSTA: "SISTEM" });
   });
 
   it("maps room-service age against the SLA: 79 percent none, 80 warn, 100 crit", () => {
