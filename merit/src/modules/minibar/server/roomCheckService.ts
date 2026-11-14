@@ -1165,9 +1165,9 @@ const listSchema = z
   })
   .optional();
 
-export type MyTransaction = RoomCheckHistoryItem & { kind: "ISLEM" | "DND"; canDelete: boolean };
+export type MyTransaction = RoomCheckHistoryItem & { kind: "ISLEM" | "DND" | "MMD"; canDelete: boolean };
 
-/** The user's own records (replacements, Sarfiyat Yok, MyBar fulfilment) and DND marks, newest first. */
+/** The user's own records (replacements, Sarfiyat Yok, MyBar fulfilment), DND marks and MMD records, newest first. */
 export async function listMyTransactions(
   ctx: Ctx,
   q: z.input<typeof listSchema> = {},
@@ -1185,7 +1185,7 @@ export async function listMyTransactions(
     floor: { select: { id: true, number: true, name: true } },
     roomType: { select: { name: true } },
   } as const;
-  const [txs, dndChecks, stocks] = await Promise.all([
+  const [txs, dndChecks, mmds, stocks] = await Promise.all([
     prisma.minibarTransaction.findMany({
       where: { hotelId, userId: ctx.user.id, ...(range ? { occurredAt: range } : {}) },
       include: {
@@ -1210,6 +1210,12 @@ export async function listMyTransactions(
         ...(range ? { at: range } : {}),
       },
       include: { dnd: { include: { room: { include: roomInclude } } } },
+      orderBy: { at: "desc" },
+      take: limit,
+    }),
+    prisma.roomMmd.findMany({
+      where: { userId: ctx.user.id, hotelId, ...(range ? { at: range } : {}) },
+      include: { room: { include: roomInclude } },
       orderBy: { at: "desc" },
       take: limit,
     }),
@@ -1290,6 +1296,31 @@ export async function listMyTransactions(
       typeBadgeColor: "yellow",
       note: c.note,
       occurredAt: c.at.toISOString(),
+      dateStr,
+      isToday: dateStr === today,
+      canEditDirectly: false,
+      canDelete: false,
+      items: [],
+      totalItemsCount: 0,
+      pendingCorrection: null,
+    });
+  }
+  for (const m of mmds) {
+    const dateStr = businessDate(m.at);
+    rows.push({
+      id: `mmd:${m.id}`,
+      kind: "MMD",
+      roomId: m.room.id,
+      roomNumber: m.room.number,
+      floorId: m.room.floor.id,
+      floorNumber: m.room.floor.number,
+      floorName: m.room.floor.name,
+      roomTypeName: m.room.roomType?.name ?? "Standart Oda",
+      type: "MMD",
+      typeLabel: "MMD (misafir müsait değil)",
+      typeBadgeColor: "yellow",
+      note: m.reason,
+      occurredAt: m.at.toISOString(),
       dateStr,
       isToday: dateStr === today,
       canEditDirectly: false,

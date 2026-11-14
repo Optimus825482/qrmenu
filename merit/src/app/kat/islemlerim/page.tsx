@@ -18,10 +18,34 @@ function qtyChanged(tx: RoomCheckHistoryItem, qty: Record<string, number>): bool
   return tx.items.some((it) => (qty[it.productId] ?? 0) !== it.added);
 }
 
+/** A row of the user's own list: minibar records, DND marks and MMD records (`/api/minibar/my-checks`). */
+type MyRecord = RoomCheckHistoryItem & { kind?: "ISLEM" | "DND" | "MMD" };
+
+/** Only room check records are changed here: an addition can be edited or deleted, "Sarfiyat Yok" deleted. */
+const canEditRecord = (tx: MyRecord) => (tx.kind ?? "ISLEM") === "ISLEM" && tx.type === "SETUP_KONTROL";
+const canDeleteRecord = (tx: MyRecord) =>
+  (tx.kind ?? "ISLEM") === "ISLEM" && (tx.type === "SETUP_KONTROL" || tx.type === "SARFIYAT_YOK");
+
+const BADGE_TONE: Record<RoomCheckHistoryItem["typeBadgeColor"], string> = {
+  emerald: "border-ok/40 bg-ok/15 text-ok",
+  slate: "border-border bg-bg text-text",
+  amber: "border-accent/40 bg-accent/10 text-accent",
+  yellow: "border-warn/40 bg-warn/15 text-warn",
+};
+
+/** What an empty product list means for this record. */
+function emptyText(tx: MyRecord): string {
+  if (tx.kind === "DND") return "Oda DND olarak işaretlendi.";
+  if (tx.kind === "MMD") return "Misafir müsait değildi; odaya girilmedi.";
+  if (tx.type === "SARFIYAT_YOK") return "Sarfiyat Yok — Minibar Tam";
+  return "Ürün yok.";
+}
+
 export default function KatIslemlerimPage() {
   const canView = useCanViewPath();
   const approvalsHref = "/kat/duzeltme-onay";
-  const [items, setItems] = useState<RoomCheckHistoryItem[]>([]);
+  const [items, setItems] = useState<MyRecord[]>([]);
+  const [range, setRange] = useState<"today" | "all">("today");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,10 +68,10 @@ export default function KatIslemlerimPage() {
       const res = await mbFetch("/api/minibar/my-checks");
       const json = await res.json();
       if (!res.ok) throw new Error((json as { error?: string })?.error ?? "İşlemler alınamadı.");
-      const checks: RoomCheckHistoryItem[] = Array.isArray(json)
+      const checks: MyRecord[] = Array.isArray(json)
         ? json
-        : Array.isArray((json as { checks?: RoomCheckHistoryItem[] })?.checks)
-          ? (json as { checks: RoomCheckHistoryItem[] }).checks
+        : Array.isArray((json as { checks?: MyRecord[] })?.checks)
+          ? (json as { checks: MyRecord[] }).checks
           : [];
       setItems(checks);
     } catch (e) {
@@ -172,6 +196,9 @@ export default function KatIslemlerimPage() {
     }
   };
 
+  const todayCount = items.filter((tx) => tx.isToday).length;
+  const shown = range === "today" ? items.filter((tx) => tx.isToday) : items;
+
   // Unsaved input in the open dialog: closing it (button or the phone's back) asks first (D4/D6).
   const editDirty = editingTx !== null && (qtyChanged(editingTx, editQty) || editNote !== (editingTx.note ?? ""));
   const correctionDirty =
@@ -229,13 +256,36 @@ export default function KatIslemlerimPage() {
           <div role="alert" className="rounded-2xl border border-danger/40 bg-danger/10 p-5 text-sm text-danger">
             {error}
           </div>
-        ) : items.length === 0 ? (
+        ) : (
+          <>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Tarih aralığı">
+            {(
+              [
+                ["today", `Bugün (${todayCount})`],
+                ["all", `Tümü (${items.length})`],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={range === key}
+                onClick={() => setRange(key)}
+                style={{ minHeight: "var(--tap-action)" }}
+                className={`rounded-xl border px-3.5 py-2 text-xs font-semibold transition ${
+                  range === key ? "border-accent bg-accent text-white" : "border-border bg-surface text-text hover:bg-bg"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {shown.length === 0 ? (
           <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
-            Henüz kayıtlı oda kontrol işleminiz bulunmuyor.
+            {range === "today" ? "Bugün kayıtlı işleminiz bulunmuyor." : "Henüz kayıtlı işleminiz bulunmuyor."}
           </div>
         ) : (
           <div className="space-y-3">
-            {items.map((tx) => (
+            {shown.map((tx) => (
               <div
                 key={tx.id}
                 className="rounded-2xl border border-border bg-surface p-4 space-y-3"
@@ -250,17 +300,25 @@ export default function KatIslemlerimPage() {
                           Bugün
                         </span>
                       ) : (
-                        <span className="rounded-full bg-warn/15 px-2.5 py-0.5 text-xs font-bold text-warn">
-                          Geçmiş Tarihli (Yönetici Onaylı)
+                        <span className="rounded-full bg-bg border border-border px-2.5 py-0.5 text-xs font-bold text-muted">
+                          {tx.dateStr}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted mt-0.5">
-                      {new Date(tx.occurredAt).toLocaleString("tr-TR")} · {tx.typeLabel}
+                    <p className="text-xs text-muted mt-0.5 flex flex-wrap items-center gap-1.5">
+                      <span
+                        data-testid="islem-turu"
+                        className={`rounded-full border px-2 py-0.5 font-bold ${BADGE_TONE[tx.typeBadgeColor] ?? BADGE_TONE.slate}`}
+                      >
+                        {tx.typeLabel}
+                      </span>
+                      <span>{new Date(tx.occurredAt).toLocaleString("tr-TR", { timeZone: "Europe/Nicosia" })}</span>
                     </p>
                   </div>
 
+                  {canDeleteRecord(tx) ? (
                   <div className="flex items-center gap-2">
+                    {canEditRecord(tx) ? (
                     <button
                       type="button"
                       data-mutates=""
@@ -271,6 +329,7 @@ export default function KatIslemlerimPage() {
                       <Icon name="edit" size={14} />
                       {tx.isToday ? "Değiştir" : "Düzeltme Talep Et"}
                     </button>
+                    ) : null}
                     <button
                       type="button"
                       data-mutates=""
@@ -283,10 +342,11 @@ export default function KatIslemlerimPage() {
                       {tx.isToday ? "Sil" : "Silme Talep Et"}
                     </button>
                   </div>
+                  ) : null}
                 </div>
 
                 {tx.items.length === 0 ? (
-                  <p className="text-xs text-muted italic">Sarfiyat Yok — Minibar Tam</p>
+                  <p className="text-xs text-muted italic">{emptyText(tx)}</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {tx.items.map((it) => (
@@ -300,10 +360,12 @@ export default function KatIslemlerimPage() {
                   </div>
                 )}
 
-                {tx.note ? <p className="text-xs text-muted">Not: {tx.note}</p> : null}
+                {tx.note ? <p className="text-xs text-muted">{tx.kind === "MMD" ? "Sebep" : "Not"}: {tx.note}</p> : null}
               </div>
             ))}
           </div>
+        )}
+          </>
         )}
       </main>
 

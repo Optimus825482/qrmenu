@@ -614,6 +614,16 @@ describe("listMyTransactions", () => {
     const forDay = await rc.listMyTransactions(kat.ctx, { day: DAY }, minutes(T0, 20));
     expect(forDay.find((x) => x.id === old.transactionId)).toBeUndefined();
   });
+
+  it("kullanıcının kendi MMD kayıtları da listelenir (başkasınınki değil); silinemez", async () => {
+    const { w, kat, kat2 } = await world();
+    await mmd.recordMmd(kat.ctx, { roomId: w.room.id, reason: "Misafir uyuyor" }, minutes(T0, 2));
+    await mmd.recordMmd(kat2.ctx, { roomId: w.room.id, reason: "Başkasının kaydı" }, minutes(T0, 3));
+    const list = await rc.listMyTransactions(kat.ctx, {}, minutes(T0, 20));
+    const mmds = list.filter((x) => x.kind === "MMD");
+    expect(mmds).toHaveLength(1);
+    expect(mmds[0]).toMatchObject({ type: "MMD", note: "Misafir uyuyor", canDelete: false, isToday: true, roomNumber: w.room.number });
+  });
 });
 
 describe("düzeltme talebi akışı", () => {
