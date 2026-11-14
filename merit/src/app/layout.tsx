@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { APP_THEME_COLOR } from "@/shell/appearance";
 import { PwaRegister } from "@/shell/components/PwaRegister";
+import { StaleBuildReload } from "@/shell/staleBuildReload";
 import { EnvLabelProvider } from "@/components/EnvLabel";
 import { env } from "@/lib/env";
 import "./globals.css";
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <EnvLabelProvider label={env.ENV_LABEL}>
           <PwaRegister />
+          <StaleBuildReload />
           {children}
         </EnvLabelProvider>
       </body>
