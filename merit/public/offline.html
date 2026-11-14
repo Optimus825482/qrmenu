@@ -33,6 +33,7 @@
       align-items: center;
       justify-content: center;
       gap: clamp(12px, 4vw, 32px);
+      direction: ltr; /* Arapçada (rtl) da logo sırası Royal → Premium → Diamond kalır */
       animation: breathe 3.2s ease-in-out infinite;
     }
     .logos img {
@@ -86,32 +87,61 @@
 
   <h1 id="title">Kısa süreli güncelleme</h1>
   <p id="msg">Sizlere daha iyi hizmet verebilmek adına, son teknolojik gelişmeler doğrultusunda sistemimizde kısa süreli bir güncelleme yapılmaktadır. Birkaç saniye sonra istediğiniz alana ulaşabileceksiniz.</p>
-  <p class="en" id="msg-en">To serve you better, we are applying a brief system update in line with the latest technology. You will reach the page you requested in a few seconds.</p>
-  <div class="thanks">Anlayışınız için teşekkür ederiz.</div>
+  <p class="en" id="msg-en" dir="ltr" lang="en"></p>
+  <div class="thanks" id="thanks">Anlayışınız için teşekkür ederiz.</div>
 
   <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
-  <button class="btn" type="button" onclick="window.location.reload()">Şimdi yenile</button>
+  <button class="btn" id="btn" type="button" onclick="window.location.reload()">Şimdi yenile</button>
 
   <script>
     (function () {
+      // Misafir menüsünün 9 dili (src/lib/i18n/locales.ts ile aynı). o*: cihaz çevrimdışıyken.
+      var T = {
+        tr: { title: 'Kısa süreli güncelleme', msg: 'Sizlere daha iyi hizmet verebilmek adına, son teknolojik gelişmeler doğrultusunda sistemimizde kısa süreli bir güncelleme yapılmaktadır. Birkaç saniye sonra istediğiniz alana ulaşabileceksiniz.', thanks: 'Anlayışınız için teşekkür ederiz.', oTitle: 'İnternet bağlantısı yok', oMsg: 'Bağlantınız geri geldiğinde sayfa kendiliğinden açılacaktır.', btn: 'Şimdi yenile' },
+        en: { title: 'Brief system update', msg: 'To serve you better, we are carrying out a brief update to our system in line with the latest technological developments. You will be able to reach the page you requested in a few seconds.', thanks: 'Thank you for your understanding.', oTitle: 'No internet connection', oMsg: 'The page will open automatically as soon as your connection is back.', btn: 'Refresh now' },
+        de: { title: 'Kurzes Systemupdate', msg: 'Um Ihnen einen noch besseren Service zu bieten, führen wir entsprechend den neuesten technologischen Entwicklungen ein kurzes Update unseres Systems durch. In wenigen Sekunden gelangen Sie zur gewünschten Seite.', thanks: 'Vielen Dank für Ihr Verständnis.', oTitle: 'Keine Internetverbindung', oMsg: 'Die Seite öffnet sich automatisch, sobald Ihre Verbindung wiederhergestellt ist.', btn: 'Jetzt aktualisieren' },
+        ru: { title: 'Кратковременное обновление', msg: 'Чтобы обслуживать вас ещё лучше, мы проводим кратковременное обновление системы в соответствии с последними технологическими достижениями. Через несколько секунд вы сможете перейти на нужную страницу.', thanks: 'Благодарим за понимание.', oTitle: 'Нет подключения к интернету', oMsg: 'Страница откроется автоматически, как только соединение восстановится.', btn: 'Обновить' },
+        ar: { title: 'تحديث قصير للنظام', msg: 'لنقدّم لكم خدمة أفضل، نُجري حاليًا تحديثًا قصيرًا لنظامنا مواكبةً لأحدث التطورات التقنية. ستتمكنون من الوصول إلى الصفحة المطلوبة خلال ثوانٍ قليلة.', thanks: 'شكرًا لتفهّمكم.', oTitle: 'لا يوجد اتصال بالإنترنت', oMsg: 'ستُفتح الصفحة تلقائيًا فور عودة الاتصال.', btn: 'تحديث الآن' },
+        fr: { title: 'Courte mise à jour du système', msg: 'Afin de mieux vous servir, nous effectuons une courte mise à jour de notre système conformément aux dernières avancées technologiques. Vous pourrez accéder à la page demandée dans quelques secondes.', thanks: 'Merci de votre compréhension.', oTitle: 'Pas de connexion Internet', oMsg: 'La page s’ouvrira automatiquement dès le rétablissement de votre connexion.', btn: 'Actualiser' },
+        el: { title: 'Σύντομη ενημέρωση συστήματος', msg: 'Για να σας εξυπηρετούμε καλύτερα, πραγματοποιούμε μια σύντομη ενημέρωση του συστήματός μας σύμφωνα με τις τελευταίες τεχνολογικές εξελίξεις. Σε λίγα δευτερόλεπτα θα μπορείτε να μεταβείτε στη σελίδα που ζητήσατε.', thanks: 'Σας ευχαριστούμε για την κατανόηση.', oTitle: 'Δεν υπάρχει σύνδεση στο διαδίκτυο', oMsg: 'Η σελίδα θα ανοίξει αυτόματα μόλις αποκατασταθεί η σύνδεσή σας.', btn: 'Ανανέωση' },
+        it: { title: 'Breve aggiornamento del sistema', msg: 'Per offrirvi un servizio sempre migliore, stiamo effettuando un breve aggiornamento del nostro sistema in linea con le più recenti innovazioni tecnologiche. Tra pochi secondi potrete accedere alla pagina richiesta.', thanks: 'Grazie per la comprensione.', oTitle: 'Nessuna connessione a Internet', oMsg: 'La pagina si aprirà automaticamente non appena la connessione sarà ripristinata.', btn: 'Aggiorna ora' },
+        pt: { title: 'Breve atualização do sistema', msg: 'Para melhor o servir, estamos a realizar uma breve atualização do nosso sistema, de acordo com os mais recentes avanços tecnológicos. Dentro de alguns segundos poderá aceder à página pretendida.', thanks: 'Obrigado pela sua compreensão.', oTitle: 'Sem ligação à Internet', oMsg: 'A página abrirá automaticamente assim que a ligação for restabelecida.', btn: 'Atualizar agora' }
+      };
+
+      // Dil sırası: ?lang= (test) → misafirin menüde seçtiği dil (merit_lang çerezi) → cihaz dili → İngilizce.
+      function pickLang() {
+        var tries = [];
+        try { tries.push(new URLSearchParams(window.location.search).get('lang')); } catch (e) {}
+        var m = document.cookie.match(/(?:^|;\s*)merit_lang=([^;]+)/);
+        if (m) tries.push(decodeURIComponent(m[1]));
+        var nav = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+        for (var i = 0; i < nav.length; i++) tries.push(nav[i]);
+        for (var j = 0; j < tries.length; j++) {
+          var code = String(tries[j] || '').toLowerCase().split(/[-_]/)[0];
+          if (Object.prototype.hasOwnProperty.call(T, code)) return code;
+        }
+        return 'en';
+      }
+
+      var lang = pickLang();
+      var t = T[lang];
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
       var title = document.getElementById('title');
       var msg = document.getElementById('msg');
       var msgEn = document.getElementById('msg-en');
-      var updateTitle = title.textContent;
-      var updateMsg = msg.textContent;
-      var updateMsgEn = msgEn.textContent;
+      document.getElementById('thanks').textContent = t.thanks;
+      document.getElementById('btn').textContent = t.btn;
 
-      // Cihazın interneti yoksa sorun sunucuda değildir: metni ona göre göster.
+      // Cihazın interneti yoksa sorun sunucuda değildir: metni ona göre göster. Ana dil İngilizce
+      // değilse altta küçük İngilizce satır da durur (dili listede olmayan misafirler için).
       function render() {
-        if (navigator.onLine === false) {
-          title.textContent = 'İnternet bağlantısı yok';
-          msg.textContent = 'Bağlantınız geri geldiğinde sayfa kendiliğinden açılacaktır.';
-          msgEn.textContent = 'You appear to be offline. The page will open as soon as your connection is back.';
-        } else {
-          title.textContent = updateTitle;
-          msg.textContent = updateMsg;
-          msgEn.textContent = updateMsgEn;
-        }
+        var offline = navigator.onLine === false;
+        title.textContent = offline ? t.oTitle : t.title;
+        msg.textContent = offline ? t.oMsg : t.msg;
+        msgEn.textContent = lang === 'en' ? '' : (offline ? T.en.oMsg : T.en.msg);
+        msgEn.style.display = lang === 'en' ? 'none' : '';
       }
 
       // Uygulama geri gelince sayfayı yenile; 3 sn arayla /api/health sorulur. Yanıtı uygulama verdiyse
