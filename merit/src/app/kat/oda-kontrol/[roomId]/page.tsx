@@ -16,6 +16,9 @@ import { noConsumptionBlockedReason, type RoomBadgeKind } from "@/modules/miniba
 /** Writes give up after this long; the same request key is sent again on the next tap. */
 const WRITE_TIMEOUT_MS = 15_000;
 
+/** Most numbered buttons a product row can show after the "+" icon is pressed. */
+const EXTRA_BUTTON_MAX = 20;
+
 const errorText = (e: unknown, fallback: string): string =>
   e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError")
     ? "Sunucu zamanında yanıt vermedi. Lütfen tekrar deneyin."
@@ -112,6 +115,8 @@ export default function OdaKontrolPage() {
   const [noUseKey, setNoUseKey] = useState(newRequestKey);
   const [dndKey, setDndKey] = useState(newRequestKey);
   const quickKeys = useRef<Record<string, string>>({});
+  // Extra numbered buttons revealed beyond the normal +1..+setup ones, per product (staff leaving more than the setup).
+  const [extraCounts, setExtraCounts] = useState<Record<string, number>>({});
   // The action bar is fixed: the page keeps room for it under the last row.
   const barRef = useRef<HTMLDivElement>(null);
   const [barHeight, setBarHeight] = useState(0);
@@ -153,10 +158,10 @@ export default function OdaKontrolPage() {
   const busy = submitting || addingProductId !== null;
 
   /** +N saves at once: the product is put back and recorded in one tap; the toast offers "Geri al". */
-  const handleQuickAdd = async (setupId: string, item: RoomCheckItem, n: number) => {
+  const handleQuickAdd = async (setupId: string, item: RoomCheckItem, n: number, overSetup = false) => {
     if (!data || busy) return;
     setAddingProductId(item.productId);
-    const quickId = `${setupId}:${item.productId}:${n}`;
+    const quickId = `${setupId}:${item.productId}:${n}${overSetup ? ":over" : ""}`;
     const clientRequestId = (quickKeys.current[quickId] ??= newRequestKey());
     const typedNote = note.trim();
     try {
@@ -164,7 +169,7 @@ export default function OdaKontrolPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: [{ productId: item.productId, setupId, qty: n }],
+          items: [{ productId: item.productId, setupId, qty: n, ...(overSetup ? { overSetup: true } : {}) }],
           clientRequestId,
           ...(typedNote ? { note: typedNote } : {}),
         }),
@@ -405,10 +410,11 @@ export default function OdaKontrolPage() {
                 <div className="divide-y divide-border">
                   {setup.items.map((item) => {
                     const buttonCap = Math.min(Math.max(item.setupQty, 1), 4);
-                    const quickNumbers = Array.from({ length: buttonCap }, (_, i) => i + 1);
+                    const extraCount = Math.min(extraCounts[item.productId] ?? 0, EXTRA_BUTTON_MAX - buttonCap);
+                    const quickNumbers = Array.from({ length: buttonCap + extraCount }, (_, i) => i + 1);
                     const limitReason =
                       item.allowedLeft === 0
-                        ? "Günlük setup sınırı doldu"
+                        ? "Günlük setup sınırı doldu — fazlası için ürün adının yanındaki + düğmesini kullanın"
                         : item.poolRemaining <= 0
                           ? "Otel deposunda stok yok"
                           : item.poolRemaining < buttonCap
@@ -423,7 +429,24 @@ export default function OdaKontrolPage() {
                         className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-text">{item.productName}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-text">{item.productName}</p>
+                            {buttonCap + extraCount < EXTRA_BUTTON_MAX ? (
+                              <button
+                                type="button"
+                                aria-label={`${item.productName} için ek adet düğmesi ekle`}
+                                title="Setup miktarından fazla bırakmak için bir sayı düğmesi daha ekle"
+                                onClick={() =>
+                                  setExtraCounts((prev) => ({ ...prev, [item.productId]: (prev[item.productId] ?? 0) + 1 }))
+                                }
+                                data-testid={`extra-plus-${item.productName}`}
+                                style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
+                                className="inline-flex shrink-0 items-center justify-center rounded-full border-2 border-accent bg-accent/10 text-accent transition hover:bg-accent hover:text-white"
+                              >
+                                <Icon name="plus" size={20} />
+                              </button>
+                            ) : null}
+                          </div>
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
                             <span>Setup hedef: {item.targetQty} {item.unit}</span>
                             <span>·</span>
@@ -444,7 +467,8 @@ export default function OdaKontrolPage() {
                         <div className="flex flex-wrap items-center gap-2" role="group" aria-label={`${item.productName} hızlı ikame`}>
                           {quickNumbers.map((n) => {
                             const outOfPool = item.poolRemaining < n;
-                            const overCap = item.allowedLeft < n;
+                            const isExtra = n > buttonCap;
+                            const overCap = !isExtra && item.allowedLeft < n;
                             const disabled = outOfPool || overCap || busy;
                             const reason = overCap
                               ? "Günlük setup sınırı doldu"
@@ -463,7 +487,7 @@ export default function OdaKontrolPage() {
                                 title={reason}
                                 onClick={() => {
                                   if (disabled) return;
-                                  void handleQuickAdd(setup.setupId, item, n);
+                                  void handleQuickAdd(setup.setupId, item, n, isExtra);
                                 }}
                                 style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
                                 className={`inline-flex items-center justify-center rounded-xl border px-3 text-sm font-bold tabular-nums transition ${

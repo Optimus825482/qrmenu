@@ -13,7 +13,7 @@ const set = (...a: Action[]) => [...a].sort().join("");
 
 describe("SCREEN_LIMITS tek liste", () => {
   it("her girdi plan etiketi taşır ve P5/P2/P3 girdileri vardır", () => {
-    expect(SCREEN_LIMITS.every((l) => ["P5", "P2", "P3", "P7", "YR", "KD"].includes(l.plan))).toBe(true);
+    expect(SCREEN_LIMITS.every((l) => ["P5", "P2", "P3", "P7", "YR", "KD", "OKI"].includes(l.plan))).toBe(true);
     for (const plan of ["P5", "P2", "P3"]) expect(SCREEN_LIMITS.some((l) => l.plan === plan)).toBe(true);
   });
 
@@ -49,6 +49,14 @@ describe("SCREEN_LIMITS tek liste", () => {
   it("R-HKS", () => {
     expect(acts("R-HKS", "MB-TAN")).toBe(set("V"));
     expect(acts("R-HKS", "MB-ZIM")).toBe(set("V", "R"));
+  });
+
+  it("MB-OKI (Oda Kontrol İşlemleri): yalnız R-SYS ve R-OSS", () => {
+    expect(acts("R-SYS", "MB-OKI")).toBe(set(...PROFILE_ACTIONS.TAM));
+    expect(acts("R-OSS", "MB-OKI")).toBe(set("V", "O", "D", "A", "R"));
+    for (const other of ROLES.map((r) => r.code).filter((c) => c !== "R-SYS" && c !== "R-OSS")) {
+      expect(acts(other, "MB-OKI"), other).toBe("");
+    }
   });
 
   it("R-SYS tam yetkili kalır; MB-PERS ve MB-RAP değişmez", () => {
@@ -96,7 +104,9 @@ describe("migration SQL'i seed çıktısıyla aynı sonucu verir (gerçek test D
     const roles = await testDb.role.findMany();
     await testDb.roleScreenPermission.deleteMany({ where });
     for (const def of ROLES) {
-      for (const s of screens) {
+      // Oda Kontrol İşlemleri (MB-OKI) was added later: a database seeded before it has no rows for it, the migration
+      // (20261114110000) writes its default grants.
+      for (const s of screens.filter((x) => x.code !== "MB-OKI")) {
         const granted =
           def.modules === "ALL"
             ? PROFILE_ACTIONS.TAM
@@ -132,6 +142,7 @@ describe("migration SQL'i seed çıktısıyla aynı sonucu verir (gerçek test D
       "20261112120000_mty_tanim_ve_onaysiz_duzeltme",
       "20261112150000_kademe_rolleri",
       "20261113140000_mty_mybar_onay",
+      "20261114110000_oda_kontrol_islemleri",
     ]) {
       const file = readFileSync(path.resolve(__dirname, `../../prisma/migrations/${migration}/migration.sql`), "utf8");
       const block = file.slice(file.indexOf("-- @limits:begin"), file.indexOf("-- @limits:end"));

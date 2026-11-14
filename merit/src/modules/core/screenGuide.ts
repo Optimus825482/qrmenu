@@ -280,6 +280,28 @@ const LIST: ScreenGuide[] = [
       "Ürün adını değiştirmek geçmiş kayıtları etkilemez.",
     ],
   ),
+  guide(
+    "MB-OKI",
+    "personel",
+    "Bütün personelin oda kontrol kayıtlarını gün ve personele göre listeler, gerekirse düzeltir veya silersin.",
+    [
+      ["oki-filtre", "Tarih ve personel", "Bir gün ya da tarih aralığı seç; istersen yalnız bir personelin kayıtlarını göster."],
+      ["oki-liste", "Kayıt listesi", "Her satırda saat, oda, personel, işlem türü, ürünler ve not görünür; tüm oteller seçiliyse otel sütunu da çıkar."],
+      ["oki-duzenle", "Düzenle", "Ürün adetlerini veya notu değiştirirsin; fark otel deposuna işlenir."],
+      ["oki-sil", "Sil", "Kaydı gerekçe yazarak silersin; ürünler otel deposuna geri döner."],
+    ],
+    [
+      "MyBar karşılama kayıtları burada yalnız okunur; MyBar talebi üzerinden düzeltilir.",
+      "Her silme ve düzeltme denetim günlüğüne yazılır; gerekçeyi açık yaz.",
+    ],
+    {
+      actions: {
+        V: "Bütün personelin oda kontrol kayıtlarını görürsün.",
+        D: "Kayıtları düzeltir ve silersin.",
+      },
+      requires: { "oki-duzenle": ["D"], "oki-sil": ["D"] },
+    },
+  ),
   // QR_MENU
   guide(
     "QM-MIS",
@@ -519,6 +541,7 @@ const LIST: ScreenGuide[] = [
     "Bugünkü canlı sayaçları (oda servisi, MyBar, minibar, QR) ve çevrimiçi kullanıcıyı otel otel görürsün.",
     [
       ["durum-tablo", "Anlık Durum", "Masaüstünde widget, tablette üst çubuktaki Anlık Durum düğmesi, telefonda ana ekran kartı."],
+      ["durum-renk", "Renkler", "Her satırda bugün alınan, tamamlanan ve bekleyen sayılar ayrı renkle gösterilir."],
       ["durum-satir", "Satır ayrıntısı", "Bir satıra tıklayınca o sayının dökümü açılır."],
     ],
     [

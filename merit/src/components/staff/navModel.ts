@@ -79,6 +79,9 @@ const DEPO_MORE: Def[] = [
   { id: "occupancy", label: "Doluluk yükleme", icon: "trending", href: "/depo/doluluk-yukle", screen: "MB-DOL" },
   { id: "definitions", label: "Tanımlar", icon: "settings", href: "/depo/tanimlar", screen: "MB-TAN" },
   { id: "floors", label: "Kat planı", icon: "building", href: "/kat", screen: "MB-KAT" },
+  // A depot-family user who also checks rooms (MB-KF, e.g. Oda Servisi Sorumlusu) reaches their own records;
+  // the page guard and route owner MB-TUK is checked by resolve() as well.
+  { id: "mine", label: "İşlemlerim", icon: "list", href: "/kat/islemlerim", screen: "MB-KF" },
 ];
 
 const FAMILIES: Record<Family, { primary: Def[]; more: Def[] }> = {

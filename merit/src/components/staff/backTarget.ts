@@ -17,6 +17,7 @@ const PAGE_GUARDS: ReadonlyArray<readonly [string, readonly string[]]> = [
   ["/kat/manuel-kayit", ["MB-TUK"]],
   ["/kat/mybar", ["MB-PERS"]],
   ["/kat/oda-kontrol", ["MB-TUK"]],
+  ["/kat/oda-kontrol-islemleri", ["MB-OKI"]],
   ["/kat/qr", ["MB-KF"]],
   ["/kat/stok", ["MB-ZIM"]],
   ["/kat/talep", ["MB-TAL"]],

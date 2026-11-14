@@ -131,6 +131,25 @@ export function registerMinibarApps(): void {
     mobile: "none",
   });
 
+  // The user's own room check records: a manager who does room checks (R-OSS) has no floor navigation, so the
+  // list (with the same-day cancel / cancellation request) is a window of its own. Server: roomCheckService.
+  registerCatalogApp({
+    id: "minibar.islemlerim",
+    title: "İşlemlerim",
+    launchLabel: "İşlemlerim",
+    icon: "denetim",
+    moduleKey: "MINIBAR",
+    screenCode: "MB-TUK",
+    purpose: "Yaptığın oda kontrol kayıtlarını odaya göre görür, bugünkünü iptal eder, geçmiş için iptal talebi gönderirsin.",
+    roleCodes: ["R-MTY", "R-OSS", "R-FBY", "R-FBM"],
+    category: "MINIBAR",
+    needsHotel: false,
+    window: { w: 1000, h: 760, minW: 640, minH: 480 },
+    kind: "iframe",
+    url: "/kat/islemlerim",
+    mobile: "full",
+  });
+
   // Requests of the floor team that wait for a decision: corrections / deletions, manual entries, extra stock.
   // The server decides who may resolve them (roomCheckService.resolveCorrectionRequest, manualEntryRequests).
   registerCatalogApp({
@@ -188,5 +207,23 @@ export function registerMinibarApps(): void {
     component: () =>
       import("@/shell/apps/MinibarUsersWindow").then((m) => ({ default: m.MinibarUsersWindow })),
     mobile: "none",
+  });
+
+  // The room check records of ALL staff for a manager: edit and delete of any day (MB-OKI V / D). Lists every hotel
+  // of the user's scope where the screen is granted, or the one the banner picks. Server: roomCheckAdminService.
+  registerCatalogApp({
+    id: "minibar.odakontrol",
+    title: "Oda Kontrol İşlemleri",
+    launchLabel: "Oda Kontrol İşlemleri",
+    icon: "denetim",
+    moduleKey: "MINIBAR",
+    screenCode: "MB-OKI",
+    purpose: "Bütün personelin oda kontrol kayıtlarını gün ve personele göre görür, düzeltir veya silersin.",
+    category: "MINIBAR",
+    needsHotel: false,
+    window: { w: 1180, h: 780, minW: 760, minH: 500 },
+    kind: "iframe",
+    url: "/kat/oda-kontrol-islemleri",
+    mobile: "full",
   });
 }

@@ -74,13 +74,28 @@ async function expectConsistent(hotelId: string, productId: string, opening: num
   expect(opening + moves.reduce((a, m) => a + m.qty, 0)).toBe(row.remainingQty);
 }
 
-type RepOpts = { productId?: string; roomId?: string; rid?: string; now?: Date; setupId?: string; note?: string };
+type RepOpts = {
+  productId?: string;
+  roomId?: string;
+  rid?: string;
+  now?: Date;
+  setupId?: string;
+  note?: string;
+  overSetup?: boolean;
+};
 const rep = (ctx: Ctx, w: World, qty: number, o: RepOpts = {}) =>
   rc.addReplacement(
     ctx,
     {
       roomId: o.roomId ?? w.room.id,
-      items: [{ productId: o.productId ?? w.cola.id, setupId: o.setupId ?? w.setup.id, qty }],
+      items: [
+        {
+          productId: o.productId ?? w.cola.id,
+          setupId: o.setupId ?? w.setup.id,
+          qty,
+          ...(o.overSetup ? { overSetup: true } : {}),
+        },
+      ],
       clientRequestId: o.rid ?? randomUUID(),
       ...(o.note ? { note: o.note } : {}),
     },
@@ -172,6 +187,21 @@ describe("addReplacement", () => {
     expect((await stockOf(w.hotelId, w.cola.id)).remainingQty).toBe(92);
     // the other product is independent
     expect((await rep(kat.ctx, w, 3, { productId: w.water.id })).added).toBe(3);
+  });
+
+  it("overSetup: setup sınırını aşar (havuzdan düşer), bayraksız aynı ekleme DAILY_LIMIT; havuz yetersizse yine STOCK_INSUFFICIENT", async () => {
+    const { w, kat } = await world({ stock: 10 });
+    await rep(kat.ctx, w, 4); // setup 4 -> full
+    expect(await codeOf(rep(kat.ctx, w, 1))).toBe("DAILY_LIMIT");
+    const r = await rep(kat.ctx, w, 5, { overSetup: true });
+    expect(r.added).toBe(5);
+    expect((await stockOf(w.hotelId, w.cola.id)).remainingQty).toBe(1);
+    // still over the setup afterwards: the plain path stays closed
+    expect(await codeOf(rep(kat.ctx, w, 1))).toBe("DAILY_LIMIT");
+    // the pool is still enforced for over-setup lines
+    expect(await codeOf(rep(kat.ctx, w, 2, { overSetup: true }))).toBe("STOCK_INSUFFICIENT");
+    expect((await stockOf(w.hotelId, w.cola.id)).remainingQty).toBe(1);
+    await expectConsistent(w.hotelId, w.cola.id, 10);
   });
 
   it("iki personel eşzamanlı 5+5: kapasiteyi aşamaz (biri DAILY_LIMIT)", async () => {
@@ -897,5 +927,80 @@ describe("rotalar ve eski servisler", () => {
     const del = await myCheckRoute.DELETE(new Request("http://localhost/api/minibar/my-checks/t", { method: "DELETE" }), params({ txId: body.transactionId }));
     expect(del.status).toBe(200);
     expect(((await del.json()) as { restored: unknown[] }).restored).toHaveLength(1);
+  });
+});
+
+describe("R-OSS: birden çok otelde İşlemlerim ve grup iptali", () => {
+  /** R-OSS: oturum oteli DIAMOND, oda kontrolü yaptığı otel ROYAL (kapsamında). */
+  async function ossWorld() {
+    const base = await world({ rooms: 2 });
+    const oss = await staff("R-OSS", "DIAMOND", [base.w.hotelCode]);
+    return { ...base, oss };
+  }
+
+  it("oturum oteli başka olsa da kendi kayıtları (kapsamdaki tüm oteller) listelenir; başkasınınki listelenmez", async () => {
+    const { w, kat, oss } = await ossWorld();
+    const mine = await rep(oss.ctx, w, 2, { now: minutes(T0, 5) });
+    await rep(kat.ctx, w, 1, { now: minutes(T0, 6), roomId: w.rooms[1]!.id });
+    const list = await rc.listMyTransactions(oss.ctx, {}, minutes(T0, 20));
+    expect(list.map((x) => x.id)).toEqual([mine.transactionId]);
+    expect(list[0]).toMatchObject({ roomNumber: w.room.number, canDelete: true, isToday: true });
+    // narrowing to a hotel outside the scope still fails
+    const other = await testDb.hotel.findFirstOrThrow({ where: { code: "DIAMOND" } });
+    expect(await rc.listMyTransactions(oss.ctx, { hotelId: other.id }, minutes(T0, 20))).toEqual([]);
+    const katOther = await staff("R-KAT", "DIAMOND");
+    expect(await codeOf(rc.listMyTransactions(katOther.ctx, { hotelId: w.hotelId }, T0))).toBe("FORBIDDEN");
+  });
+
+  it("R-OSS bugünkü kaydını tek tek siler; stok geri döner", async () => {
+    const { w, oss } = await ossWorld();
+    const r = await rep(oss.ctx, w, 2);
+    await rc.deleteMyTransaction(oss.ctx, r.transactionId, minutes(T0, 5));
+    expect((await stockOf(w.hotelId, w.cola.id)).remainingQty).toBe(100);
+  });
+
+  it("deleteMyTransactions: bir odanın tüm bugünkü kayıtları tek işlemde silinir, ürünler depoya döner", async () => {
+    const { w, oss } = await ossWorld();
+    const a = await rep(oss.ctx, w, 1, { now: T0 });
+    const b = await rep(oss.ctx, w, 2, { now: minutes(T0, 10), productId: w.water.id });
+    expect((await stockOf(w.hotelId, w.cola.id)).remainingQty).toBe(99);
+    const out = await rc.deleteMyTransactions(oss.ctx, { transactionIds: [a.transactionId, b.transactionId] }, minutes(T0, 20));
+    expect(out.deleted).toBe(2);
+    expect(out.restored).toEqual(expect.arrayContaining([{ productId: w.cola.id, qty: 1 }, { productId: w.water.id, qty: 2 }]));
+    expect(await testDb.minibarTransaction.count()).toBe(0);
+    await expectConsistent(w.hotelId, w.cola.id, 100);
+    await expectConsistent(w.hotelId, w.water.id, 100);
+  });
+
+  it("deleteMyTransactions: hepsi ya da hiçbiri (dünkü kayıt varsa FORBIDDEN, başkasınınki NOT_FOUND)", async () => {
+    const { w, kat, kat2, oss } = await ossWorld();
+    const today = await rep(kat.ctx, w, 1, { now: minutes(T0, 1) });
+    const old = await rep(kat.ctx, w, 1, { now: YESTERDAY });
+    expect(await codeOf(rc.deleteMyTransactions(kat.ctx, { transactionIds: [today.transactionId, old.transactionId] }, T0))).toBe("FORBIDDEN");
+    expect(await codeOf(rc.deleteMyTransactions(kat2.ctx, { transactionIds: [today.transactionId] }, T0))).toBe("NOT_FOUND");
+    expect(await codeOf(rc.deleteMyTransactions(kat.ctx, { transactionIds: [] }, T0))).toBe("VALIDATION");
+    expect(await testDb.minibarTransaction.count()).toBe(2);
+    expect((await stockOf(w.hotelId, w.cola.id)).remainingQty).toBe(98);
+    // R-OSS (MB-TUK A) may cancel the group of another attendant, as with a single record
+    await rc.deleteMyTransactions(oss.ctx, { transactionIds: [today.transactionId] }, T0);
+    expect(await testDb.minibarTransaction.count()).toBe(1);
+  });
+
+  it("createCorrectionRequests: geçmiş grup için tek gerekçeyle SILME talepleri; bekleyen atlanır; R-OSS karar verir", async () => {
+    const { w, kat, oss } = await ossWorld();
+    const a = await rep(kat.ctx, w, 1, { now: YESTERDAY });
+    const b = await rep(kat.ctx, w, 1, { now: new Date(YESTERDAY.getTime() + 600_000), productId: w.water.id });
+    const out = await rc.createCorrectionRequests(kat.ctx, { transactionIds: [a.transactionId, b.transactionId], reason: "Yanlış oda seçildi" });
+    expect(out.requestIds).toHaveLength(2);
+    expect(out.message).toMatch(/Oda Servisi Sorumlusu/);
+    expect(await testDb.minibarCorrectionRequest.count({ where: { actionType: "SILME", status: "BEKLIYOR" } })).toBe(2);
+    expect(await codeOf(rc.createCorrectionRequests(kat.ctx, { transactionIds: [a.transactionId], reason: "Yanlış oda seçildi" }))).toBe("CONFLICT");
+    expect(await codeOf(rc.createCorrectionRequests(kat.ctx, { transactionIds: [a.transactionId], reason: "yok" }))).toBe("VALIDATION");
+
+    const listed = await rc.listMyTransactions(kat.ctx, {}, T0);
+    expect(listed.find((x) => x.id === a.transactionId)?.pendingCorrection).toMatchObject({ actionType: "SILME" });
+
+    await rc.resolveCorrectionRequest(oss.ctx, { requestId: out.requestIds[0], approved: true }, T0);
+    expect(await testDb.minibarTransaction.count({ where: { id: a.transactionId } })).toBe(0);
   });
 });

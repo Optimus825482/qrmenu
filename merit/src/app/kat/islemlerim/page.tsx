@@ -21,10 +21,71 @@ function qtyChanged(tx: RoomCheckHistoryItem, qty: Record<string, number>): bool
 /** A row of the user's own list: minibar records, DND marks and MMD records (`/api/minibar/my-checks`). */
 type MyRecord = RoomCheckHistoryItem & { kind?: "ISLEM" | "DND" | "MMD" };
 
-/** Only room check records are changed here: an addition can be edited or deleted, "Sarfiyat Yok" deleted. */
+/** Only room check records are changed here: an addition can be edited or cancelled, "Sarfiyat Yok" cancelled. */
 const canEditRecord = (tx: MyRecord) => (tx.kind ?? "ISLEM") === "ISLEM" && tx.type === "SETUP_KONTROL";
 const canDeleteRecord = (tx: MyRecord) =>
   (tx.kind ?? "ISLEM") === "ISLEM" && (tx.type === "SETUP_KONTROL" || tx.type === "SARFIYAT_YOK");
+
+/** All of one user's records for one room on one business day: the unit of the list and of the cancel button. */
+type RoomGroup = {
+  key: string;
+  roomId: string;
+  roomNumber: string;
+  floorName: string;
+  dateStr: string;
+  isToday: boolean;
+  firstAt: string;
+  lastAt: string;
+  /** Every record of the group, newest first (as the server sends them). */
+  records: MyRecord[];
+  /** Products added to the room that day, summed over the records. */
+  products: { productId: string; productName: string; added: number }[];
+  /** Records the group cancel removes (today) or asks to remove (past days). */
+  cancellable: MyRecord[];
+};
+
+function groupByRoomDay(items: MyRecord[]): RoomGroup[] {
+  const map = new Map<string, RoomGroup>();
+  for (const tx of items) {
+    const key = `${tx.roomId}|${tx.dateStr}`;
+    let g = map.get(key);
+    if (!g) {
+      g = {
+        key,
+        roomId: tx.roomId,
+        roomNumber: tx.roomNumber,
+        floorName: tx.floorName,
+        dateStr: tx.dateStr,
+        isToday: tx.isToday,
+        firstAt: tx.occurredAt,
+        lastAt: tx.occurredAt,
+        records: [],
+        products: [],
+        cancellable: [],
+      };
+      map.set(key, g);
+    }
+    g.records.push(tx);
+    if (tx.occurredAt < g.firstAt) g.firstAt = tx.occurredAt;
+    if (tx.occurredAt > g.lastAt) g.lastAt = tx.occurredAt;
+    if (canDeleteRecord(tx)) g.cancellable.push(tx);
+    for (const it of tx.items) {
+      const row = g.products.find((p) => p.productId === it.productId);
+      if (row) row.added += it.added;
+      else g.products.push({ productId: it.productId, productName: it.productName, added: it.added });
+    }
+  }
+  return [...map.values()]
+    .map((g) => ({ ...g, products: g.products.filter((p) => p.added > 0) }))
+    .sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
+}
+
+const timeOf = (iso: string) =>
+  new Date(iso).toLocaleTimeString("tr-TR", { timeZone: "Europe/Nicosia", hour: "2-digit", minute: "2-digit" });
+const dayOf = (dateStr: string) => dateStr.split("-").reverse().join(".");
+
+/** Records without products (DND, MMD, Sarfiyat Yok) stay visible as their own lines inside the group. */
+const isMarkRecord = (tx: MyRecord) => tx.items.length === 0 || (tx.kind ?? "ISLEM") !== "ISLEM";
 
 const BADGE_TONE: Record<RoomCheckHistoryItem["typeBadgeColor"], string> = {
   emerald: "border-ok/40 bg-ok/15 text-ok",
@@ -54,10 +115,8 @@ export default function KatIslemlerimPage() {
   const [editNote, setEditNote] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const [correctionModal, setCorrectionModal] = useState<{
-    tx: RoomCheckHistoryItem;
-    actionType: "SILME" | "DUZELTME";
-  } | null>(null);
+  // A correction of a past-day record's quantities (the cancel of a whole room group has its own flow).
+  const [correctionModal, setCorrectionModal] = useState<{ tx: RoomCheckHistoryItem } | null>(null);
   const [correctionReason, setCorrectionReason] = useState("");
   const [correctionQty, setCorrectionQty] = useState<Record<string, number>>({});
 
@@ -86,33 +145,59 @@ export default function KatIslemlerimPage() {
     return () => clearTimeout(t);
   }, [loadChecks]);
 
-  const handleDelete = async (tx: RoomCheckHistoryItem) => {
-    if (!tx.isToday) {
-      setCorrectionModal({ tx, actionType: "SILME" });
-      setCorrectionReason("");
+  /** Same business day: cancels every record of the room group in one go. Past days: asks the Oda Servisi Sorumlusu to. */
+  const handleCancelGroup = async (g: RoomGroup) => {
+    const ids = g.cancellable.map((tx) => tx.id);
+    if (ids.length === 0) return;
+    if (g.isToday) {
+      const ok = await confirm({
+        title: `Oda ${g.roomNumber} kayıtları iptal edilsin mi?`,
+        message: `Bugün bu odaya yapılan ${ids.length} kayıt iptal edilir; eklenen ürünler otel deposuna geri eklenir.`,
+        confirmLabel: "İptal Et",
+        cancelLabel: "Vazgeç",
+        danger: true,
+      });
+      if (!ok) return;
+      setSaving(true);
+      try {
+        const res = await mbFetch("/api/minibar/my-checks/batch-delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transactionIds: ids }),
+        });
+        const json = (await res.json()) as { message?: string; error?: string };
+        if (!res.ok) throw new Error(json.error ?? "İptal edilemedi.");
+        await loadChecks();
+        notify.success(json.message ?? "Kayıtlar iptal edildi.");
+      } catch (e) {
+        notify.error(e instanceof Error ? e.message : "İptal hatası");
+      } finally {
+        setSaving(false);
+      }
       return;
     }
-
-    const ok = await confirm({
-      title: `Oda ${tx.roomNumber} kontrol kaydı silinsin mi?`,
-      message: "Eklenen ürünler otel deposuna geri eklenecektir.",
-      confirmLabel: "Sil",
-      cancelLabel: "Vazgeç",
+    const reason = await askReason({
+      title: `Oda ${g.roomNumber} · ${dayOf(g.dateStr)} kayıtları için iptal talebi`,
+      message: "Geçmiş günün kayıtları Oda Servisi Sorumlusu onayıyla iptal edilir.",
+      reasons: ["Yanlış oda seçildi", "Adet hatalı girildi", "Mükerrer kayıt"],
+      minLength: 5,
+      confirmLabel: "İptal Talebi Gönder",
       danger: true,
     });
-    if (!ok) return;
-
+    if (!reason) return;
     setSaving(true);
     try {
-      const res = await mbFetch(`/api/minibar/my-checks/${tx.id}`, {
-        method: "DELETE",
+      const res = await mbFetch("/api/minibar/corrections/request-group", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactionIds: ids, reason }),
       });
       const json = (await res.json()) as { message?: string; error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Silinemedi.");
+      if (!res.ok) throw new Error(json.error ?? "Talep gönderilemedi.");
       await loadChecks();
-      notify.success(json.message ?? "Kayıt silindi.");
+      notify.success(json.message ?? "İptal talebi Oda Servisi Sorumlusu onayına gönderildi.");
     } catch (e) {
-      notify.error(e instanceof Error ? e.message : "Silme hatası");
+      notify.error(e instanceof Error ? e.message : "Talep hatası");
     } finally {
       setSaving(false);
     }
@@ -124,7 +209,7 @@ export default function KatIslemlerimPage() {
       map[it.productId] = it.added;
     }
     if (!tx.isToday) {
-      setCorrectionModal({ tx, actionType: "DUZELTME" });
+      setCorrectionModal({ tx });
       setCorrectionReason("");
       setCorrectionQty(map);
       return;
@@ -179,16 +264,16 @@ export default function KatIslemlerimPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           transactionId: correctionModal.tx.id,
-          actionType: correctionModal.actionType,
+          actionType: "DUZELTME",
           reason,
-          proposedData:
-            correctionModal.actionType === "DUZELTME" ? correctionQty : undefined,
+          proposedData: correctionQty,
         }),
       });
       const json = (await res.json()) as { message?: string; error?: string };
       if (!res.ok) throw new Error(json.error ?? "Talep gönderilemedi.");
       setCorrectionModal(null);
-      notify.success(json.message ?? "Düzeltme talebi yönetici onayına gönderildi.");
+      await loadChecks();
+      notify.success(json.message ?? "Düzeltme talebi Oda Servisi Sorumlusu onayına gönderildi.");
     } catch (e) {
       notify.error(e instanceof Error ? e.message : "Talep hatası");
     } finally {
@@ -196,15 +281,14 @@ export default function KatIslemlerimPage() {
     }
   };
 
-  const todayCount = items.filter((tx) => tx.isToday).length;
-  const shown = range === "today" ? items.filter((tx) => tx.isToday) : items;
+  const todayGroups = groupByRoomDay(items.filter((tx) => tx.isToday));
+  const allGroups = groupByRoomDay(items);
+  const shown = range === "today" ? todayGroups : allGroups;
 
   // Unsaved input in the open dialog: closing it (button or the phone's back) asks first (D4/D6).
   const editDirty = editingTx !== null && (qtyChanged(editingTx, editQty) || editNote !== (editingTx.note ?? ""));
   const correctionDirty =
-    correctionModal !== null &&
-    (correctionReason.trim() !== "" ||
-      (correctionModal.actionType === "DUZELTME" && qtyChanged(correctionModal.tx, correctionQty)));
+    correctionModal !== null && (correctionReason.trim() !== "" || qtyChanged(correctionModal.tx, correctionQty));
   useBeforeUnload(editDirty || correctionDirty);
   const closeEdit = async (): Promise<boolean> => {
     if (editDirty && !(await askLeave())) return false;
@@ -229,7 +313,8 @@ export default function KatIslemlerimPage() {
             <div className="min-w-0">
               <h1 className="text-lg font-bold">İşlemlerim ve Oda Kontrol Kayıtları</h1>
               <p className="text-xs text-muted">
-                Bugünkü kayıtları doğrudan düzenleyebilir, geçmiş kayıtlar için yönetici onaylı düzeltme isteyebilirsiniz
+                Kayıtlar odaya göre gruplanır. Bugünkü kayıtları iptal edebilir, geçmiş günler için Oda Servisi
+                Sorumlusu onaylı iptal talebi gönderebilirsiniz
               </p>
             </div>
           </div>
@@ -241,7 +326,7 @@ export default function KatIslemlerimPage() {
               className="inline-flex items-center gap-1.5 rounded-xl border border-warn/50 bg-warn/15 px-3 py-2 text-xs font-semibold text-warn hover:bg-warn/25"
             >
               <Icon name="shield" size={16} />
-              Bekleyen Yönetici Onayları
+              Bekleyen Talepler ve Onaylar
             </Link>
           ) : null}
         </div>
@@ -261,8 +346,8 @@ export default function KatIslemlerimPage() {
           <div className="flex flex-wrap gap-2" role="group" aria-label="Tarih aralığı">
             {(
               [
-                ["today", `Bugün (${todayCount})`],
-                ["all", `Tümü (${items.length})`],
+                ["today", `Bugün (${todayGroups.length})`],
+                ["all", `Tümü (${allGroups.length})`],
               ] as const
             ).map(([key, label]) => (
               <button
@@ -285,84 +370,128 @@ export default function KatIslemlerimPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {shown.map((tx) => (
-              <div
-                key={tx.id}
-                className="rounded-2xl border border-border bg-surface p-4 space-y-3"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-base font-bold text-text">Oda {tx.roomNumber}</span>
-                      <span className="text-xs text-muted">({tx.floorName})</span>
-                      {tx.isToday ? (
-                        <span className="rounded-full bg-ok/15 px-2.5 py-0.5 text-xs font-bold text-ok">
-                          Bugün
+            {shown.map((g) => {
+              const marks = g.records.filter(isMarkRecord);
+              const withItems = g.records.filter((tx) => !isMarkRecord(tx));
+              const pendingAll =
+                g.cancellable.length > 0 && g.cancellable.every((tx) => tx.pendingCorrection?.actionType === "SILME");
+              const times =
+                timeOf(g.firstAt) === timeOf(g.lastAt) ? timeOf(g.firstAt) : `${timeOf(g.firstAt)} – ${timeOf(g.lastAt)}`;
+              return (
+                <div key={g.key} data-testid="oda-grubu" className="rounded-2xl border border-border bg-surface p-4 space-y-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                        <span className="font-semibold text-text">{dayOf(g.dateStr)}</span>
+                        <span className="tabular-nums">{times}</span>
+                        {g.isToday ? (
+                          <span className="rounded-full bg-ok/15 px-2.5 py-0.5 text-xs font-bold text-ok">Bugün</span>
+                        ) : null}
+                      </p>
+                      <p className="mt-0.5 flex items-center gap-2">
+                        <span className="text-base font-bold text-text">Oda {g.roomNumber}</span>
+                        <span className="text-xs text-muted">({g.floorName})</span>
+                      </p>
+                    </div>
+
+                    {g.cancellable.length > 0 ? (
+                      pendingAll ? (
+                        <span className="rounded-xl border border-warn/40 bg-warn/15 px-3 py-2 text-xs font-semibold text-warn">
+                          İptal talebi onay bekliyor
                         </span>
                       ) : (
-                        <span className="rounded-full bg-bg border border-border px-2.5 py-0.5 text-xs font-bold text-muted">
-                          {tx.dateStr}
+                        <button
+                          type="button"
+                          data-mutates=""
+                          onClick={() => void handleCancelGroup(g)}
+                          disabled={saving}
+                          style={{ minHeight: "var(--tap-action)" }}
+                          className="inline-flex items-center gap-1 rounded-xl border border-danger/40 bg-danger/10 px-3 py-1.5 text-xs font-semibold text-danger hover:bg-danger/20 disabled:opacity-50"
+                        >
+                          <Icon name="trash" size={14} />
+                          {g.isToday ? "İptal Et" : "İptal Talebi Gönder"}
+                        </button>
+                      )
+                    ) : null}
+                  </div>
+
+                  {g.products.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {g.products.map((p) => (
+                        <span key={p.productId} className="rounded-lg border border-border bg-bg px-2.5 py-1 text-xs text-text">
+                          {p.productName}: <strong className="text-ok">+{p.added}</strong>
                         </span>
-                      )}
+                      ))}
                     </div>
-                    <p className="text-xs text-muted mt-0.5 flex flex-wrap items-center gap-1.5">
+                  ) : null}
+
+                  {marks.map((tx) => (
+                    <div key={tx.id} className="flex flex-wrap items-center gap-2 text-xs text-muted">
                       <span
                         data-testid="islem-turu"
                         className={`rounded-full border px-2 py-0.5 font-bold ${BADGE_TONE[tx.typeBadgeColor] ?? BADGE_TONE.slate}`}
                       >
                         {tx.typeLabel}
                       </span>
-                      <span>{new Date(tx.occurredAt).toLocaleString("tr-TR", { timeZone: "Europe/Nicosia" })}</span>
-                    </p>
-                  </div>
+                      <span className="tabular-nums">{timeOf(tx.occurredAt)}</span>
+                      <span className="italic">{emptyText(tx)}</span>
+                      {tx.note ? (
+                        <span>
+                          {tx.kind === "MMD" ? "Sebep" : "Not"}: {tx.note}
+                        </span>
+                      ) : null}
+                      {tx.pendingCorrection ? (
+                        <span className="font-semibold text-warn">Talep onay bekliyor</span>
+                      ) : null}
+                    </div>
+                  ))}
 
-                  {canDeleteRecord(tx) ? (
-                  <div className="flex items-center gap-2">
-                    {canEditRecord(tx) ? (
-                    <button
-                      type="button"
-                      data-mutates=""
-                      onClick={() => openEdit(tx)}
-                      style={{ minHeight: "var(--tap-action)" }}
-                      className="inline-flex items-center gap-1 rounded-xl border border-border bg-bg px-3 py-1.5 text-xs font-semibold text-text hover:bg-surface"
-                    >
-                      <Icon name="edit" size={14} />
-                      {tx.isToday ? "Değiştir" : "Düzeltme Talep Et"}
-                    </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      data-mutates=""
-                      onClick={() => void handleDelete(tx)}
-                      disabled={saving}
-                      style={{ minHeight: "var(--tap-action)" }}
-                      className="inline-flex items-center gap-1 rounded-xl border border-danger/40 bg-danger/10 px-3 py-1.5 text-xs font-semibold text-danger hover:bg-danger/20"
-                    >
-                      <Icon name="trash" size={14} />
-                      {tx.isToday ? "Sil" : "Silme Talep Et"}
-                    </button>
-                  </div>
+                  {withItems.length > 0 ? (
+                    <details className="rounded-xl border border-border bg-bg px-3 py-2">
+                      <summary className="cursor-pointer text-xs font-semibold text-text">
+                        Kayıtlar ({withItems.length})
+                      </summary>
+                      <ul className="mt-2 space-y-2">
+                        {withItems.map((tx) => (
+                          <li key={tx.id} className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <span className="flex min-w-0 flex-wrap items-center gap-1.5 text-text">
+                              <span
+                                data-testid="islem-turu"
+                                className={`rounded-full border px-2 py-0.5 font-bold ${BADGE_TONE[tx.typeBadgeColor] ?? BADGE_TONE.slate}`}
+                              >
+                                {tx.typeLabel}
+                              </span>
+                              <span className="tabular-nums text-muted">{timeOf(tx.occurredAt)}</span>
+                              {tx.items.map((it) => (
+                                <span key={it.productId}>
+                                  {it.productName} <strong className="text-ok">+{it.added}</strong>
+                                </span>
+                              ))}
+                              {tx.note ? <span className="text-muted">Not: {tx.note}</span> : null}
+                              {tx.pendingCorrection ? (
+                                <span className="font-semibold text-warn">Talep onay bekliyor</span>
+                              ) : null}
+                            </span>
+                            {canEditRecord(tx) && !tx.pendingCorrection ? (
+                              <button
+                                type="button"
+                                data-mutates=""
+                                onClick={() => openEdit(tx)}
+                                style={{ minHeight: "var(--tap-action)" }}
+                                className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-text hover:bg-bg"
+                              >
+                                <Icon name="edit" size={14} />
+                                {tx.isToday ? "Değiştir" : "Düzeltme Talep Et"}
+                              </button>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
                   ) : null}
                 </div>
-
-                {tx.items.length === 0 ? (
-                  <p className="text-xs text-muted italic">{emptyText(tx)}</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {tx.items.map((it) => (
-                      <span
-                        key={it.productId}
-                        className="rounded-lg border border-border bg-bg px-2.5 py-1 text-xs text-text"
-                      >
-                        {it.productName}: <strong className="text-ok">+{it.added}</strong>
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {tx.note ? <p className="text-xs text-muted">{tx.kind === "MMD" ? "Sebep" : "Not"}: {tx.note}</p> : null}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
           </>
@@ -445,42 +574,40 @@ export default function KatIslemlerimPage() {
         >
           <div className="w-full max-w-md rounded-2xl border border-warn/40 bg-surface text-text p-5 space-y-4">
             <h2 id="correction-tx-title" className="text-base font-bold text-warn">
-              Geçmiş Tarihli Kayıt — Yönetici Onay Talebi ({correctionModal.actionType})
+              Geçmiş Tarihli Kayıt — Düzeltme Talebi
             </h2>
             <p className="text-xs text-muted">
-              Geçmiş tarihli oda kontrol kayıtları yalnızca Sistem Yöneticisi onayı ile değiştirilebilir veya silinebilir.
+              Geçmiş tarihli oda kontrol kayıtları yalnızca Oda Servisi Sorumlusu onayı ile değiştirilebilir.
             </p>
-            {correctionModal.actionType === "DUZELTME" ? (
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {correctionModal.tx.items.map((it) => (
-                  <div
-                    key={it.productId}
-                    className="flex items-center justify-between rounded-xl border border-border bg-bg px-3 py-2"
-                  >
-                    <span className="text-xs text-text">{it.productName}</span>
-                    <input
-                      type="number"
-                      min={0}
-                      aria-label={`${it.productName} önerilen adet`}
-                      value={correctionQty[it.productId] ?? 0}
-                      onChange={(e) =>
-                        setCorrectionQty((prev) => ({
-                          ...prev,
-                          [it.productId]: Math.max(0, Number(e.target.value)),
-                        }))
-                      }
-                      className="min-h-11 w-20 rounded-xl border border-border bg-surface px-2 text-center text-sm font-bold tabular-nums text-text"
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : null}
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {correctionModal.tx.items.map((it) => (
+                <div
+                  key={it.productId}
+                  className="flex items-center justify-between rounded-xl border border-border bg-bg px-3 py-2"
+                >
+                  <span className="text-xs text-text">{it.productName}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    aria-label={`${it.productName} önerilen adet`}
+                    value={correctionQty[it.productId] ?? 0}
+                    onChange={(e) =>
+                      setCorrectionQty((prev) => ({
+                        ...prev,
+                        [it.productId]: Math.max(0, Number(e.target.value)),
+                      }))
+                    }
+                    className="min-h-11 w-20 rounded-xl border border-border bg-surface px-2 text-center text-sm font-bold tabular-nums text-text"
+                  />
+                </div>
+              ))}
+            </div>
             <textarea
               rows={3}
-              aria-label="Düzeltme veya silme gerekçesi"
+              aria-label="Düzeltme gerekçesi"
               value={correctionReason}
               onChange={(e) => setCorrectionReason(e.target.value)}
-              placeholder="Düzeltme veya silme gerekçenizi detaylı yazın..."
+              placeholder="Düzeltme gerekçenizi detaylı yazın..."
               className="w-full rounded-xl border border-border bg-bg p-3 text-sm text-text placeholder:text-muted"
             />
             <div className="flex justify-end gap-2">
@@ -500,7 +627,7 @@ export default function KatIslemlerimPage() {
                 style={{ minHeight: "var(--tap-action)" }}
                 className="rounded-xl bg-warn px-4 py-2 text-xs font-bold text-bg hover:opacity-95 disabled:opacity-50"
               >
-                Yönetici Onayına Gönder
+                Onaya Gönder
               </button>
             </div>
           </div>

@@ -179,14 +179,14 @@ export function LiveStatusWidget({ screens }: { screens?: readonly string[] } = 
 
   const error = kpiError ?? liveError;
   return (
-    <div className="xp-widget-status">
+    <div className="xp-widget-status" data-guide="durum-tablo">
       <div className="xp-widget-status-title">
         <span className="xp-widget-status-live" aria-hidden="true" />
         Anlık Durum
       </div>
       {kpis ? (
         <>
-          <div className="xp-widget-status-legend">
+          <div className="xp-widget-status-legend" data-guide="durum-renk">
             Bugün · <span data-role="recv">alınan</span> / <span data-role="done">tamamlanan</span> / <span data-role="wait">bekleyen</span>
           </div>
           <table>
@@ -237,6 +237,7 @@ export function LiveStatusWidget({ screens }: { screens?: readonly string[] } = 
                   key={line.key}
                   data-group-start={(index === kpiLineCount && index > 0) || undefined}
                   data-detail={isDetailKind(line.key) || undefined}
+                  data-guide={index === 0 ? "durum-satir" : undefined}
                   onClick={isDetailKind(line.key) ? () => setDetail(line.key as LiveDetailKind) : undefined}
                 >
                   <th scope="row" title={line.hint}>

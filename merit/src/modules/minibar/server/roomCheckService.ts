@@ -434,7 +434,13 @@ const replacementSchema = z
     roomId: id,
     items: z
       .array(
-        z.strictObject({ productId: id, setupId: id, qty: z.number().int().min(1, "Adet en az 1 olmalı").max(999) }),
+        z.strictObject({
+          productId: id,
+          setupId: id,
+          qty: z.number().int().min(1, "Adet en az 1 olmalı").max(999),
+          /** Staff deliberately leaves more than the setup amount: skips the daily setup limit (pool stock still applies). */
+          overSetup: z.boolean().optional(),
+        }),
       )
       .min(1, "En az bir ürün seçin")
       .max(50),
@@ -522,7 +528,7 @@ export async function bookReplacementTx(
     room: RoomRef;
     /** The attendant who checked the room: owner of the record. */
     userId: string;
-    items: { productId: string; setupId: string; qty: number }[];
+    items: { productId: string; setupId: string; qty: number; overSetup?: boolean }[];
     clientRequestId: string;
     note?: string;
     now: Date;
@@ -554,6 +560,7 @@ export async function bookReplacementTx(
     return { ...it, setupQty: setup.items.find((i) => i.productId === it.productId)!.setupQty };
   });
   for (const l of lines) {
+    if (l.overSetup) continue; // pool stock is still checked in takeManyFromPool
     const capacity = caps.get(l.productId) ?? 0;
     const added = done.get(l.productId) ?? 0;
     if (added + l.qty > capacity) {
@@ -977,6 +984,51 @@ export async function deleteMyTransaction(ctx: Ctx, transactionId: string, now: 
   );
 }
 
+const groupIdsSchema = z.strictObject({ transactionIds: z.array(id).min(1).max(50) });
+
+/**
+ * Deletes several records of today at once (the İşlemlerim room group): ONE database transaction, so either
+ * every record goes and its products return to the hotel pool, or nothing changes.
+ */
+export async function deleteMyTransactions(ctx: Ctx, input: unknown, now: Date = new Date()) {
+  const parsed = groupIdsSchema.safeParse(input);
+  if (!parsed.success) throw fromZod(parsed.error);
+  const ids = [...new Set(parsed.data.transactionIds)];
+  const known = await prisma.minibarTransaction.findMany({
+    where: { id: { in: ids }, hotelId: { in: ctx.hotelIds } },
+    select: { id: true, hotelId: true, roomId: true },
+  });
+  if (known.length !== ids.length) throw new DomainError("NOT_FOUND", NOT_FOUND_TX);
+  const approve = new Map<string, boolean>();
+  for (const hotelId of new Set(known.map((k) => k.hotelId))) {
+    await assertCan(ctx, SCREEN, "D", hotelId);
+    approve.set(hotelId, await can(ctx, SCREEN, "A", hotelId));
+  }
+  // Same lock order for every caller (room, then record), so two groups deleted at once cannot deadlock.
+  known.sort((a, b) => (a.roomId === b.roomId ? (a.id < b.id ? -1 : 1) : a.roomId < b.roomId ? -1 : 1));
+  return prisma.$transaction(
+    async (tx) => {
+      const restored = new Map<string, number>();
+      for (const k of known) {
+        const out = await deleteTransactionTx(
+          tx,
+          { userId: ctx.user.id, hotelId: k.hotelId, canApprove: approve.get(k.hotelId) ?? false },
+          k.id,
+          now,
+        );
+        for (const r of out.restored) restored.set(r.productId, (restored.get(r.productId) ?? 0) + r.qty);
+      }
+      const qty = [...restored.values()].reduce((a, b) => a + b, 0);
+      return {
+        deleted: known.length,
+        restored: [...restored].map(([productId, q]) => ({ productId, qty: q })),
+        message: `${known.length} kayıt silindi; ${qty} adet ürün otel deposuna iade edildi.`,
+      };
+    },
+    { timeout: 20_000 },
+  );
+}
+
 const updateSchema = z
   .strictObject({
     transactionId: id,
@@ -1195,8 +1247,19 @@ export async function listMyTransactions(
 ): Promise<MyTransaction[]> {
   const parsed = listSchema.safeParse(q);
   if (!parsed.success) throw fromZod(parsed.error);
-  const hotelId = parsed.data?.hotelId ?? ctx.session.hotelId;
-  await assertCan(ctx, SCREEN, "V", hotelId);
+  // The user's own records of every hotel of their scope that they may view (a multi-hotel manager such as
+  // R-OSS works in rooms of hotels other than the session's one); `hotelId` narrows it to one hotel.
+  let hotelIds: string[];
+  if (parsed.data?.hotelId) {
+    await assertCan(ctx, SCREEN, "V", parsed.data.hotelId);
+    hotelIds = [parsed.data.hotelId];
+  } else {
+    const checks = await Promise.all(
+      [...new Set([ctx.session.hotelId, ...ctx.hotelIds])].map(async (h) => ((await can(ctx, SCREEN, "V", h)) ? h : null)),
+    );
+    hotelIds = checks.filter((h): h is string => h !== null);
+    if (hotelIds.length === 0) await assertCan(ctx, SCREEN, "V", ctx.session.hotelId);
+  }
   const limit = parsed.data?.limit ?? 150;
   const today = businessDate(now);
   const range = parsed.data?.day ? dayRange(parsed.data.day) : undefined;
@@ -1207,7 +1270,7 @@ export async function listMyTransactions(
   } as const;
   const [txs, dndChecks, mmds, stocks] = await Promise.all([
     prisma.minibarTransaction.findMany({
-      where: { hotelId, userId: ctx.user.id, ...(range ? { occurredAt: range } : {}) },
+      where: { hotelId: { in: hotelIds }, userId: ctx.user.id, ...(range ? { occurredAt: range } : {}) },
       include: {
         room: { include: roomInclude },
         items: { include: { product: { include: { group: { select: { name: true } } } } } },
@@ -1225,7 +1288,7 @@ export async function listMyTransactions(
       // closes a DND) is the other record's side effect, not a DND mark of the user
       where: {
         userId: ctx.user.id,
-        dnd: { hotelId },
+        dnd: { hotelId: { in: hotelIds } },
         OR: [{ note: null }, { NOT: { note: { startsWith: "OTOMATİK TAMAMLANDI" } } }],
         ...(range ? { at: range } : {}),
       },
@@ -1234,14 +1297,14 @@ export async function listMyTransactions(
       take: limit,
     }),
     prisma.roomMmd.findMany({
-      where: { userId: ctx.user.id, hotelId, ...(range ? { at: range } : {}) },
+      where: { userId: ctx.user.id, hotelId: { in: hotelIds }, ...(range ? { at: range } : {}) },
       include: { room: { include: roomInclude } },
       orderBy: { at: "desc" },
       take: limit,
     }),
-    prisma.hotelStock.findMany({ where: { hotelId }, select: { productId: true, remainingQty: true } }),
+    prisma.hotelStock.findMany({ where: { hotelId: { in: hotelIds } }, select: { hotelId: true, productId: true, remainingQty: true } }),
   ]);
-  const stockMap = new Map(stocks.map((s) => [s.productId, s.remainingQty]));
+  const stockMap = new Map(stocks.map((s) => [`${s.hotelId}:${s.productId}`, s.remainingQty]));
 
   const rows: MyTransaction[] = txs.map((t) => {
     const dateStr = businessDate(t.occurredAt);
@@ -1261,7 +1324,7 @@ export async function listMyTransactions(
       consumed: i.consumed,
       added: i.added,
       groupName: i.product.group?.name ?? "Genel",
-      stockQty: stockMap.get(i.productId) ?? 0,
+      stockQty: stockMap.get(`${t.hotelId}:${i.productId}`) ?? 0,
       maxTargetQty: i.setupQty || 10,
     }));
     const latest = t.correctionRequests[0];
@@ -1363,7 +1426,7 @@ const requestSchema = z.strictObject({
   proposedData: z.record(id, z.number().int().min(0).max(999)).optional(),
 });
 
-/** A warehouse officer (MB-TAL D) asks the system administrator to delete/correct a past-dated record. */
+/** A floor attendant / warehouse officer (MB-TAL D) asks the Oda Servisi Sorumlusu to delete/correct a past-dated record. */
 export async function createCorrectionRequest(ctx: Ctx, input: unknown) {
   const parsed = requestSchema.safeParse(input);
   if (!parsed.success) throw fromZod(parsed.error);
@@ -1430,19 +1493,72 @@ export async function createCorrectionRequest(ctx: Ctx, input: unknown) {
       requestId: req.id,
       message: `Oda ${row.room.number} için geçmiş tarihli ${
         actionType === "SILME" ? "silme" : "düzeltme"
-      } talebi Sistem Yöneticisi onayına gönderildi.`,
+      } talebi Oda Servisi Sorumlusu onayına gönderildi.`,
     };
   });
 }
 
+const groupRequestSchema = z.strictObject({
+  transactionIds: z.array(id).min(1).max(50),
+  reason: z.string().trim().min(5, "Lütfen geçmiş tarihli işlem için en az 5 karakterlik gerekçe giriniz").max(500),
+});
+
+/**
+ * Deletion requests for several past-dated records at once (one İşlemlerim room group). Records that already
+ * wait for a decision are skipped; the rest each get their own request (decided one by one by the approver).
+ */
+export async function createCorrectionRequests(ctx: Ctx, input: unknown) {
+  const parsed = groupRequestSchema.safeParse(input);
+  if (!parsed.success) throw fromZod(parsed.error);
+  const ids = [...new Set(parsed.data.transactionIds)];
+  const rows = await prisma.minibarTransaction.findMany({
+    where: { id: { in: ids }, hotelId: { in: ctx.hotelIds } },
+    select: { id: true, type: true },
+  });
+  if (rows.length !== ids.length) {
+    throw new DomainError("NOT_FOUND", "Düzeltme talep edilecek işlem kaydı bulunamadı");
+  }
+  if (rows.some((r) => r.type !== "SETUP_KONTROL" && r.type !== "SARFIYAT_YOK")) {
+    throw new DomainError("VALIDATION", "Bu işlem türü için düzeltme talebi oluşturulamaz");
+  }
+  const pending = new Set(
+    (
+      await prisma.minibarCorrectionRequest.findMany({
+        where: { transactionId: { in: ids }, status: "BEKLIYOR" },
+        select: { transactionId: true },
+      })
+    ).map((p) => p.transactionId),
+  );
+  const todo = ids.filter((t) => !pending.has(t));
+  if (todo.length === 0) {
+    throw new DomainError("CONFLICT", "Bu işlemler için zaten onay bekleyen bir düzeltme talebi bulunmaktadır");
+  }
+  const requestIds: string[] = [];
+  for (const transactionId of todo) {
+    const out = await createCorrectionRequest(ctx, { transactionId, actionType: "SILME", reason: parsed.data.reason });
+    requestIds.push(out.requestId);
+  }
+  const skipped = ids.length - todo.length;
+  return {
+    success: true,
+    requestIds,
+    message:
+      `${todo.length} kayıt için silme talebi Oda Servisi Sorumlusu onayına gönderildi.` +
+      (skipped > 0 ? ` ${skipped} kayıt için talep zaten bekliyordu.` : ""),
+  };
+}
+
 /** Correction requests of a hotel (the route has already authorised `MB-TAL V` for it). */
 export async function listCorrectionRequests(params: {
-  hotelId: string;
+  hotelId?: string;
+  /** Several hotels at once (a manager of more than one hotel); used when `hotelId` is absent. */
+  hotelIds?: string[];
   status?: "BEKLIYOR" | "ONAYLANDI" | "REDDEDILDI";
 }): Promise<CorrectionRequestItem[]> {
-  const { hotelId, status } = params;
+  const { status } = params;
+  const hotels = params.hotelId ? [params.hotelId] : (params.hotelIds ?? []);
   const requests = await prisma.minibarCorrectionRequest.findMany({
-    where: { hotelId, ...(status ? { status } : {}) },
+    where: { hotelId: { in: hotels }, ...(status ? { status } : {}) },
     include: {
       requestedBy: { select: { id: true, fullName: true } },
       approvedBy: { select: { id: true, fullName: true } },
@@ -1498,7 +1614,7 @@ export async function resolveCorrectionRequest(ctx: Ctx, input: unknown, now: Da
   const hotelId = known.hotelId;
   // Decided by the system administrator or the minibar system manager (same roles as the manual entry requests).
   if (!isStockManager(ctx)) {
-    throw new DomainError("FORBIDDEN", "Düzeltme taleplerini yalnızca Sistem Yöneticisi ve Minibar Yönetimi karara bağlayabilir");
+    throw new DomainError("FORBIDDEN", "Düzeltme taleplerini yalnızca Oda Servisi Sorumlusu, Minibar Yönetimi ve Sistem Yöneticisi karara bağlayabilir");
   }
   await assertCan(ctx, SCREEN, ctx.user.roleKind === "SISTEM" ? "A" : "V", hotelId);
   const approverId = ctx.user.id;

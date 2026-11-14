@@ -13,6 +13,7 @@ const bodySchema = z.object({
         productId: z.string().min(1).max(64),
         setupId: z.string().min(1).max(64),
         qty: z.number().int().min(1).max(999),
+        overSetup: z.boolean().optional(),
       }),
     )
     .max(50)

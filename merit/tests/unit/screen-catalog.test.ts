@@ -17,10 +17,10 @@ describe("ekran kataloğu", () => {
     expect(existsSync(path.resolve(__dirname, "../../src/app/(guest)/q/[token]/page.tsx"))).toBe(true);
   });
 
-  it("33 ekran, sortOrder 1..33, kodlar benzersiz", () => {
-    expect(SCREENS).toHaveLength(33);
-    expect(SCREENS.map((s) => s.sortOrder)).toEqual(Array.from({ length: 33 }, (_, i) => i + 1));
-    expect(new Set(SCREENS.map((s) => s.code)).size).toBe(33);
+  it("35 ekran, sortOrder 1..35, kodlar benzersiz", () => {
+    expect(SCREENS).toHaveLength(35);
+    expect(SCREENS.map((s) => s.sortOrder)).toEqual(Array.from({ length: 35 }, (_, i) => i + 1));
+    expect(new Set(SCREENS.map((s) => s.code)).size).toBe(35);
   });
 
   it("düzeltilen yollar ve MB-TAL adı", () => {
@@ -51,8 +51,10 @@ describe("screenPaths", () => {
 
   it("screenForPath en uzun önek eşleşmesini döndürür", () => {
     expect(screenForPath("/kat/oda-kontrol/abc")?.code).toBe("MB-TUK");
-    expect(screenForPath("/kat/islemlerim")?.code).toBe("MB-KAT");
+    expect(screenForPath("/kat/islemlerim")?.code).toBe("MB-TUK");
     expect(screenForPath("/kat/qr")?.code).toBe("MB-KF");
+    expect(screenForPath("/kat/oda-kontrol-islemleri")?.code).toBe("MB-OKI");
+    expect(screenForPath("/kat/oda-kontrol/abc")?.code).toBe("MB-TUK");
     expect(screenForPath("/depo/stok")?.code).toBe("MB-ZIM");
     expect(screenForPath("/kasa/yazici")?.code).toBe("QS-FIS");
     expect(screenForPath("/kasa/masa/3")?.code).toBe("QS-KAS");

@@ -194,6 +194,9 @@ describe("migration 20261112150000 seed ile aynı matrisi üretir", () => {
     const where = { hotelId: null, role: { code: { in: ["R-FBY", "R-OSS", "R-FBM"] } } };
     const read = async () =>
       (await testDb.roleScreenPermission.findMany({ where, include: { role: true, screen: true } }))
+        // MB-OKI (Oda Kontrol İşlemleri, 14 Kas 2026) came after this migration; its own migration grants it.
+        // CR-DUR (Anlık Durum, migration 20261114090000) likewise.
+        .filter((r) => r.screen.code !== "MB-OKI" && r.screen.code !== "CR-DUR")
         .map((r) => `${r.role.code}|${r.screen.code}|${[r.canView, r.canCreate, r.canEdit, r.canApprove, r.canReport].join()}`)
         .sort();
     const expected = await read();

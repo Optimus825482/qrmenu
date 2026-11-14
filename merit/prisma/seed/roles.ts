@@ -99,7 +99,7 @@ const DEPARTMENT_CORE_VIEW = new Set(["CR-KOM", "CR-RAP", "CR-RAD", "CR-DUR"]);
  * their whole global matrix (its `@limits` block). `match.exceptCodes` selects every role except those listed.
  */
 export type ScreenLimit = {
-  plan: "P5" | "P2" | "P3" | "P7" | "YR" | "KD";
+  plan: "P5" | "P2" | "P3" | "P7" | "YR" | "KD" | "OKI";
   match?: {
     kind?: RoleKind;
     profile?: Profile;
@@ -241,6 +241,11 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
     grant: { "MB-RAP": ["R"], "QM-RAP": ["R"], "QS-RAP": ["R"], "RO-SLA": ["R"] },
   },
   { plan: "KD", match: { codes: ["R-OSS"] }, grant: { "MB-RAP": ["R"], "RO-SLA": ["R"] } },
+  // OKI (14 Kas 2026) — Oda Kontrol İşlemleri (MB-OKI): the manager tool that edits and deletes the room check
+  // records of all staff. Only R-SYS (modules "ALL", never limited) and R-OSS (V,O,D,A + R) hold it by default;
+  // the system administrator grants it to other users / roles from the Yetki Matrisi. Migration 20261114110000.
+  { plan: "OKI", match: { exceptCodes: ["R-OSS"] }, keep: { "MB-OKI": [] } },
+  { plan: "OKI", match: { codes: ["R-OSS"] }, grant: { "MB-OKI": ["R"] } },
 ];
 
 const ACTION_ORDER: readonly Action[] = ["V", "O", "D", "A", "R"];

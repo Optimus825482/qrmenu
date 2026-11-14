@@ -59,7 +59,7 @@ describe("seed matrisi (saf)", () => {
     const minibar = SCREENS.filter((s) => s.moduleKey === "MINIBAR").map((s) => s.code);
     const depKat = minibar.filter((s) => acts("R-DEP", s) !== "" || acts("R-KAT", s) !== "");
     for (const s of depKat) expect(acts("R-MTY", s), s).toContain("V");
-    for (const s of minibar.filter((x) => !["MB-RAP", "MB-DOL", "MB-ZIM", "MB-TAN", "MB-PERS"].includes(x))) expect(acts("R-MTY", s), s).toBe("V");
+    for (const s of minibar.filter((x) => !["MB-RAP", "MB-DOL", "MB-ZIM", "MB-TAN", "MB-PERS", "MB-OKI"].includes(x))) expect(acts("R-MTY", s), s).toBe("V");
     // MyBar (13 Kas 2026, migration 20261113140000): talebi onaylar ve tamamlar; iptal (A) yok.
     expect([...acts("R-MTY", "MB-PERS")].sort().join("")).toBe("DV");
     expect(acts("R-MTY", "MB-ZIM")).toBe("VOD"); // otel deposu: merkez depo tedariki ve başlangıç stoğu (12 Kas 2026)
@@ -69,7 +69,8 @@ describe("seed matrisi (saf)", () => {
     expect(acts("R-MTY", "MB-DOL")).toBe("VOD"); // yükleme O; silme / geri alma D
     for (const s of SCREENS.filter((x) => x.moduleKey === "CORE")) {
       // CR-RAD: Operasyon Radarı, sunucuda yalnız MINIBAR katmanına indirilir (radar/server/scope.ts).
-      expect(acts("R-MTY", s.code), s.code).toBe(["CR-KOM", "CR-RAD", "CR-RAP"].includes(s.code) ? "VR" : "");
+      // CR-DUR: Anlık Durum (14 Kas 2026, migration 20261114090000) is a delegated core screen too.
+      expect(acts("R-MTY", s.code), s.code).toBe(["CR-KOM", "CR-RAD", "CR-RAP", "CR-DUR"].includes(s.code) ? "VR" : "");
     }
   });
 
@@ -256,6 +257,8 @@ describe("migration 20261110160000 seed ile aynı matrisi üretir", () => {
     const where = { hotelId: null, role: { code: { in: [...NEW_ROLES] } } };
     const read = async () =>
       (await testDb.roleScreenPermission.findMany({ where, include: { role: true, screen: true } }))
+        // CR-DUR (migration 20261114090000) came after this migration; its own migration grants it.
+        .filter((r) => r.screen.code !== "CR-DUR")
         .map((r) => `${r.role.code}|${r.screen.code}|${[r.canView, r.canCreate, r.canEdit, r.canApprove, r.canReport].join()}`)
         .sort();
     const expected = await read();

@@ -60,6 +60,9 @@ const CATALOG: ReadonlyArray<readonly [ModuleKey, string, string, string]> = [
   ["CORE", "CR-REH", "Kurulum Rehberi", "/admin#core.rehber"],
   // The live counters widget (desktop, personel/tablet and mobile shells). Last, so earlier sort orders stay.
   ["CORE", "CR-DUR", "Anlık Durum", "/admin#core.durum"],
+  // Oda Kontrol İşlemleri (14 Kas 2026): the room check records of all staff, edit / delete of any day. Last, so earlier
+  // sort orders stay; the permission matrix lists it with the other MINIBAR screens.
+  ["MINIBAR", "MB-OKI", "Oda Kontrol İşlemleri", "/kat/oda-kontrol-islemleri"],
 ];
 
 export const SCREENS: ScreenDef[] = CATALOG.map(([moduleKey, code, name, path], index) => ({
