@@ -45,7 +45,7 @@ afterAll(async () => {
 });
 
 describe("katalog", () => {
-  it("yedi anahtar, plan ekran kodları ve outlet kapsamı", () => {
+  it("sekiz anahtar, plan ekran kodları ve outlet kapsamı", () => {
     expect(MENU_REPORTS.map((d) => [d.key, d.screenCode, d.outletScoped === true])).toEqual([
       ["qr-tarama", "QM-RAP", true],
       ["menu-durum", "QM-RAP", true],
@@ -53,6 +53,7 @@ describe("katalog", () => {
       ["siparis-urun", "QS-RAP", true],
       ["siparis-sure", "QS-RAP", true],
       ["rs-sla", "RO-SLA", true],
+      ["rs-tukenen", "RO-SLA", true],
       ["oturum", "CR-ONL", false],
     ]);
   });
@@ -350,5 +351,59 @@ describe("rs-sla", () => {
       ["Merit Royal", 20, 1, 0],
       ["Merit Royal Premium", 30, 0, 1],
     ]);
+  });
+});
+
+describe("rs-tukenen", () => {
+  it("işaretleme başına bir satır; sonraki açılışla eşlenir, BAR ve gün dışı sayılmaz, silinen ürün adı denetim kaydından", async () => {
+    const fbm = await staff("R-FBM", "ROYAL");
+    const hid = await hotelId("ROYAL");
+    const rs =
+      (await testDb.outlet.findFirst({ where: { hotelId: hid, type: "ODA_SERVISI" } })) ?? (await makeOutlet("ROYAL", "Oda Servisi", "ODA_SERVISI"));
+    const bar = await makeOutlet("ROYAL", "Bar T", "BAR");
+    const cat = await testDb.menuNode.create({ data: { outletId: rs.id, kind: "KATEGORI", name: "Yiyecekler" } });
+    const sub = await testDb.menuNode.create({ data: { outletId: rs.id, kind: "ALT_KATEGORI", name: "Sıcaklar", parentId: cat.id } });
+    const burger = await testDb.menuNode.create({ data: { outletId: rs.id, kind: "OGE", name: "Burger", parentId: sub.id, price: 15 } });
+    const soup = await testDb.menuNode.create({ data: { outletId: rs.id, kind: "OGE", name: "Çorba", parentId: sub.id, price: 8, isAvailable: false } });
+    const barItem = await testDb.menuNode.create({ data: { outletId: bar.id, kind: "OGE", name: "Mojito", price: 9 } });
+    const log = (entityId: string, available: boolean, createdAt: Date, after: Record<string, unknown> = {}) =>
+      testDb.auditLog.create({
+        data: {
+          userId: fbm.ctx.user.id,
+          hotelId: hid,
+          action: "MENU_NODE_AVAILABILITY",
+          entity: "MenuNode",
+          entityId,
+          before: { isAvailable: !available },
+          after: { isAvailable: available, ...after },
+          createdAt,
+        },
+      });
+    await log(burger.id, false, at("09:00"));
+    await log(burger.id, true, at("09:45"));
+    await log(burger.id, false, at("12:00"));
+    await log(burger.id, true, at("08:00", "2026-11-01")); // reopened after the range: still paired
+    await log(soup.id, false, at("10:00"));
+    await log("gone-node", false, at("11:00"), { name: "Eski Ürün", outletId: rs.id });
+    await log(barItem.id, false, at("10:30")); // not room service
+    await log(burger.id, false, at("09:00", "2026-10-29")); // outside the range
+
+    const res = await run(fbm.ctx, "rs-tukenen");
+    expect(res.rows.map((r) => [r.item, r.path, r.state, r.minutes])).toEqual([
+      ["Burger", "Yiyecekler › Sıcaklar", "Yeniden açıldı", 1200],
+      ["Eski Ürün", "", "Tükenik", null],
+      ["Çorba", "Yiyecekler › Sıcaklar", "Tükenik", null],
+      ["Burger", "Yiyecekler › Sıcaklar", "Yeniden açıldı", 45],
+    ]);
+    expect(res.rows[3]).toMatchObject({ hotel: "Merit Royal", price: 15, by: fbm.ctx.user.fullName, restoredBy: fbm.ctx.user.fullName });
+    expect(res.summary).toEqual([
+      { label: "Tükendi işaretleme", value: 4 },
+      { label: "Hâlâ tükenik", value: 2 },
+      { label: "Yeniden açılan", value: 2 },
+      { label: "Ort. menüde yok (dk)", value: 622.5 },
+    ]);
+
+    const open = await run(fbm.ctx, "rs-tukenen", { params: { state: "tukenik" } });
+    expect(open.rows.map((r) => r.item)).toEqual(["Eski Ürün", "Çorba"]);
   });
 });

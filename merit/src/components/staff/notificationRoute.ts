@@ -21,6 +21,7 @@ const BY_REF: Record<string, readonly string[]> = {
   RoomDnd: ["/kat"],
   MinibarDay: ["/kat/tavsiye-is-plani", "/kat"],
   OccupancyUpload: ["/depo/doluluk-yukle"],
+  MenuNode: ["/oda-servisi/menu"],
 };
 
 /** Kayıt türü yazılmamış bildirimler için tür önekinden tahmin (ilk eşleşen kazanır). */

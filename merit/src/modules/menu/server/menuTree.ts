@@ -8,6 +8,7 @@ import { DomainError } from "@/lib/result";
 import { removeUpload } from "@/lib/uploads";
 import { parseInput } from "@/modules/core/server/admin/crud";
 import { audit } from "@/modules/core/server/audit";
+import { notify } from "@/modules/core/server/notifications";
 import { ALLERGENS } from "../allergens";
 import { ITEM_TAG_IDS } from "../design";
 import { assertOutletScope, loadNodeScope, outletScope } from "./menuNodeAccess";
@@ -15,6 +16,10 @@ import { assertMenuAccess } from "./menuAccess";
 import { autoTranslateMenuNode } from "./translations";
 
 const SCREEN = "QM-MEN";
+
+/** Who hears that a room-service item was marked sold out or put back: room-service lead, F&B manager, hotel manager, system administrator. */
+export const SOLD_OUT_NOTIFY_ROLES = ["R-OSS", "R-FBM", "R-OTM", "R-SYS"] as const;
+export const SOLD_OUT_NOTIFICATION = { soldOut: "rs.menu.soldout", restocked: "rs.menu.restocked" } as const;
 
 export type MenuTreeNode = {
   id: string;
@@ -382,7 +387,7 @@ export async function setAvailable(ctx: Ctx, nodeId: string, available: boolean)
   if (!allowed) await assertCan(ctx, SCREEN, "D", scope.hotelId);
   assertOutletScope(ctx, scope.outletId);
   await prisma.$transaction(async (tx) => {
-    const before = await tx.menuNode.findUnique({ where: { id: nodeId }, select: { isAvailable: true } });
+    const before = await tx.menuNode.findUnique({ where: { id: nodeId }, select: { isAvailable: true, name: true } });
     if (!before) throw new DomainError("NOT_FOUND", "Menü öğesi bulunamadı");
     if (before.isAvailable === available) return;
     await tx.menuNode.update({ where: { id: nodeId }, data: { isAvailable: available } });
@@ -393,7 +398,8 @@ export async function setAvailable(ctx: Ctx, nodeId: string, available: boolean)
       entity: "MenuNode",
       entityId: nodeId,
       before: { isAvailable: before.isAvailable },
-      after: { isAvailable: available },
+      // Name and outlet are kept with the record: the sold-out report still reads them after the node is deleted.
+      after: { isAvailable: available, name: before.name, outletId: scope.outletId },
     });
     await publish(
       {
@@ -404,6 +410,23 @@ export async function setAvailable(ctx: Ctx, nodeId: string, available: boolean)
       },
       tx,
     );
+    if (scope.outletType === "ODA_SERVISI") {
+      await notify(
+        {
+          recipients: { hotelId: scope.hotelId, roleCodes: [...SOLD_OUT_NOTIFY_ROLES] },
+          // The person who did it does not need to be told.
+          excludeUserIds: [ctx.user.id],
+          type: available ? SOLD_OUT_NOTIFICATION.restocked : SOLD_OUT_NOTIFICATION.soldOut,
+          title: available ? `Oda servisi: ${before.name} yeniden menüde` : `Oda servisi: ${before.name} tükendi`,
+          body: available
+            ? `${ctx.user.fullName} tükendi işaretini kaldırdı. Ürün misafir menüsünde yeniden görünüyor.`
+            : `${ctx.user.fullName} tükendi olarak işaretledi. Ürün misafir menüsünden gizlendi.`,
+          refType: "MenuNode",
+          refId: nodeId,
+        },
+        tx,
+      );
+    }
   });
 }
 

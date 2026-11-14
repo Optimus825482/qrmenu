@@ -23,6 +23,7 @@ const BY_REF: Record<string, string> = {
   Outlet: "order.yazicilar",
   MailQueue: "core.rapor",
   AppScreen: "core.kullanici",
+  MenuNode: "rs.menu",
 };
 
 /** Kayıt türü yazılmamış eski bildirimler için tür önekinden tahmin. */

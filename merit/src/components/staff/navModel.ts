@@ -62,6 +62,8 @@ const ODS_PRIMARY: Def[] = [
   { id: "delivery", label: "Teslim", icon: "walk", href: "/oda-servisi?sekme=teslim", screen: "RO-TES" },
   // Read-only lookup of delivered orders by delivery day and room.
   { id: "delivered", label: "Teslim Edilenler", icon: "check-circle", href: "/oda-servisi/teslim-edilenler", screen: "RO-TES" },
+  // The hotel's room-service menu as a tree; sold-out items are marked and put back here.
+  { id: "rs-menu", label: "Oda Servisi Menüsü", icon: "utensils", href: "/oda-servisi/menu", screen: "RO-TAL" },
 ];
 const ODS_MORE: Def[] = [];
 
@@ -153,7 +155,7 @@ function resolve(def: Def, visible: ReadonlySet<string>): NavItem | undefined {
 /**
  * Bottom navigation (spec 2.2), derived from the screens the session may view:
  * kat Bugün · Katlar · QR Okut · İşlemlerim · Daha; waiter Kuyruk · Masalarım · Çağrılar · Daha;
- * room service Talepler · Teslim · Teslim Edilenler · Daha; depot Havuz · Talepler · Raporlar · Daha.
+ * room service Talepler · Teslim · Teslim Edilenler · Oda Servisi Menüsü · Daha; depot Havuz · Talepler · Raporlar · Daha.
  * A user of several families gets the leading family's entries in the bar and every other family's links under "Daha"
  * (no duplicates, stable order). Never links to a screen outside `visible`; 2-5 primary entries (Daha included),
  * empty when nothing is visible.

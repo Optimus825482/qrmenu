@@ -14,6 +14,8 @@ export type NotifyInput = {
   body: string;
   refType?: string;
   refId?: string;
+  /** Users left out of a role-addressed list (the person whose own action the notification reports). */
+  excludeUserIds?: string[];
   /**
    * Hotel to fall back to when the recipient list resolves empty: the notification then goes to the
    * hotel's managers (`FALLBACK_ROLE_CODES`) instead of being dropped silently. Opt-in: without it an
@@ -45,6 +47,12 @@ export async function notify(input: NotifyInput, tx?: Prisma.TransactionClient):
   if (!tx) return prisma.$transaction((inner) => notify(input, inner));
 
   let userIds = await resolveRecipients(input.recipients, tx);
+  if (input.excludeUserIds?.length) {
+    const excluded = new Set(input.excludeUserIds);
+    userIds = userIds.filter((id) => !excluded.has(id));
+    // Nobody else to tell is not an error: the actor was the only recipient.
+    if (userIds.length === 0 && !input.fallbackHotelId) return 0;
+  }
   const fallbackHotel = input.fallbackHotelId;
   if (userIds.length === 0 && fallbackHotel) {
     userIds = await usersEntitledTo(fallbackHotel, FALLBACK_ROLE_CODES, tx);

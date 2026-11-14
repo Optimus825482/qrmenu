@@ -93,19 +93,21 @@ describe("buildNav — garson ve oda servisi", () => {
     expect(labels(buildNav(minus(FOR["R-BAR"], "QM-CAG")).primary)).toEqual(["Kuyruk", "Masalarım", "Daha"]);
   });
 
-  it("oda servisi: Talepler · Teslim · Teslim Edilenler · Daha", () => {
+  it("oda servisi: Talepler · Teslim · Teslim Edilenler · Oda Servisi Menüsü · Daha", () => {
     const nav = buildNav(FOR["R-ODS"]);
-    expect(labels(nav.primary)).toEqual(["Talepler", "Teslim", "Teslim Edilenler", "Daha"]);
+    expect(labels(nav.primary)).toEqual(["Talepler", "Teslim", "Teslim Edilenler", "Oda Servisi Menüsü", "Daha"]);
+    expect(nav.primary[3].href).toBe("/oda-servisi/menu");
+    expect(screenForPath(nav.primary[3].href)?.code).toBe("RO-TAL");
     expect(nav.primary[2].href).toBe("/oda-servisi/teslim-edilenler");
     expect(screenForPath(nav.primary[2].href)?.code).toBe("RO-TES");
     // The lookup follows the delivery screen: without RO-TES it is not offered.
-    expect(labels(buildNav(minus(FOR["R-ODS"], "RO-TES")).primary)).toEqual(["Talepler", "Daha"]);
+    expect(labels(buildNav(minus(FOR["R-ODS"], "RO-TES")).primary)).toEqual(["Talepler", "Oda Servisi Menüsü", "Daha"]);
   });
 
   it("birden çok aileye yetkili kullanıcı (yönetim) yolun ailesini öne alır, kalanını Daha'da görür", () => {
     expect(navFamilies(MANAGER, "/oda-servisi")).toEqual(["ods", "depo"]);
     const ods = buildNav(MANAGER, { pathname: "/oda-servisi" });
-    expect(labels(ods.primary)).toEqual(["Talepler", "Teslim", "Teslim Edilenler", "Daha"]);
+    expect(labels(ods.primary)).toEqual(["Talepler", "Teslim", "Teslim Edilenler", "Oda Servisi Menüsü", "Daha"]);
     expect(ods.more.length).toBeGreaterThan(0);
     const garson = buildNav(MANAGER, { pathname: "/garson" });
     expect(labels(garson.primary)).toEqual(["Kuyruk", "Masalarım", "Çağrılar", "Daha"]);

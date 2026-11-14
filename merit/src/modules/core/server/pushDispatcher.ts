@@ -79,6 +79,11 @@ registerPushType("stock.critical", (n) => ({
   tag: `merit-stock.critical-${n.refId ?? "yeni"}`,
 }));
 
+// Oda servisi menüsünde tükenen / yeniden açılan ürün: sorumlular uygulama kapalıyken de görmeli.
+for (const type of ["rs.menu.soldout", "rs.menu.restocked"]) {
+  registerPushType(type, (n) => ({ title: n.title, body: n.body, url: "/oda-servisi/menu", tag: `merit-${type}-${n.refId ?? "yeni"}` }));
+}
+
 export type DispatchResult = { claimed: number; sent: number; gone: number; failed: number };
 
 function str(value: unknown): string {

@@ -142,4 +142,53 @@ describe("P6 menuAccess - Oda Servisi menü yetkilendirmesi", () => {
       code: "FORBIDDEN",
     });
   });
+
+  it("oda servisi ürünü tükendi / yeniden açıldı: sorumlulara bildirim gider, işlemi yapana gitmez; BAR outletinde bildirim yok", async () => {
+    const mrId = await hotelId("ROYAL");
+    const rsMr = await getOrCreateRsOutlet(mrId, "MR Oda Servisi 6");
+    const barMr = await testDb.outlet.create({ data: { hotelId: mrId, name: "MR Bar 6", type: "BAR", hasMenu: true } });
+    const fbm = await makeUser({ username: "rfbm-6", roleCode: "R-FBM", hotelCode: "ROYAL" });
+    const ctxFbm = await ctxFor(fbm, { hotelCode: "ROYAL" });
+    const oss = await makeUser({ username: "ross-6", roleCode: "R-OSS", hotelCode: "ROYAL" });
+    const otherHotel = await makeUser({ username: "ross-6-mrd", roleCode: "R-OSS", hotelCode: "DIAMOND" });
+
+    const chain = async (outletId: string, item: string) => {
+      const cat = await tree.create(ctxFbm, outletId, { kind: "KATEGORI", name: "Yemekler" });
+      const sub = await tree.create(ctxFbm, outletId, { kind: "ALT_KATEGORI", name: "Sıcaklar", parentId: cat.id });
+      return tree.create(ctxFbm, outletId, { kind: "OGE", name: item, parentId: sub.id, price: 15 });
+    };
+    const burger = await chain(rsMr.id, "Burger");
+    const mojito = await chain(barMr.id, "Mojito");
+
+    const ods = await makeUser({ username: "rods-6", roleCode: "R-ODS", hotelCode: "ROYAL" });
+    const ctxOds = await ctxFor(ods, { hotelCode: "ROYAL" });
+    ctxOds.session.outletId = rsMr.id;
+
+    await tree.setAvailable(ctxOds, burger.id, false);
+    const soldOut = await testDb.notification.findMany({ where: { type: "rs.menu.soldout" } });
+    expect(soldOut.map((n) => n.userId)).toEqual(expect.arrayContaining([oss.id, fbm.id]));
+    expect(soldOut.map((n) => n.userId)).not.toContain(ods.id);
+    expect(soldOut.map((n) => n.userId)).not.toContain(otherHotel.id);
+    expect(soldOut[0]).toMatchObject({ title: "Oda servisi: Burger tükendi", refType: "MenuNode", refId: burger.id, hotelId: mrId });
+
+    // The same value again changes nothing and tells nobody.
+    await tree.setAvailable(ctxOds, burger.id, false);
+    expect(await testDb.notification.count({ where: { type: "rs.menu.soldout" } })).toBe(soldOut.length);
+
+    await tree.setAvailable(ctxFbm, burger.id, true);
+    const restocked = await testDb.notification.findMany({ where: { type: "rs.menu.restocked" } });
+    expect(restocked.map((n) => n.userId)).toContain(oss.id);
+    expect(restocked.map((n) => n.userId)).not.toContain(fbm.id);
+    expect(restocked[0].title).toBe("Oda servisi: Burger yeniden menüde");
+
+    const audits = await testDb.auditLog.findMany({ where: { action: "MENU_NODE_AVAILABILITY", entityId: burger.id }, orderBy: { createdAt: "asc" } });
+    expect(audits.map((a) => a.after)).toEqual([
+      { isAvailable: false, name: "Burger", outletId: rsMr.id },
+      { isAvailable: true, name: "Burger", outletId: rsMr.id },
+    ]);
+
+    const before = await testDb.notification.count();
+    await tree.setAvailable(ctxFbm, mojito.id, false);
+    expect(await testDb.notification.count()).toBe(before);
+  });
 });
